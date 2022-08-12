@@ -1,1 +1,5 @@
 Este archivo es un archivo de prueba para aprender el funcionamiento de git.
+
+Para modificar dos archivos al mismo tiempo, se editan y luego se le da commit.
+
+No se pone ´titulo automáticamente al update
