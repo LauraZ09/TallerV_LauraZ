@@ -82,7 +82,8 @@ unsigned short days_since_born = 0;    //Variable para los días que han pasado 
  *
  * Para calcular el número de horas que han pasado: para esto se considera las 09:00
  * horas como la hora de nacimiento. De esta forma, el cálculo que se hace es el
- * siguiente: hours_since_born = days_since_born* + 3
+ * siguiente: hours_since_born = days_since_born* + 3. Este último 3 se le suma, ya que
+ * desde las 09:00 horas del 17 de Agosto, hasta las 12:00 pasan 3 horas.
  */
 
 unsigned char hours_per_day = 0;
@@ -103,6 +104,7 @@ int main(void) //Se crea la función main.
 	days_since_born = 8249;
 	hours_per_day = 24;
 	hours_since_born = hours_per_day*days_since_born - 3;
+
 
 	while (1) { //Se le pone el ciclo infinito
 		;
