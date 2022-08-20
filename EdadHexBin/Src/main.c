@@ -13,24 +13,28 @@
  *
  * A cerca de la elección de los tamaños de las variables:
  *
- * 1. Variable age: Esta es la variable donde se almacenará mi edad en años. Se le
- * asigna un tamaño char, ya que con 8 bits es más que suficiente para la edad de
+ * 1. Variable age: Esta es la variable donde se almacenará mi edad en años. Se asigna una
+ * varible tipo char, ya que con 8 bits es más que suficiente para almecenar la edad de
  * cualquier persona (con 8 bits se pueden almacenar en la variable números entre el 0
  * y el 255).
  *
  * 2. Variable days_per_year: En esta variable se almacenará la cantidad de días por año.
- * Se le asigna un tamaño short, ya que cada año cuenta con 365 días, al ser el número
- * 365 mayor a 255, se necesita un tamaño más grande que el char, por tanto se asigna
- * con un tamaño de dato short.
+ * Se asigna define como una variable tipo short, ya que cada año cuenta con 365 días;
+ * al ser el número 365 mayor a 255, se necesita un tamaño más grande que 8 bits, por tanto
+ * se define la variable tipo short con un tamaño de 16 bits y con la capacidad de almacenar
+ * números entre el 0 y (2^16-1).
  *
- * 3. Variables seconds_per_hour: En esta variable se almacenará la cantidad de segundos
- * por hora. Se le asigna a la variable un tamaño char, ya que al ser 60 segundos por
- * hora, 8 bits serán suficientes para almacenar esta variable.
- */
+ * 3. Variable seconds_per_hour: En esta variable se almacenará la cantidad de segundos
+ * por hora. Esta variable se define como una variable de tipo short, ya que al ser 3600
+ * segundos por hora 8 bits serán insuficientes para almacenar esta variable pero 16
+ * bits serán suficientes (3600 es un número menor a (2^16-1)).*/
 
-unsigned char age = 0;                 //Variable para mi edad en años.
-unsigned short days_per_year = 0;      //Variable para la cantidad de días por año.
-unsigned char seconds_per_hour = 0;    //Variable para la cantidad de segundos por hora.
+unsigned char age = 0;              //Se define variable para mi edad en años.
+unsigned short days_per_year = 0;   //Se define variable para la cantidad de días por año.
+unsigned short seconds_per_hour = 0;//Se define variable para la cantidad de segundos por hora.
+
+/*Como se puede ver en las 3 líneas anteriores las variables se definen e inmediatamente se
+ * les asigna un valor de 0, para inicializarlas adecuadamente.*/
 
 /*Ejercicio 2: Definiendo los días que han pasado desde la fecha de nacimiento.
  *
@@ -61,8 +65,8 @@ unsigned char seconds_per_hour = 0;    //Variable para la cantidad de segundos p
  * la siguiente:(365*22) + (31-9) + 181 + 16 , así days_since_born = 8249.
  */
 
-unsigned short days_since_born = 0;    //Variable para los días que han pasado desde el
-                                       // nacimiento.
+unsigned short days_since_born = 0;    //Se define variable para los días que han pasado desde
+                                       // el nacimiento.
 
 
 /*Ejercicio 3: Definiendo las horas que han pasado desde la fecha de nacimiento.
@@ -97,13 +101,20 @@ unsigned int hours_since_born = 0;
 int main(void) //Se crea la función main.
 
 {
-	//Se le asigna un valor distinto de 0 a las variables creadas anteriormente.
+	/*A continuación se e le asigna un valor distinto de 0 a las variables creadas en el
+	 * ejercicio 1: Estas asignaciones a las variables se hacen dentro del main.*/
 
 	age = 22;
 	days_per_year = 365;
+	seconds_per_hour = 3600;
+
+	/*A continuación se le asigna un valor distinto de 0 a las variables creadas para el
+	* ejercicio 2:*/
+
 	days_since_born = 8249;
+	seconds_per_hour = 3600;
 	hours_per_day = 24;
-	hours_since_born = hours_per_day*days_since_born - 3;
+	hours_since_born = hours_per_day*days_since_born + 3;
 
 
 	while (1) { //Se le pone el ciclo infinito
