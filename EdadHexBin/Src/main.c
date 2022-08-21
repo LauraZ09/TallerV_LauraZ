@@ -118,18 +118,10 @@ unsigned int hours_since_born = 0; //Se define variable para las horas desde el 
 
 unsigned int seconds_since_born = 0;//Se define variable para los segundos desde el nacimiento.
 
-//unsigned short bin_days_since_born = 0;
-//unsigned int bin_hours_since_born = 0;
-//unsigned int hex_seconds_since_born = 0;
+//unsigned char bin_days_since_born  = 0;
+//unsigned char bin_hours_since_born = 0;
+//unsigned char hex_seconds_since_born = 0;
 
-
-void convert_to_binary (unsigned decimal_number) {
-			if (decimal_number > 1) {
-				convert_to_binary (decimal_number/2);
-
-				decimal_number = decimal_number%2 ;
-			}
-}
 
 int main(void) //Se crea la función main.
 
@@ -159,8 +151,9 @@ int main(void) //Se crea la función main.
 
 	/*Ejercicio 5:
 	 *
-	 * Para este ejercicio, primero se debe descomponer el número decimal en la suma de
-	 * diferentes potencias de 2, esto se logra con la siguiente serie de pasos:
+	 * Para este ejercicio, para pasar de decimal a binario primero se debe descomponer el
+	 * número decimal en la suma de diferentes potencias de 2, esto se logra con la siguiente
+	 * serie de pasos:
 	 *
 	 * 1. Se toma el número decimal y se divide entre 2. Esta división solo puede tener
 	 * dos posibles residuos: 1 o 0. Si el residuo que se obtiene es 1, esto quiere decir
@@ -170,8 +163,8 @@ int main(void) //Se crea la función main.
 	 * 2. El número entero obtenido por la división anterior se vuelve a dividir entre 2, en
 	 * caso de que no se obtenga ningún residuo, se seguirá dividiendo hasta obtener un
 	 * residuo nuevamente, cuando se obtenga el residuo, se sumará a la descomposición el
-	 * valor 2^n, donde n es el número de veces que se dividió el número entre 2 antes de
-	 * obtener nuevamente el residuo.
+	 * valor 2^n, donde n es el número de divisiones que se han hecho desde la primera
+	 * hasta obtener nuevamente el residuo.
 	 *
 	 * 3. Se debe seguir con el procedimiento anterior hasta obtener de las divisiones un
 	 * número menor que 1.
@@ -183,7 +176,7 @@ int main(void) //Se crea la función main.
 	 * como no se obtiene ningún residuo se sigue dividiendo, 3/2=1, esta operación sí tiene
 	 * residuo, esto quiere decir que a la descomposición se le debe sumar el valor 2^2. Luego
 	 * se sigue dividiendo: 1/2, donde ya se obtiene un número menor a 1 y también se tiene
-	 * un residuo, por lo tanto se deberá sumar también 2^2. Así, la descomposición del número
+	 * un residuo, por lo tanto se deberá sumar también 2^3. Así, la descomposición del número
 	 * es la siguiente: 13 = 2^0 + 2^2 + 2^3.
 	 *
 	 * Al tener la descomposición del número, lo único que se debe hacer después, es poner 1
@@ -191,10 +184,32 @@ int main(void) //Se crea la función main.
 	 * así para el ejemplo anterior se pondría 1 en las posiciones 0, 1 y 3, quedando el número
 	 * binario: 1101.
 	 *
-	 * Este procedimiento es el que se realiza a continuación:
+	 * A continuación se le asigna a las variables days_since_born y hours_since_born su
+	 * correspondiente valor en binario:
 	 */
 
-	convert_to_binary (days_since_born);
+	//PREGUNTAR SI PRESENTAR ES IMPRIMIR O KHE?
+
+	days_since_born = 0b10000000111010;
+	hours_since_born = 0b110000010101110011;
+
+	/*Ahora, para expresar el número de segundos en Hexadecimal:
+	 * Básicamente el procedimiento es el mismo explicado anteriormente, ya que cuando se pasa
+	 * de decimal a binario se está cambiando el número de base 10 a base 2, al pasar de decimal a
+	 * hexadecimal, se hace el mismo procedimiento, pero ya teniendo en cuenta que se va a pasar de
+	 * base 16 a base 10, así, se debe dividir en vez de entre 2, entre 16 y se obteienen los factores
+	 * de descomposición.*/
+
+	seconds_since_born = 0x2a7ca130;
+
+
+
+
+
+
+
+
+
 
 	while (1) { //Se le pone el ciclo infinito
 		;
