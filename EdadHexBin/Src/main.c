@@ -43,26 +43,36 @@ unsigned short seconds_per_hour = 0;//Se define variable para la cantidad de seg
  * Variable days_since_born: Esta variable almacena el número de días que han pasado
  * desde la fecha de nacimiento. Se le asigna un tamaño short, ya que el número de días
  * que han pasado desde la fecha de nacimiento es mayor a 255 (el valor que puede
- * almacenar un tipo char) y menor a 2^16.
+ * almacenar una variable tipo char) y menor a 2^16-1 (el valor que puede almacenar una
+ * variable tipo short).
  *
- * Para calcular el número de días que han pasado: tengo 22 años, cumplidos el 09 de
- * Enero de este año. Se tienen en cuenta entonces los siguientes aspectos:
+ * Con respecto al cálculo de los días que han pasado: para este ejercicio, se asume que
+ * cada año cuenta con 365 días y se trabaja con la siguiente fecha y hora de nacimiento:
+ * 09 de Enero/2000 a las 09:00 horas. Para realizar el cálculo, se tienen en cuenta entonces
+ * los siguientes aspectos:
  *
- * 1. Días que pasaron desde el 09/01/2000 hasta el 09/01/2022: Para calcular esto se
- * asume que todos los años pasados han tenido 365 días; así, se hace la siguiente
- * operación: 365*22 = 8030.
+ * 1. Días que pasaron desde el 09/01/2000 hasta el 09/01/2022: A las 09:00 horas del
+ * 09/01/2022 se cumplen 22 años desde la fecha de nacimiento, así el número de días desde
+ * la fecha de nacimiento hasta el 09/01/2022 será igual a: age*days_per_year, es decir, es
+ * la multiplicación de los años que han pasado, por el número que representa mi edad en años.
+ *
  * 2. Días que pasaron desde el 09/01/2022 hasta el 31/01/2022: Esto es para calcular
- * los días restantes del mes de Enero, para esto solo se resta: 31-9 = 22.
+ * los días restantes del mes de Enero, para esto solo se resta: 31-9 = 22. (Esta cuenta
+ * se hace hasta las 09:00 Horas del 31 de Enero de este año).
+ *
  * 3. Días que pasaron desde el 31/01/2022 hasta el 31/07/2022: Esta operación es para
  * calcular los días que han pasado desde que terminó Enero hasta antes de empezar
  * Agosto. Para esto se tiene en cuenta que: los meses de Febrero, Marzo, Abril, Mayo,
  * Junio y Julio tienen respectivamente 28, 31, 30, 31, 30 y 31 días. Así, desde Febrero
- * hasta Julio pasan 181 días.
- * 4. Días que pasaron desde el 31/01/2022 hasta el 17/08/2022: Para esto no se tiene en
- * cuenta el día 17, ya que es hasta el medio día. Así, en Agosto pasan 16 días.
+ * hasta las 09:00 horas del 31 de Julio pasan 181 días.
+ *
+ * 4. Días que pasaron desde el 31/07/2022 hasta el 17/08/2022: Para esto, se tiene también
+ * en cuenta el día 17, ya que la hora exacta de nacimiento es a las 09:00 horas, sin embargo,
+ * no se tienen en cuenta las 3 horas adicionales que hay entre las 09:00 y las 12:00m de este
+ * día.
  *
  * Teniendo en cuenta lo anterior, la operación que se realiza para este cálculo es
- * la siguiente:(365*22) + (31-9) + 181 + 16 , así days_since_born = 8249.
+ * la siguiente:(age*days_per_year) + (31-9) + 181 + 17.
  */
 
 unsigned short days_since_born = 0;    //Se define variable para los días que han pasado desde
@@ -109,10 +119,9 @@ int main(void) //Se crea la función main.
 	seconds_per_hour = 3600;
 
 	/*A continuación se le asigna un valor distinto de 0 a las variables creadas para el
-	* ejercicio 2:*/
+	* ejercicio 2, teniendo en cuenta los cálculos anteriormente descritos:*/
 
-	days_since_born = 8249;
-	seconds_per_hour = 3600;
+	days_since_born = (age*days_per_year) + (31-9) + 181 + 17;
 	hours_per_day = 24;
 	hours_since_born = hours_per_day*days_since_born + 3;
 
