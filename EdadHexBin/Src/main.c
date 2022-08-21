@@ -7,7 +7,7 @@
  ******************************************************************************
  */
 
-//#include <stdint.h> Esto es necesario?
+#include <stdint.h>
 
 /*Ejercicio 1: Definiendo algunas variables.
  *
@@ -87,7 +87,7 @@ unsigned short days_since_born = 0;    //Se define variable para los días que h
  *
  * 1.Variable hours_since_born: En esta variable se almacenan el número de horas pasadas
  * desde la fecha de nacimiento. Este valor se estima que es mayor al valor 2^16 - 1,
- * por lo tanto se le asigna una de tipo int y con un tamaño de 32 bits, los cuales son
+ * por lo tanto se crea una variable de tipo int y con un tamaño de 32 bits, los cuales son
  * suficientes para almacenar la variable.
  *
  * 2.Variable hours_per_day: En esta variable se almacenan las horas por día, ya que un
@@ -106,6 +106,17 @@ unsigned int hours_since_born = 0; //Se define variable para las horas desde el 
 //PREGUNTAR SI ES MEJOR ASIGNARLE VALOR A UNA VARIABLE DENTRO DEL MAIN O DESDE QUE SE
 //DECLARA
 
+/*Ejercicio 4: Definiendo los segundos que han pasado desde la fecha de nacimiento.
+ * A cerca de la elección del tamaño de la variable:
+ *
+ * 1.Variable seconds_since_born: En esta variable se almacenan el número de segundos pasados
+ * desde la fecha de nacimiento. Este valor se estima que es mayor al valor 2^16 - 1,
+ * por lo tanto se define una variable de tipo int y con un tamaño de 32 bits.
+ *
+ * Para calcular el número de segundos que han pasado: El cálculo que se hace es el
+ * siguiente: seconds_since_born = hours_since_born*seconds_per_hour.*/
+
+unsigned int seconds_since_born = 0;//Se define variable para los segundos desde el nacimiento.
 
 int main(void) //Se crea la función main.
 
@@ -128,7 +139,20 @@ int main(void) //Se crea la función main.
 	hours_per_day = 24;
 	hours_since_born = hours_per_day*days_since_born + 3;
 
+	/*A continuación se le asigna un valor distinto de 0 a la variable creada para el
+	* ejercicio 4, teniendo en cuenta los cálculos anteriormente descritos:*/
 
+	seconds_since_born = hours_since_born * seconds_per_hour;
+
+	/*Ejercicio 5:
+	 *
+	 * Para este ejercicio, el número obtenido en decimal debe convertirse a binario, esto
+	 * se logra, siguiendo la siguiente serie de pasos:
+	 *
+	 * 1. Se toma el número decimal y se divide entre 2. Esta división solo puede tener
+	 * dos posibles residuos: 1 o 0. Si el residuo que se obtiene es 1, esto quiere decir
+	 * que al número binario se le deberá sumar 1, lo que es equivalente a sumar 2
+	 */
 	while (1) { //Se le pone el ciclo infinito
 		;
 	}
