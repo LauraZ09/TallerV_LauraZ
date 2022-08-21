@@ -118,6 +118,19 @@ unsigned int hours_since_born = 0; //Se define variable para las horas desde el 
 
 unsigned int seconds_since_born = 0;//Se define variable para los segundos desde el nacimiento.
 
+//unsigned short bin_days_since_born = 0;
+//unsigned int bin_hours_since_born = 0;
+//unsigned int hex_seconds_since_born = 0;
+
+
+void convert_to_binary (unsigned decimal_number) {
+			if (decimal_number > 1) {
+				convert_to_binary (decimal_number/2);
+
+				decimal_number = decimal_number%2 ;
+			}
+}
+
 int main(void) //Se crea la función main.
 
 {
@@ -146,13 +159,43 @@ int main(void) //Se crea la función main.
 
 	/*Ejercicio 5:
 	 *
-	 * Para este ejercicio, el número obtenido en decimal debe convertirse a binario, esto
-	 * se logra, siguiendo la siguiente serie de pasos:
+	 * Para este ejercicio, primero se debe descomponer el número decimal en la suma de
+	 * diferentes potencias de 2, esto se logra con la siguiente serie de pasos:
 	 *
 	 * 1. Se toma el número decimal y se divide entre 2. Esta división solo puede tener
 	 * dos posibles residuos: 1 o 0. Si el residuo que se obtiene es 1, esto quiere decir
-	 * que al número binario se le deberá sumar 1, lo que es equivalente a sumar 2
+	 * que el número es impar y por lo tanto uno de los factores de descomposición es el 1,
+	 * lo que es equivalente a sumar 2^0.
+	 *
+	 * 2. El número entero obtenido por la división anterior se vuelve a dividir entre 2, en
+	 * caso de que no se obtenga ningún residuo, se seguirá dividiendo hasta obtener un
+	 * residuo nuevamente, cuando se obtenga el residuo, se sumará a la descomposición el
+	 * valor 2^n, donde n es el número de veces que se dividió el número entre 2 antes de
+	 * obtener nuevamente el residuo.
+	 *
+	 * 3. Se debe seguir con el procedimiento anterior hasta obtener de las divisiones un
+	 * número menor que 1.
+	 *
+	 * Para clarificar un poco el procedimiento, se deja el siguiente ejemplo: sea el número
+	 * decimal 13. Al hacer la operación 13/2, se tiene como resultado entero el 6, con un
+	 * residuo de 1, este residuo se da porque el número es impar, así, ya se sabe que
+	 * en la descomposición del número debe sumarse un 2^0. Luego, se sigue dividiendo: 6/2=3,
+	 * como no se obtiene ningún residuo se sigue dividiendo, 3/2=1, esta operación sí tiene
+	 * residuo, esto quiere decir que a la descomposición se le debe sumar el valor 2^2. Luego
+	 * se sigue dividiendo: 1/2, donde ya se obtiene un número menor a 1 y también se tiene
+	 * un residuo, por lo tanto se deberá sumar también 2^2. Así, la descomposición del número
+	 * es la siguiente: 13 = 2^0 + 2^2 + 2^3.
+	 *
+	 * Al tener la descomposición del número, lo único que se debe hacer después, es poner 1
+	 * en las posiciones que representan las potencias obtenidas en la operación anterior,
+	 * así para el ejemplo anterior se pondría 1 en las posiciones 0, 1 y 3, quedando el número
+	 * binario: 1101.
+	 *
+	 * Este procedimiento es el que se realiza a continuación:
 	 */
+
+	convert_to_binary (days_since_born);
+
 	while (1) { //Se le pone el ciclo infinito
 		;
 	}
