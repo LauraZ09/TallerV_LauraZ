@@ -87,22 +87,21 @@ unsigned short days_since_born = 0;    //Se define variable para los días que h
  *
  * 1.Variable hours_since_born: En esta variable se almacenan el número de horas pasadas
  * desde la fecha de nacimiento. Este valor se estima que es mayor al valor 2^16 - 1,
- * por lo tanto se le asigna un tamaño de variable int, así, 32 bits son más que
+ * por lo tanto se le asigna una de tipo int y con un tamaño de 32 bits, los cuales son
  * suficientes para almacenar la variable.
  *
  * 2.Variable hours_per_day: En esta variable se almacenan las horas por día, ya que un
- * día tiene 24 horas, esta variable puede ser almacenada perfectamente en una variable
+ * día tiene 24 horas, esta variable puede ser almacenada perfectamente en una variable de
  * tipo char.
  *
  * Para calcular el número de horas que han pasado: para esto se considera las 09:00
  * horas como la hora de nacimiento. De esta forma, el cálculo que se hace es el
- * siguiente: hours_since_born = days_since_born* + 3. Este último 3 se le suma, ya que
- * desde las 09:00 horas del 17 de Agosto, hasta las 12:00 pasan 3 horas.
- */
+ * siguiente: hours_since_born = days_since_born*hours_per_day + 3. Esta última adición
+ * corresponde a las 3 horas que pasan desde las 09:00 horas del 17 de Agosto hasta las
+ * 12:00m de este mismo día.*/
 
-unsigned char hours_per_day = 0;
-unsigned int hours_since_born = 0;
-
+unsigned char hours_per_day = 0;   //Se define la  variable para almacenar las horas por día.
+unsigned int hours_since_born = 0; //Se define variable para las horas desde el nacimiento.
 
 //PREGUNTAR SI ES MEJOR ASIGNARLE VALOR A UNA VARIABLE DENTRO DEL MAIN O DESDE QUE SE
 //DECLARA
@@ -111,17 +110,21 @@ unsigned int hours_since_born = 0;
 int main(void) //Se crea la función main.
 
 {
-	/*A continuación se e le asigna un valor distinto de 0 a las variables creadas en el
+	/*A continuación se le asigna un valor distinto de 0 a las variables creadas en el
 	 * ejercicio 1: Estas asignaciones a las variables se hacen dentro del main.*/
 
 	age = 22;
 	days_per_year = 365;
 	seconds_per_hour = 3600;
 
-	/*A continuación se le asigna un valor distinto de 0 a las variables creadas para el
+	/*A continuación se le asigna un valor distinto de 0 a la variable creada para el
 	* ejercicio 2, teniendo en cuenta los cálculos anteriormente descritos:*/
 
 	days_since_born = (age*days_per_year) + (31-9) + 181 + 17;
+
+	/*A continuación se le asigna un valor distinto de 0 a las variables creadas para el
+	* ejercicio 3, teniendo en cuenta los cálculos anteriormente descritos:*/
+
 	hours_per_day = 24;
 	hours_since_born = hours_per_day*days_since_born + 3;
 
