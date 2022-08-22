@@ -190,6 +190,8 @@ int main(void) //Se crea la función main.
 
 	//PREGUNTAR SI PRESENTAR ES IMPRIMIR O KHE?
 
+	days_since_born=0b10000000111010;
+
 	bin_days_since_born = 0b10000000111010; //Cuando se le pone el 0b, no hace bien la operación bitwise,
 	//creo otra variable?
 	bin_hours_since_born = 0b110000010101110011;
