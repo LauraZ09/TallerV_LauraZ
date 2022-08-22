@@ -118,9 +118,9 @@ unsigned int hours_since_born = 0; //Se define variable para las horas desde el 
 
 unsigned int seconds_since_born = 0;//Se define variable para los segundos desde el nacimiento.
 
-unsigned char bin_days_since_born  = 0;
-unsigned char bin_hours_since_born = 0;
-unsigned char hex_seconds_since_born = 0;
+unsigned short bin_days_since_born  = 0;
+unsigned int bin_hours_since_born = 0;
+unsigned int hex_seconds_since_born = 0;
 
 
 int main(void) //Se crea la función main.
@@ -208,6 +208,7 @@ int main(void) //Se crea la función main.
 	/*Ejercicio 6:*/
 
 	days_since_born = days_since_born << 4; //se obtiene 16500
+	bin_days_since_born = bin_days_since_born << 4;
 	//days_since_born = days_since_born << 1; //se obtiene 16500
 	//days_since_born = days_since_born << 1; //se obtiene 16500
 	//days_since_born = days_since_born << 1; //se obtiene 16500
