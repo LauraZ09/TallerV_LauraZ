@@ -118,9 +118,9 @@ unsigned int hours_since_born = 0; //Se define variable para las horas desde el 
 
 unsigned int seconds_since_born = 0;//Se define variable para los segundos desde el nacimiento.
 
-//unsigned char bin_days_since_born  = 0;
-//unsigned char bin_hours_since_born = 0;
-//unsigned char hex_seconds_since_born = 0;
+unsigned char bin_days_since_born  = 0;
+unsigned char bin_hours_since_born = 0;
+unsigned char hex_seconds_since_born = 0;
 
 
 int main(void) //Se crea la función main.
@@ -190,8 +190,9 @@ int main(void) //Se crea la función main.
 
 	//PREGUNTAR SI PRESENTAR ES IMPRIMIR O KHE?
 
-	days_since_born = 0b10000000111010;
-	hours_since_born = 0b110000010101110011;
+	bin_days_since_born = 0b10000000111010; //Cuando se le pone el 0b, no hace bien la operación bitwise,
+	//creo otra variable?
+	bin_hours_since_born = 0b110000010101110011;
 
 	/*Ahora, para expresar el número de segundos en Hexadecimal:
 	 * Básicamente el procedimiento es el mismo explicado anteriormente, ya que cuando se pasa
@@ -200,7 +201,21 @@ int main(void) //Se crea la función main.
 	 * base 16 a base 10, así, se debe dividir en vez de entre 2, entre 16 y se obteienen los factores
 	 * de descomposición.*/
 
-	seconds_since_born = 0x2a7ca130;
+	hex_seconds_since_born = 0x2a7ca130;
+
+	/*Ejercicio 6:*/
+
+	days_since_born = days_since_born << 4; //se obtiene 16500
+	//days_since_born = days_since_born << 1; //se obtiene 16500
+	//days_since_born = days_since_born << 1; //se obtiene 16500
+	//days_since_born = days_since_born << 1; //se obtiene 16500
+
+	hours_since_born = hours_since_born >> 1;
+	hours_since_born = hours_since_born >> 1;
+	hours_since_born = hours_since_born >> 1;
+	hours_since_born = hours_since_born >> 1;
+
+
 
 
 
