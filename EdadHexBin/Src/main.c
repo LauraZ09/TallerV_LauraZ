@@ -122,6 +122,9 @@ unsigned short bin_days_since_born  = 0;
 unsigned int bin_hours_since_born = 0;
 unsigned int hex_seconds_since_born = 0;
 
+unsigned int pos1_pos5_seconds_since_born = 0; //Variable para almacenar las posiciones 1 y 5 de la variable
+//seconds_since_born
+
 
 int main(void) //Se crea la función main.
 
@@ -207,27 +210,38 @@ int main(void) //Se crea la función main.
 
 	/*Ejercicio 6:*/
 
-	days_since_born = days_since_born << 4; //se obtiene 16500
+	 //se obtiene 16500
 	bin_days_since_born = bin_days_since_born << 4;
-	//days_since_born = days_since_born << 1; //se obtiene 16500
-	//days_since_born = days_since_born << 1; //se obtiene 16500
-	//days_since_born = days_since_born << 1; //se obtiene 16500
+	days_since_born = days_since_born << 1; //se obtiene 16500
+	days_since_born = days_since_born << 1; //se obtiene 16500
+	days_since_born = days_since_born << 1; //se obtiene 16500
+
+	/*Ejercicio 7:*/
 
 	hours_since_born = hours_since_born >> 1;
 	hours_since_born = hours_since_born >> 1;
 	hours_since_born = hours_since_born >> 1;
 	hours_since_born = hours_since_born >> 1;
 
+    /*Ejercicio 8:* preguntar qué significa agregue 1*/
 
+	days_since_born = ~ days_since_born;//acá no recupero el valor original, no importa?
 
+	/*Ejercicio 9: La cuarta posición tiene el valor C (equivalente a 12), así que es par.
+	 * Se aplica entonces la máscara se aplica para obtener 1 y 5, defino nueva variable()*, si yo tengo un hex,
+	 * la máscara debe estar también en hex?*/
 
+	pos1_pos5_seconds_since_born = seconds_since_born & 0x100010;
 
+	/*Ejercicio 10: 0x2a7ca130 se le aplica la máscara  0x040, preguntar si el 0 adelante no se puede obviar*/
 
+	hex_seconds_since_born = seconds_since_born & 0x040; //El resultado es distinto de 0
+	seconds_since_born = seconds_since_born & 0x101111111;
 
+	/*Ejercicio 11: Se utilizará la variable hours_since_born*/
 
-
-
-
+	hours_since_born = ! hours_since_born;
+	hours_since_born = ! hours_since_born;
 
 	while (1) { //Se le pone el ciclo infinito
 		;
