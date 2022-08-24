@@ -2,7 +2,6 @@
  ******************************************************************************
  * @file           : Tarea 1. Mi edad en otros números
  * @author         : Laura Alejandra Zuluaga
- * @brief          :????? preguntar qué es el brief
  ******************************************************************************
  ******************************************************************************
  */
@@ -19,9 +18,9 @@
  * y el 255).
  *
  * 2. Variable days_per_year: En esta variable se almacenará la cantidad de días por año.
- * Se asigna define como una variable tipo short, ya que cada año cuenta con 365 días;
+ * Se define como una variable tipo short, ya que cada año cuenta con 365 días;
  * al ser el número 365 mayor a 255, se necesita un tamaño más grande que 8 bits, por tanto
- * se define la variable tipo short con un tamaño de 16 bits y con la capacidad de almacenar
+ * se define como una variable tipo short con un tamaño de 16 bits y con la capacidad de almacenar
  * números entre el 0 y (2^16-1).
  *
  * 3. Variable seconds_per_hour: En esta variable se almacenará la cantidad de segundos
@@ -33,10 +32,10 @@ unsigned char age = 0;              //Se define variable para mi edad en años.
 unsigned short days_per_year = 0;   //Se define variable para la cantidad de días por año.
 unsigned short seconds_per_hour = 0;//Se define variable para la cantidad de segundos por hora.
 
-/*Como se puede ver en las 3 líneas anteriores las variables se definen e inmediatamente se
+/* Como se puede ver en las 3 líneas anteriores las variables se definen e inmediatamente se
  * les asigna un valor de 0, para inicializarlas adecuadamente.*/
 
-/*Ejercicio 2: Definiendo los días que han pasado desde la fecha de nacimiento.
+/* Ejercicio 2: Definiendo los días que han pasado desde la fecha de nacimiento.
  *
  * A cerca de la elección del tamaño de la variable:
  *
@@ -46,15 +45,15 @@ unsigned short seconds_per_hour = 0;//Se define variable para la cantidad de seg
  * almacenar una variable tipo char) y menor a 2^16-1 (el valor que puede almacenar una
  * variable tipo short).
  *
- * Con respecto al cálculo de los días que han pasado: para este ejercicio, se asume que
+ * Con respecto al cálculo de los días que han pasado: para este ejercicio se asume que
  * cada año cuenta con 365 días y se trabaja con la siguiente fecha y hora de nacimiento:
  * 09 de Enero/2000 a las 09:00 horas. Para realizar el cálculo, se tienen en cuenta entonces
  * los siguientes aspectos:
  *
  * 1. Días que pasaron desde el 09/01/2000 hasta el 09/01/2022: A las 09:00 horas del
- * 09/01/2022 se cumplen 22 años desde la fecha de nacimiento, así el número de días desde
+ * 09/01/2022 se cumplen 22 años desde la fecha de nacimiento, así, el número de días desde
  * la fecha de nacimiento hasta el 09/01/2022 será igual a: age*days_per_year, es decir, es
- * la multiplicación de los años que han pasado, por el número que representa mi edad en años.
+ * la multiplicación de los años que han pasado por el número que representa mi edad en años.
  *
  * 2. Días que pasaron desde el 09/01/2022 hasta el 31/01/2022: Esto es para calcular
  * los días restantes del mes de Enero, para esto solo se resta: 31-9 = 22. (Esta cuenta
@@ -106,7 +105,8 @@ unsigned int hours_since_born = 0; //Se define variable para las horas desde el 
 //PREGUNTAR SI ES MEJOR ASIGNARLE VALOR A UNA VARIABLE DENTRO DEL MAIN O DESDE QUE SE
 //DECLARA
 
-/*Ejercicio 4: Definiendo los segundos que han pasado desde la fecha de nacimiento.
+/* Ejercicio 4: Definiendo los segundos que han pasado desde la fecha de nacimiento.
+ *
  * A cerca de la elección del tamaño de la variable:
  *
  * 1.Variable seconds_since_born: En esta variable se almacenan el número de segundos pasados
@@ -116,11 +116,16 @@ unsigned int hours_since_born = 0; //Se define variable para las horas desde el 
  * Para calcular el número de segundos que han pasado: El cálculo que se hace es el
  * siguiente: seconds_since_born = hours_since_born*seconds_per_hour.*/
 
-unsigned int seconds_since_born = 0;//Se define variable para los segundos desde el nacimiento.
+unsigned int seconds_since_born = 0; //Se define variable para los segundos desde el nacimiento.
 
-unsigned short bin_days_since_born  = 0;
+
+/*A continuación se definen algunas variables auxiliares que se usarán más adelante para
+ * realizar algunos cálculos*/
+
+unsigned short bin_days_since_born = 0;
 unsigned int bin_hours_since_born = 0;
 unsigned int hex_seconds_since_born = 0;
+unsigned short not_days_since_born = 0;
 
 unsigned int pos1_pos5_seconds_since_born = 0; //Variable para almacenar las posiciones 1 y 5 de la variable
 //seconds_since_born
@@ -129,25 +134,25 @@ unsigned int pos1_pos5_seconds_since_born = 0; //Variable para almacenar las pos
 int main(void) //Se crea la función main.
 
 {
-	/*A continuación se le asigna un valor distinto de 0 a las variables creadas en el
+	/*A continuación, se le asigna un valor distinto de 0 a las variables creadas en el
 	 * ejercicio 1: Estas asignaciones a las variables se hacen dentro del main.*/
 
 	age = 22;
 	days_per_year = 365;
 	seconds_per_hour = 3600;
 
-	/*A continuación se le asigna un valor distinto de 0 a la variable creada para el
+    /*A continuación, se le asigna un valor distinto de 0 a la variable creada para el
 	* ejercicio 2, teniendo en cuenta los cálculos anteriormente descritos:*/
 
 	days_since_born = (age*days_per_year) + (31-9) + 181 + 17;
 
-	/*A continuación se le asigna un valor distinto de 0 a las variables creadas para el
+	/*A continuación, se le asigna un valor distinto de 0 a las variables creadas para el
 	* ejercicio 3, teniendo en cuenta los cálculos anteriormente descritos:*/
 
 	hours_per_day = 24;
 	hours_since_born = hours_per_day*days_since_born + 3;
 
-	/*A continuación se le asigna un valor distinto de 0 a la variable creada para el
+	/*A continuación, se le asigna un valor distinto de 0 a la variable creada para el
 	* ejercicio 4, teniendo en cuenta los cálculos anteriormente descritos:*/
 
 	seconds_since_born = hours_since_born * seconds_per_hour;
@@ -167,12 +172,12 @@ int main(void) //Se crea la función main.
 	 * caso de que no se obtenga ningún residuo, se seguirá dividiendo hasta obtener un
 	 * residuo nuevamente, cuando se obtenga el residuo, se sumará a la descomposición el
 	 * valor 2^n, donde n es el número de divisiones que se han hecho desde la primera
-	 * hasta obtener nuevamente el residuo.
+	 * hasta obtener nuevamente el residuo 1.
 	 *
 	 * 3. Se debe seguir con el procedimiento anterior hasta obtener de las divisiones un
 	 * número menor que 1.
 	 *
-	 * Para clarificar un poco el procedimiento, se deja el siguiente ejemplo: sea el número
+	 * Para clarificar un poco el procedimiento se deja el siguiente ejemplo: sea el número
 	 * decimal 13. Al hacer la operación 13/2, se tiene como resultado entero el 6, con un
 	 * residuo de 1, este residuo se da porque el número es impar, así, ya se sabe que
 	 * en la descomposición del número debe sumarse un 2^0. Luego, se sigue dividiendo: 6/2=3,
@@ -184,59 +189,86 @@ int main(void) //Se crea la función main.
 	 *
 	 * Al tener la descomposición del número, lo único que se debe hacer después, es poner 1
 	 * en las posiciones que representan las potencias obtenidas en la operación anterior,
-	 * así para el ejemplo anterior se pondría 1 en las posiciones 0, 1 y 3, quedando el número
+	 * así, para el ejemplo anterior se pondría 1 en las posiciones 0, 1 y 3, quedando el número
 	 * binario: 1101.
 	 *
-	 * A continuación se le asigna a las variables days_since_born y hours_since_born su
-	 * correspondiente valor en binario:
+	 * Realizando el procedimiento anterior para las variables days_since_born y hours_since_born su
+	 * correspondiente valor en binario es: days_since_born = 0b10000000111010 y
+	 * hours_since_born = 0b110000010101110011;
 	 */
 
-	//PREGUNTAR SI PRESENTAR ES IMPRIMIR O KHE?
-
-	days_since_born=0b10000000111010;
-
-	bin_days_since_born = 0b10000000111010; //Cuando se le pone el 0b, no hace bien la operación bitwise,
-	//creo otra variable?
+	bin_days_since_born = 0b10000000111010; //Mejor no hacer esto o khe?
 	bin_hours_since_born = 0b110000010101110011;
 
 	/*Ahora, para expresar el número de segundos en Hexadecimal:
 	 * Básicamente el procedimiento es el mismo explicado anteriormente, ya que cuando se pasa
 	 * de decimal a binario se está cambiando el número de base 10 a base 2, al pasar de decimal a
 	 * hexadecimal, se hace el mismo procedimiento, pero ya teniendo en cuenta que se va a pasar de
-	 * base 16 a base 10, así, se debe dividir en vez de entre 2, entre 16 y se obteienen los factores
-	 * de descomposición.*/
+	 * base 16 a base 10, así, se debe dividir en vez de entre 2, entre 16 y ahora los posibles residuos
+	 * serán números entre el 0 y F (A = 10, B = 11, C = 12, D = 13, E = 14, F = 15).
+	 *
+	 * Realizando este procedimiento, se obtiene el número: hex_seconds_since_born = 0x2A7CA130*
+	 */
 
-	hex_seconds_since_born = 0x2a7ca130;
+	hex_seconds_since_born = 0x2A7CA130;
 
-	/*Ejercicio 6:*/
+	/*A cerca del tipo de variable:
+	 *
+	 * Como se puede ver, se definieron las siguientes variables: bin_days_since_born, bin_hours_since_born
+	 * y hex_seconds_since_born. Estas variables almacenan los mismos datos que days_since_born,
+	 * hours_since_born y seconds_since_born, respectivamente; al almacenar las mismas cantidades (en binario,
+	 * hexagonal o hexadecimal la cantidad será la misma, solo cambia la representación) no es necesario hacer
+	 * un cambio en el tipo de variable con el que se definen (short, int y int, respectivamente).
+	 *
+	 * La definición de estas variables servirá más adelante para realizar algunas operaciones.*/
 
-	 //se obtiene 16500
-	bin_days_since_born = bin_days_since_born << 4;
-	days_since_born = days_since_born << 1; //se obtiene 16500
-	days_since_born = days_since_born << 1; //se obtiene 16500
-	days_since_born = days_since_born << 1; //se obtiene 16500
+	/*Ejercicio 6: Operación Shift izquierda.
+	 *
+	 * Al aplicarla una vez: Al aplicar la operación una vez, el valor de la variable se multiplica por 2,
+	 * esto pasa porque la variable tiene el siguiente valor: 0b0010000000111010, al aplicarle la operación,
+	 * todos los valores se correrán hacia la izquierda, es decir, quedará como resultado el número
+	 * 0b0100000001110100 y todos los 1 pasarán a multiplicar por una potencia de 2 un número más alta.
+	 *
+	 * Al aplicarla dos veces: La segunda vez que se aplica, el número vuelve a duplicarse, ya que los números
+	 * volverán a moverse una posición y quedará el número 0b0100000001110100.
+	 *
+	 * Al aplicarla cuatro veces seguidas: Al aplicar la operación una tercera vez  */
 
-	/*Ejercicio 7:*/
 
-	hours_since_born = hours_since_born >> 1;
-	hours_since_born = hours_since_born >> 1;
-	hours_since_born = hours_since_born >> 1;
-	hours_since_born = hours_since_born >> 1;
+	bin_days_since_born = days_since_born << 1;
+	bin_days_since_born = days_since_born << 1;
+	bin_days_since_born = days_since_born << 1;
+	bin_days_since_born = days_since_born << 1;
 
-    /*Ejercicio 8:* preguntar qué significa agregue 1*/
 
-	days_since_born = ~ days_since_born;//acá no recupero el valor original, no importa?
+	/*Ejercicio 7: Al realizar la operación una vez se divide el valor por dos, al hacerla una segunda
+	 * vez, se divide el valor entre 2 una segunda vez y al hacerlo 4 veces seguidas, el valor original
+	 * queda divido entre el valor 2^4*/
 
-	/*Ejercicio 9: La cuarta posición tiene el valor C (equivalente a 12), así que es par.
-	 * Se aplica entonces la máscara se aplica para obtener 1 y 5, defino nueva variable()*, si yo tengo un hex,
-	 * la máscara debe estar también en hex?*/
+	bin_hours_since_born = hours_since_born >> 1;
+	bin_hours_since_born = bin_hours_since_born >> 1;
+	bin_hours_since_born = bin_hours_since_born >> 1;
+	bin_hours_since_born = bin_hours_since_born >> 1;
 
-	pos1_pos5_seconds_since_born = seconds_since_born & 0x100010;
+    /*Ejercicio 8: Al aplicar el operador NOT a la variable, sumarle 1 y luego sumarle la variable original
+     * se obtiene un resultado de 0. De esto se puede interpretar que, al aplicarle not a un valor y sumarle 1
+     * se está tomando la representación negativa del número y por ello al sumar con la variable original
+     * se obtiene el 0.*/
+
+	not_days_since_born = ~ days_since_born + 1;
+	bin_days_since_born = not_days_since_born + days_since_born;
+
+	/*Ejercicio 9: El valor en hexadecimal es0x2a7ca130 La cuarta posición tiene el valor C (equivalente a 12), así que es par.
+	 * Se aplica entonces la máscara para obtener 1 y 5. La máscara elegida es la 0x00F000F0, esta máscara se elige de tal forma
+	 * que si no se conoce cuál es el valor del hexadecimal en las posiciones 1 y 5, igual se pueda obtener (al poner la F se
+	 * está aplicando la máscara binaria 1111 a esa posición hexadecimal)*/
+
+	pos1_pos5_seconds_since_born = seconds_since_born & 0x00F000F0;
 
 	/*Ejercicio 10: 0x2a7ca130 se le aplica la máscara  0x040, preguntar si el 0 adelante no se puede obviar*/
 
-	hex_seconds_since_born = seconds_since_born & 0x040; //El resultado es distinto de 0
-	seconds_since_born = seconds_since_born & 0x101111111;
+	hex_seconds_since_born = seconds_since_born & 0x040; //El resultado 0, por tanto se borra la posición 3
+	seconds_since_born = seconds_since_born & 0x2a7c0130;
 
 	/*Ejercicio 11: Se utilizará la variable hours_since_born*/
 
