@@ -12,16 +12,15 @@
  *
  * A cerca de la elección de los tamaños de las variables:
  *
- * 1. Variable age: Esta es la variable donde se almacenará mi edad en años. Se asigna una
- * varible tipo char, ya que con 8 bits es más que suficiente para almecenar la edad de
+ * 1. Variable age: Esta es la variable donde se almacenará mi edad en años. Se define una
+ * varible de tipo char, ya que con 8 bits es más que suficiente para almecenar la edad de
  * cualquier persona (con 8 bits se pueden almacenar en la variable números entre el 0
  * y el 255).
  *
  * 2. Variable days_per_year: En esta variable se almacenará la cantidad de días por año.
  * Se define como una variable tipo short, ya que cada año cuenta con 365 días;
  * al ser el número 365 mayor a 255, se necesita un tamaño más grande que 8 bits, por tanto
- * se define como una variable tipo short con un tamaño de 16 bits y con la capacidad de almacenar
- * números entre el 0 y (2^16-1).
+ * se define como una variable tipo short con un tamaño de 16 bits.
  *
  * 3. Variable seconds_per_hour: En esta variable se almacenará la cantidad de segundos
  * por hora. Esta variable se define como una variable de tipo short, ya que al ser 3600
@@ -79,8 +78,6 @@ unsigned short days_since_born = 0;    //Se define variable para los días que h
 
 
 /*Ejercicio 3: Definiendo las horas que han pasado desde la fecha de nacimiento.
- *PREGUNTAR SI PUEDO CREAR UNA VARIABLE CON EL NÚMERO DE HORAS POR DÍA, O SI ES
- *INNECESARIO
  *
  * A cerca de la elección del tamaño de las variables:
  *
@@ -102,9 +99,6 @@ unsigned short days_since_born = 0;    //Se define variable para los días que h
 unsigned char hours_per_day = 0;   //Se define la  variable para almacenar las horas por día.
 unsigned int hours_since_born = 0; //Se define variable para las horas desde el nacimiento.
 
-//PREGUNTAR SI ES MEJOR ASIGNARLE VALOR A UNA VARIABLE DENTRO DEL MAIN O DESDE QUE SE
-//DECLARA
-
 /* Ejercicio 4: Definiendo los segundos que han pasado desde la fecha de nacimiento.
  *
  * A cerca de la elección del tamaño de la variable:
@@ -122,14 +116,21 @@ unsigned int seconds_since_born = 0; //Se define variable para los segundos desd
 /*A continuación se definen algunas variables auxiliares que se usarán más adelante para
  * realizar algunos cálculos*/
 
-unsigned short bin_days_since_born = 0;
-unsigned int bin_hours_since_born = 0;
-unsigned int hex_seconds_since_born = 0;
-unsigned short not_days_since_born = 0;
-
+unsigned short bin_days_since_born = 0;        //Esta es una variable auxiliar en la que se almacenarán
+										       //datos que serán posteriormente descartados y será de utilidad
+                                               //a la hora de realizar operaciones binarias con la variable
+                                               //days_since_born.
+unsigned int bin_hours_since_born = 0; 	       //Variable auxiliar para realizar operaciones binarias con la variable
+										       //days_since_born.
+unsigned int hex_seconds_since_born = 0;       //Variable auxiliar para realizar operaciones con la variable
+										       //seconds_since_born.
+unsigned int int_bin_days_since_born = 0;      //Variable auxiliar de tipo int para realizar operaciones con la variable
+										       //days_since_born.
+unsigned short not_days_since_born = 0;        //Variable para almacenar el valor inverso de la variable days_since_born.
 unsigned int pos1_pos5_seconds_since_born = 0; //Variable para almacenar las posiciones 1 y 5 de la variable
-//seconds_since_born
-
+                                               //seconds_since_born.
+unsigned char bin_seconds_per_hour = 0;        //Variable auxiliar para realizar operaciones bitwise con la variable
+											   //seconds_per_hour.
 
 int main(void) //Se crea la función main.
 
@@ -171,7 +172,7 @@ int main(void) //Se crea la función main.
 	 * 2. El número entero obtenido por la división anterior se vuelve a dividir entre 2, en
 	 * caso de que no se obtenga ningún residuo, se seguirá dividiendo hasta obtener un
 	 * residuo nuevamente, cuando se obtenga el residuo, se sumará a la descomposición el
-	 * valor 2^n, donde n es el número de divisiones que se han hecho desde la primera
+	 * valor 2^n, donde n es el número de divisiones que se han hecho desde la segunda
 	 * hasta obtener nuevamente el residuo 1.
 	 *
 	 * 3. Se debe seguir con el procedimiento anterior hasta obtener de las divisiones un
@@ -187,9 +188,9 @@ int main(void) //Se crea la función main.
 	 * un residuo, por lo tanto se deberá sumar también 2^3. Así, la descomposición del número
 	 * es la siguiente: 13 = 2^0 + 2^2 + 2^3.
 	 *
-	 * Al tener la descomposición del número, lo único que se debe hacer después, es poner 1
+	 * Al tener la descomposición del número, lo único que se debe hacer después es poner 1
 	 * en las posiciones que representan las potencias obtenidas en la operación anterior,
-	 * así, para el ejemplo anterior se pondría 1 en las posiciones 0, 1 y 3, quedando el número
+	 * así, para el ejemplo anterior se pondría 1 en las posiciones 0, 2 y 3, quedando el número
 	 * binario: 1101.
 	 *
 	 * Realizando el procedimiento anterior para las variables days_since_born y hours_since_born su
@@ -197,7 +198,7 @@ int main(void) //Se crea la función main.
 	 * hours_since_born = 0b110000010101110011;
 	 */
 
-	bin_days_since_born = 0b10000000111010; //Mejor no hacer esto o khe?
+	bin_days_since_born = 0b10000000111010;
 	bin_hours_since_born = 0b110000010101110011;
 
 	/*Ahora, para expresar el número de segundos en Hexadecimal:
@@ -207,8 +208,7 @@ int main(void) //Se crea la función main.
 	 * base 16 a base 10, así, se debe dividir en vez de entre 2, entre 16 y ahora los posibles residuos
 	 * serán números entre el 0 y F (A = 10, B = 11, C = 12, D = 13, E = 14, F = 15).
 	 *
-	 * Realizando este procedimiento, se obtiene el número: hex_seconds_since_born = 0x2A7CA130*
-	 */
+	 * Realizando este procedimiento, se obtiene el número: hex_seconds_since_born = 0x2A7CA130*/
 
 	hex_seconds_since_born = 0x2A7CA130;
 
@@ -218,9 +218,8 @@ int main(void) //Se crea la función main.
 	 * y hex_seconds_since_born. Estas variables almacenan los mismos datos que days_since_born,
 	 * hours_since_born y seconds_since_born, respectivamente; al almacenar las mismas cantidades (en binario,
 	 * hexagonal o hexadecimal la cantidad será la misma, solo cambia la representación) no es necesario hacer
-	 * un cambio en el tipo de variable con el que se definen (short, int y int, respectivamente).
-	 *
-	 * La definición de estas variables servirá más adelante para realizar algunas operaciones.*/
+	 * un cambio en el tipo de variable con el que se definen (short, int y int, respectivamente).*/
+
 
 	/*Ejercicio 6: Operación Shift izquierda.
 	 *
@@ -232,18 +231,39 @@ int main(void) //Se crea la función main.
 	 * Al aplicarla dos veces: La segunda vez que se aplica, el número vuelve a duplicarse, ya que los números
 	 * volverán a moverse una posición y quedará el número 0b0100000001110100.
 	 *
-	 * Al aplicarla cuatro veces seguidas: Al aplicar la operación una tercera vez  */
-
+	 * Al aplicarla cuatro veces seguidas: Al aplicar la operación cuatro veces seguidas se observa un comportamiento
+	 * bastante particular: el número binario que queda es el 0b1110100000, esto pasa porque al realizar el tercer shift
+	 * hay un desbordamiento, entonces como la variable tiene una cantidad de bits limitados ese 1 se pierde, así, al valor
+	 * decimal de la variable se le restará el valor 2^n, donde n es la posición que tenía el número que se perdió por desbordamiento
+	 * y el valor restante se multiplicará por dos, ya que el resto de números se moverán hacia la izquierda y quedarán en una
+	 * potencia de 2 más alta (valor obtenido por el tercer shift = (valor anterior - 2^n)*2). Al aplicar el cuarto shift se volverá
+	 * al patrón anterior de multiplicar por 2, ya que ahora sí se tiene el espacio para mover los números sin generar un
+	 * desbordamiento*/
 
 	bin_days_since_born = days_since_born << 1;
-	bin_days_since_born = days_since_born << 1;
-	bin_days_since_born = days_since_born << 1;
-	bin_days_since_born = days_since_born << 1;
+	bin_days_since_born = bin_days_since_born << 1;
+	bin_days_since_born = bin_days_since_born << 1;
+	bin_days_since_born = bin_days_since_born << 1;
+
+	/*Si se desea multiplicar por 2 sin tener el problema del overflow, lo que se debe hacer es darle un tamaño más
+	 * grande a la variable con la que se opera, así no habrá ningún desbordamiento y se podrá multiplicar por dos
+	 * los datos la cantidad de veces que se requiera (hasta alcanzar el tamaño máximo de la nueva variable), a continuación,
+	 * se realiza la operación nuevamente, pero con la variable int_bin_days_since_born, la cual se definió con un tamaño mayor.*/
+
+	int_bin_days_since_born = days_since_born << 1;
+	int_bin_days_since_born = int_bin_days_since_born << 1;
+	int_bin_days_since_born = int_bin_days_since_born << 1;
+	int_bin_days_since_born = int_bin_days_since_born << 1;
+
+	/*En esta ocasión, se puede observar que al aplicar la operación 4 veces se obtiene el número original multiplicado
+	 * por el valor 2^4.*/
 
 
-	/*Ejercicio 7: Al realizar la operación una vez se divide el valor por dos, al hacerla una segunda
+	/*Ejercicio 7: Operación Shift derecha.
+	 *
+	 * Al realizar la operación una vez se divide el valor original entre dos, al hacerla una segunda
 	 * vez, se divide el valor entre 2 una segunda vez y al hacerlo 4 veces seguidas, el valor original
-	 * queda divido entre el valor 2^4*/
+	 * queda divido entre el valor 2^4 y se podría seguir haciendo la operación hasta obtener el mínimo valor.*/
 
 	bin_hours_since_born = hours_since_born >> 1;
 	bin_hours_since_born = bin_hours_since_born >> 1;
@@ -258,22 +278,31 @@ int main(void) //Se crea la función main.
 	not_days_since_born = ~ days_since_born + 1;
 	bin_days_since_born = not_days_since_born + days_since_born;
 
-	/*Ejercicio 9: El valor en hexadecimal es0x2a7ca130 La cuarta posición tiene el valor C (equivalente a 12), así que es par.
+	/*Al sumarle un valor diferente de 1 ya el resultado no es 0 sino que será igual al valor sumado - 1.*/
+
+	not_days_since_born = ~ days_since_born + 2;
+	bin_days_since_born = not_days_since_born + days_since_born;
+
+	/*Ejercicio 9: El valor en hexadecimal es 0x2A7CA130, la cuarta posición tiene el valor C (equivalente a 12), así que es par.
 	 * Se aplica entonces la máscara para obtener 1 y 5. La máscara elegida es la 0x00F000F0, esta máscara se elige de tal forma
 	 * que si no se conoce cuál es el valor del hexadecimal en las posiciones 1 y 5, igual se pueda obtener (al poner la F se
 	 * está aplicando la máscara binaria 1111 a esa posición hexadecimal)*/
 
 	pos1_pos5_seconds_since_born = seconds_since_born & 0x00F000F0;
 
-	/*Ejercicio 10: 0x2a7ca130 se le aplica la máscara  0x040, preguntar si el 0 adelante no se puede obviar*/
+	/*Ejercicio 10: Se le aplica la máscara 0x040 a la variable número de segundos.
+	 *
+	 * Al aplicar esta máscara, se debe tener en cuenta que se está aplicando bit a bit, es decir que esta máscara es equivalente
+	 * a aplicar la máscara: 0b000001000000. El resultado obtenido es igual a 0, por lo tanto se aplica una máscara para eliminar
+	 * la posición 3 del hexadecimal. La máscara elegida es 0xFFFF0FFF (se eligen las F por lo que se explicó anteriormente).*/
 
-	hex_seconds_since_born = seconds_since_born & 0x040; //El resultado 0, por tanto se borra la posición 3
-	seconds_since_born = seconds_since_born & 0x2a7c0130;
+	hex_seconds_since_born = seconds_since_born & 0x040;
+	hex_seconds_since_born = seconds_since_born & 0xFFFF0FFF;
 
-	/*Ejercicio 11: Se utilizará la variable hours_since_born*/
+	/*Ejercicio 11: Se utilizará la variable seconds_per_hour*/
 
-	hours_since_born = ! hours_since_born;
-	hours_since_born = ! hours_since_born;
+	bin_seconds_per_hour = ! seconds_per_hour;
+	bin_seconds_per_hour = ! bin_seconds_per_hour;
 
 	while (1) { //Se le pone el ciclo infinito
 		;
