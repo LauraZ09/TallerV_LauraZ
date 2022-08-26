@@ -6,8 +6,6 @@
  ******************************************************************************
  */
 
-#include <stdint.h>
-
 /*Ejercicio 1: Definiendo algunas variables.
  *
  * A cerca de la elección de los tamaños de las variables:
@@ -121,13 +119,13 @@ unsigned short bin_days_since_born = 0;        //Esta es una variable auxiliar e
                                                //a la hora de realizar operaciones binarias con la variable
                                                //days_since_born.
 unsigned int bin_hours_since_born = 0; 	       //Variable auxiliar para realizar operaciones binarias con la variable
-										       //days_since_born.
+										       //hours_since_born.
 unsigned int hex_seconds_since_born = 0;       //Variable auxiliar para realizar operaciones con la variable
 										       //seconds_since_born.
 unsigned int int_bin_days_since_born = 0;      //Variable auxiliar de tipo int para realizar operaciones con la variable
 										       //days_since_born.
 unsigned short not_days_since_born = 0;        //Variable para almacenar el valor inverso de la variable days_since_born.
-unsigned int pos1_pos5_seconds_since_born = 0; //Variable para almacenar las posiciones 1 y 5 de la variable
+unsigned int pos1_pos5_seconds_since_born = 0; //Variable para almacenar las posiciones 1 y 5 del valor Hex de la variable
                                                //seconds_since_born.
 unsigned char bin_seconds_per_hour = 0;        //Variable auxiliar para realizar operaciones bitwise con la variable
 											   //seconds_per_hour.
@@ -205,7 +203,7 @@ int main(void) //Se crea la función main.
 	 * Básicamente el procedimiento es el mismo explicado anteriormente, ya que cuando se pasa
 	 * de decimal a binario se está cambiando el número de base 10 a base 2, al pasar de decimal a
 	 * hexadecimal, se hace el mismo procedimiento, pero ya teniendo en cuenta que se va a pasar de
-	 * base 16 a base 10, así, se debe dividir en vez de entre 2, entre 16 y ahora los posibles residuos
+	 * base 10 a base 16, así, se debe dividir en vez de entre 2, entre 16 y ahora los posibles residuos
 	 * serán números entre el 0 y F (A = 10, B = 11, C = 12, D = 13, E = 14, F = 15).
 	 *
 	 * Realizando este procedimiento, se obtiene el número: hex_seconds_since_born = 0x2A7CA130*/
@@ -215,7 +213,7 @@ int main(void) //Se crea la función main.
 	/*A cerca del tipo de variable:
 	 *
 	 * Como se puede ver, se definieron las siguientes variables: bin_days_since_born, bin_hours_since_born
-	 * y hex_seconds_since_born. Estas variables almacenan los mismos datos que days_since_born,
+	 * y hex_seconds_since_born. Estas variables se asignan con los mismos datos que days_since_born,
 	 * hours_since_born y seconds_since_born, respectivamente; al almacenar las mismas cantidades (en binario,
 	 * hexagonal o hexadecimal la cantidad será la misma, solo cambia la representación) no es necesario hacer
 	 * un cambio en el tipo de variable con el que se definen (short, int y int, respectivamente).*/
@@ -273,7 +271,11 @@ int main(void) //Se crea la función main.
     /*Ejercicio 8: Al aplicar el operador NOT a la variable, sumarle 1 y luego sumarle la variable original
      * se obtiene un resultado de 0. De esto se puede interpretar que, al aplicarle not a un valor y sumarle 1
      * se está tomando la representación negativa del número y por ello al sumar con la variable original
-     * se obtiene el 0.*/
+     * se obtiene el 0. Sin embargo, más precisamente lo que pasa es que al invertir el valor y sumarle 1 estamos
+     * encontrando el complemento, es decir, se está encontrando la cantidad que le hace falta a la variable para
+     * llegar a la cantidad máxima que esos bits pueden almacenar, así, cuando se le suma el valor original
+     * hay un debordamiento (se está alcanzando la máxima cantidad que la variable está en capacidad de almacerna)
+     * y la variable queda en 0.*/
 
 	not_days_since_born = ~ days_since_born + 1;
 	bin_days_since_born = not_days_since_born + days_since_born;
@@ -286,7 +288,7 @@ int main(void) //Se crea la función main.
 	/*Ejercicio 9: El valor en hexadecimal es 0x2A7CA130, la cuarta posición tiene el valor C (equivalente a 12), así que es par.
 	 * Se aplica entonces la máscara para obtener 1 y 5. La máscara elegida es la 0x00F000F0, esta máscara se elige de tal forma
 	 * que si no se conoce cuál es el valor del hexadecimal en las posiciones 1 y 5, igual se pueda obtener (al poner la F se
-	 * está aplicando la máscara binaria 1111 a esa posición hexadecimal)*/
+	 * está aplicando la máscara binaria 1111 a esa posición hexadecimal) y se pone la máscara con el operador and.*/
 
 	pos1_pos5_seconds_since_born = seconds_since_born & 0x00F000F0;
 
@@ -299,7 +301,13 @@ int main(void) //Se crea la función main.
 	hex_seconds_since_born = seconds_since_born & 0x040;
 	hex_seconds_since_born = seconds_since_born & 0xFFFF0FFF;
 
-	/*Ejercicio 11: Se utilizará la variable seconds_per_hour*/
+	/*Ejercicio 11: Se utilizará la variable seconds_per_hour.
+	 *
+	 *Al aplicarle el operandor a la variable una vez lo que se obtiene es un 0 y una segunda vez se obtiene un 1. Este es un
+	 *un operador booleano, es decir, solo tiene dos valores posible como resultado y en vez de trabajar con los valores de los bits,
+	 *este operador toma la cantidad de la variable completa. Este operador en particular, lo que hace es retornar False (0) cuando la
+	 *entrada sea true (número diferente de 0) y retornar True (1) cuando la entrada sea false (0), se podría decir que es como el
+	 *operador booleano que hace los papeles de NOT.*/
 
 	bin_seconds_per_hour = ! seconds_per_hour;
 	bin_seconds_per_hour = ! bin_seconds_per_hour;
