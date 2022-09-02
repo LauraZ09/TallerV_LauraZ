@@ -24,7 +24,7 @@ int main (void) {
 	handlerUserLedPin.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_OUT;
 	handlerUserLedPin.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
 	handlerUserLedPin.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_NOTHING;
-	handlerUserLedPin.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
+	handlerUserLedPin.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_HIGH;
 	handlerUserLedPin.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
 
 	//Deseamos trabajar con el puerto GPIOC
@@ -33,7 +33,7 @@ int main (void) {
 	handlerPushButton.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_IN;
 	handlerPushButton.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
 	handlerPushButton.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_PULLUP;
-	handlerPushButton.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
+	handlerPushButton.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_HIGH;
 	handlerPushButton.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
 
 	//Deseamos trabajar con el pin B9
@@ -61,10 +61,6 @@ int main (void) {
 	GPIO_Config(&handlerSecondLed);
 	GPIO_Config(&handlerSecondButton);
 
-	//Hacemos que el pin a5 quede encendido
-	GPIO_WritePin (&handlerUserLedPin, 0);
-	GPIO_WritePin (&handlerSecondLed, 0);
-
 	//Este es el ciclo principal, donde se ejecuta todo el programa
 	while (1){
 		unsigned long long i = 0;
@@ -73,41 +69,18 @@ int main (void) {
 		pinStateUserButton = GPIO_ReadPin (&handlerPushButton);
 		pinStateSecondButton = GPIO_ReadPin (&handlerSecondButton);
 
-		if (pinStateUserButton == 0 && pinStateSecondButton == 0) {
-			GPIO_WritePin (&handlerUserLedPin, 1);
-			for (i = 0; i <= 100000; i++);
-			GPIO_WritePin (&handlerUserLedPin, 0);
-			for (i = 0; i <= 100000; i++);
-			GPIO_WritePin (&handlerSecondLed, 1);
-			for (i = 0; i <= 200000; i++);
-			GPIO_WritePin (&handlerSecondLed, 0);
-			for (i = 0; i <= 200000; i++);
 
-		}
-		else if (pinStateUserButton == 1 && pinStateSecondButton == 0 ) {
-			GPIO_WritePin (&handlerUserLedPin, 1);
-			for (i = 0; i <= 200000; i++);
-			GPIO_WritePin (&handlerUserLedPin, 0);
-		    for (i = 0; i <= 200000; i++);
-			GPIO_WritePin (&handlerSecondLed, 1);
-			for (i = 0; i <= 100000; i++);
-			GPIO_WritePin (&handlerSecondLed, 0);
-			for (i = 0; i <= 100000; i++);
-			//Debe durar 200 ms
-		}
-
-		else if (pinStateSecondButton == 1 && pinStateUserButton == 0) {
-			GPIO_WritePin (&handlerUserLedPin, 1);
-			GPIO_WritePin (&handlerSecondLed, 1);
-			for (i = 0; i <= 200000; i++);
-			GPIO_WritePin (&handlerSecondLed, 0);
-			for (i = 0; i <= 200000; i++);
-		}
-
-		else if (pinStateSecondButton == 1 && pinStateUserButton == 1) {
+		if (pinStateUserButton == 1 && pinStateSecondButton == 1){
 			GPIO_WritePin (&handlerUserLedPin, 0);
 			GPIO_WritePin (&handlerSecondLed, 0);
 		}
+
+		else if (pinStateUserButton == 0 && pinStateSecondButton == 0){
+			GPIO_WritePin (&handlerUserLedPin, 1);
+			GPIO_WritePin (&handlerSecondLed, 1);
+		}
+
 
 	}
 }
+
