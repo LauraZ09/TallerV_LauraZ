@@ -21,8 +21,31 @@
 
 /*Función Principal del programa*/
 
+uint16_t data = 0;
+uint16_t *ptrEjemplo;
+uint32_t valorPuntero = 0;
+
 int main(void)
 {
+	//Inicializando el valor
+	data = 57;
+
+	//Cambiando el valor de data en +32
+	data += 32;
+
+	//Cargamos la posición de la memoria de data
+	ptrEjemplo = &data;
+
+	//Para ver la posición de memoria
+	valorPuntero = (uint32_t) ptrEjemplo;
+
+	//Escribir el valor en esa posición de memoria
+	*ptrEjemplo+=2;
+	//Moverse de posición de memoria
+	ptrEjemplo++;
+	//Escribo en la nueva posición
+	*ptrEjemplo+=0xAC;
+
     /* Loop forever */
 	while (1) {
 
