@@ -25,7 +25,7 @@
 #define HSI_CLOCK_SPEED		16000000		//Value for the main clock signal (HSI -> High Speed Internal)
 #define HSE_CLOCK_SPEED		4000000			//Value for the main clock signal (HSI -> High Speed External)
 
-#define NOP ()		asm("NOP")
+#define NOP()		  asm("NOP")
 #define __weak		__attribute__((weak))
 
 /*
