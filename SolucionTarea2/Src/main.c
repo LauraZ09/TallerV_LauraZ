@@ -1,6 +1,7 @@
 /******************************************************************************
- * @file           : Solución Tarea 2
- * @author         : Laura Alejandra Zuluaga Moreno
+ * @file           :Solución Tarea 2
+ * @author         :Laura Alejandra Zuluaga Moreno,
+ *  			   :lazuluagamo@unal.edu.co
  ******************************************************************************
  *En el siguiente documento se encuentra la solución a la Tarea 2
  ******************************************************************************/
@@ -57,26 +58,46 @@ int main(void)
 	 * 	  procedimiento se realiza a continuación*/
 
 	   //Se definen los handler para los pines que deseamos configurar
+
+	    GPIO_Handler_t handlerPinC6  = {0};
+	    GPIO_Handler_t handlerPinC10 = {0};
 		GPIO_Handler_t handlerPinC11 = {0};
 		GPIO_Handler_t handlerPinC12 = {0};
 		GPIO_Handler_t handlerPinC13 = {0};
 		GPIO_Handler_t handlerPinA5  = {0};
 
+
 		//Se hace la configuración de los pines
 
 	    handlerPinC11.pGPIOx = GPIOC;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinNumber 		= PIN_11;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinNumber 		= PIN_6;
 	    handlerPinC11.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_IN;
 	    handlerPinC11.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
 	    handlerPinC11.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_PULLUP;
 	    handlerPinC11.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
 	    handlerPinC11.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
 
+	    handlerPinC11.pGPIOx = GPIOC;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinNumber 		= PIN_10;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_OUT;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_NOTHING;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
+
+	    handlerPinC11.pGPIOx = GPIOC;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinNumber 		= PIN_11;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_OUT;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_NOTHING;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
+	    handlerPinC11.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
+
 	    handlerPinC12.pGPIOx = GPIOC;
 	    handlerPinC12.GPIO_PinConfig.GPIO_PinNumber 		= PIN_12;
-	    handlerPinC12.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_IN;
+	    handlerPinC12.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_OUT;
 	    handlerPinC12.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
-	    handlerPinC12.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_PULLUP;
+	    handlerPinC12.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_NOTHING;
 	    handlerPinC12.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
 	    handlerPinC12.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
 
@@ -98,53 +119,33 @@ int main(void)
 	    handlerPinA5.GPIO_PinConfig.GPIO_PinAltFunMode 	    = AF0;
 
 		//Cargamos la configuración del PIN específico
+
+		GPIO_Config(&handlerPinC6);
+		GPIO_Config(&handlerPinC10);
 		GPIO_Config(&handlerPinC11);
 		GPIO_Config(&handlerPinC12);
-		GPIO_Config(&handlerPinA5);
 		GPIO_Config(&handlerPinC13);
+		GPIO_Config(&handlerPinA5);
 
 		//Se definen las variables donde se guarda el estado del PIN
 		uint8_t pinC11Value = 0;
 		(void) pinC11Value;
 		uint8_t pinC12Value = 0;
 		(void) pinC12Value;
-		uint8_t pinA5Value = 0;
-		(void) pinA5Value;
-		uint8_t pinC13Value = 0;
-		(void) pinC13Value;
 
+		//Se escriben los pines en 1
+		GPIO_WritePin (&handlerPinC10, SET);
 		GPIO_WritePin (&handlerPinC11, SET);
 		GPIO_WritePin (&handlerPinC12, SET);
-		GPIO_WritePin (&handlerPinA5, SET);
 
+        //Se leen los pines
 		pinC11Value = GPIO_ReadPin (&handlerPinC11);
 		pinC12Value = GPIO_ReadPin (&handlerPinC12);
-		pinA5Value  = GPIO_ReadPin (&handlerPinA5);
-		uint64_t i = 0;
-		for (i = 0; i <= 600000; i++);
 
-		GPIOxTooglePin (&handlerPinA5);
-		for (i = 0; i <= 600000; i++);
-		pinA5Value  = GPIO_ReadPin (&handlerPinA5);
-		GPIOxTooglePin (&handlerPinA5);
-		for (i = 0; i <= 600000; i++);
-		pinA5Value  = GPIO_ReadPin (&handlerPinA5);
-		GPIOxTooglePin (&handlerPinA5);
-		for (i = 0; i <= 600000; i++);
-		pinA5Value  = GPIO_ReadPin (&handlerPinA5);
-		GPIOxTooglePin (&handlerPinA5);
-		for (i = 0; i <= 600000; i++);
-		pinA5Value  = GPIO_ReadPin (&handlerPinA5);
-
-		//if (GPIO_ReadPin (&handlerPinC13)==0) {
-			//GPIOxTooglePin (&handlerPinA5);
-			//for (i = 0; i <= 600000; i++);
-
-		}
-
-		//Se escriben los PINES en 1
-
-		//Se lee el estado de los PINES:
+		//Se vuelven a poner los pines en 0
+		GPIO_WritePin (&handlerPinC10, RESET);
+		GPIO_WritePin (&handlerPinC11, RESET);
+		GPIO_WritePin (&handlerPinC12, RESET);
 
 
 		/* PUNTO 2:	 Cree una nueva función llamada GPIOxTooglePin, la cual reciba como parámetro solamente un elemento
@@ -153,7 +154,22 @@ int main(void)
 		 *del  configurado). Cambiar el estado significa: sí está encendido que pase a apagado, si está apagado que pase a
 		 *del  encendido. Hint: La operación XOR puede ser útil.*/
 
+		GPIO_WritePin (&handlerPinA5, SET);//Se escribe el PINA5 se escribe en 1 (el LED se prende)
+		uint32_t i;
+		for (i = 0; i <= 600000; i++);
+		GPIOxTooglePin (&handlerPinA5);		//Al aplicar la función una vez debe pasar a apagado
+		for (i = 0; i <= 600000; i++);
+		GPIOxTooglePin (&handlerPinA5);		//Al aplicar la función una segunda vez debe prenderse otra vez
+		for (i = 0; i <= 600000; i++);
+		GPIOxTooglePin (&handlerPinA5);
+		for (i = 0; i <= 600000; i++);
+		GPIOxTooglePin (&handlerPinA5);
+		for (i = 0; i <= 600000; i++);
 
+		/*Como se puede observar, se aplica la función unas cuantas veces y después de aplicarla cada vez se pone un ciclo for,
+		 * este ciclo es un delay para poder alcanzar a ver cada cambio en el estado del PIN, en la práctica este código al
+		 * cargarlo en el micro debe verse como un blinky de unas cuantas repeticiones.
+		 */
 
     /* Loop forever */ //Preguntar lo de in y out
 	while (1) {
@@ -161,9 +177,13 @@ int main(void)
 		/* PUNTO 3:	 Utilice el “USER_BUTTON” (azul) con la nueva función GPIOxToogle, de forma que el USER_LED (Led verde)
 		 *  cambie de estado cada vez que pulsa USER_BUTTON..*/
 
+		if (GPIO_ReadPin (&handlerPinC13)==0) {
+			GPIOxTooglePin (&handlerPinA5);
+			for (i = 0; i <= 600000; i++);
+		}
+
 	}
 }
-
 
 
 
