@@ -1,7 +1,8 @@
 /**
  ******************************************************************************
- * @file           : Tarea 1. Mi edad en otros números
- * @author         : Laura Alejandra Zuluaga
+ * @file           		: Tarea 1. Mi edad en otros números
+ * @author         		: Laura Alejandra Zuluaga, lazuluagamo@unal.edu.co
+ * Fecha de nacimiento	: 09/01/2000
  ******************************************************************************
  ******************************************************************************
  */
