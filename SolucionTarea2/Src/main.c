@@ -52,7 +52,7 @@ int main(void)
 	 * C. Se corrige el código, reemplazando por las líneas que se escribieron en el enunciado anterior. Y para
 	 * 	  comprobar que el código queda correcto se realiza el siguiente ejercicio:
 	 *
-	 * 	  Se escriben los pines PIN_A5 y PIN_A6 en 1 con la función GPIO_WritePin, luego, se aplica la
+	 * 	  Se escriben los pines PIN_C11 y PIN_C12 en 1 con la función GPIO_WritePin, luego, se aplica la
 	 * 	  función a ellos y se comprueba con el debugger si la función sí retorna el estado correcto. Este
 	 * 	  procedimiento se realiza a continuación*/
 
@@ -73,7 +73,7 @@ int main(void)
 	    handlerPinC11.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
 
 	    handlerPinC12.pGPIOx = GPIOC;
-	    handlerPinC12.GPIO_PinConfig.GPIO_PinNumber 		= PIN_13;
+	    handlerPinC12.GPIO_PinConfig.GPIO_PinNumber 		= PIN_12;
 	    handlerPinC12.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_IN;
 	    handlerPinC12.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
 	    handlerPinC12.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_PULLUP;
@@ -81,7 +81,7 @@ int main(void)
 	    handlerPinC12.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
 
 	    handlerPinC13.pGPIOx = GPIOC;
-	    handlerPinC13.GPIO_PinConfig.GPIO_PinNumber 		= PIN_12;
+	    handlerPinC13.GPIO_PinConfig.GPIO_PinNumber 		= PIN_13;
 	    handlerPinC13.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_IN;
 	    handlerPinC13.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
 	    handlerPinC13.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_PULLUP;
@@ -136,6 +136,12 @@ int main(void)
 		for (i = 0; i <= 600000; i++);
 		pinA5Value  = GPIO_ReadPin (&handlerPinA5);
 
+		//if (GPIO_ReadPin (&handlerPinC13)==0) {
+			//GPIOxTooglePin (&handlerPinA5);
+			//for (i = 0; i <= 600000; i++);
+
+		}
+
 		//Se escriben los PINES en 1
 
 		//Se lee el estado de los PINES:
@@ -149,18 +155,12 @@ int main(void)
 
 
 
-
     /* Loop forever */ //Preguntar lo de in y out
 	while (1) {
 
 		/* PUNTO 3:	 Utilice el “USER_BUTTON” (azul) con la nueva función GPIOxToogle, de forma que el USER_LED (Led verde)
 		 *  cambie de estado cada vez que pulsa USER_BUTTON..*/
-		if (!GPIO_ReadPin (&handlerPinC13)) {
-			GPIOxTooglePin (&handlerPinA5);
-			for (i = 0; i<600000; i++){
-				NOP();
-			}
-		}
+
 	}
 }
 
