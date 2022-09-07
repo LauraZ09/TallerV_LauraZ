@@ -66,24 +66,23 @@ int main(void)
 		GPIO_Handler_t handlerPinC13 = {0};
 		GPIO_Handler_t handlerPinA5  = {0};
 
-
 		//Se hace la configuración de los pines
 
-	    handlerPinC11.pGPIOx = GPIOC;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinNumber 		= PIN_6;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_IN;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_PULLUP;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
+	    handlerPinC6.pGPIOx = GPIOC;
+	    handlerPinC6.GPIO_PinConfig.GPIO_PinNumber 			= PIN_6;
+	    handlerPinC6.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_IN;
+	    handlerPinC6.GPIO_PinConfig.GPIO_PinOPType 			= GPIO_OTYPE_PUSHPULL;
+	    handlerPinC6.GPIO_PinConfig.GPIO_PinPuPdControl    	= GPIO_PUPDR_PULLDOWN;
+	    handlerPinC6.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
+	    handlerPinC6.GPIO_PinConfig.GPIO_PinAltFunMode 		= AF0;
 
-	    handlerPinC11.pGPIOx = GPIOC;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinNumber 		= PIN_10;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_OUT;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_NOTHING;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
-	    handlerPinC11.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
+	    handlerPinC10.pGPIOx = GPIOC;
+	    handlerPinC10.GPIO_PinConfig.GPIO_PinNumber 		= PIN_10;
+	    handlerPinC10.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_OUT;
+	    handlerPinC10.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
+	    handlerPinC10.GPIO_PinConfig.GPIO_PinPuPdControl    = GPIO_PUPDR_NOTHING;
+	    handlerPinC10.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
+	    handlerPinC10.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF0;
 
 	    handlerPinC11.pGPIOx = GPIOC;
 	    handlerPinC11.GPIO_PinConfig.GPIO_PinNumber 		= PIN_11;
@@ -118,6 +117,7 @@ int main(void)
 	    handlerPinA5.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
 	    handlerPinA5.GPIO_PinConfig.GPIO_PinAltFunMode 	    = AF0;
 
+
 		//Cargamos la configuración del PIN específico
 
 		GPIO_Config(&handlerPinC6);
@@ -126,6 +126,7 @@ int main(void)
 		GPIO_Config(&handlerPinC12);
 		GPIO_Config(&handlerPinC13);
 		GPIO_Config(&handlerPinA5);
+
 
 		//Se definen las variables donde se guarda el estado del PIN
 		uint8_t pinC11Value = 0;
@@ -180,8 +181,28 @@ int main(void)
 		if (GPIO_ReadPin (&handlerPinC13)==0) {
 			GPIOxTooglePin (&handlerPinA5);
 			for (i = 0; i <= 600000; i++);
+
 		}
 
+		/*Agregue un botón externo al PIN_C6, configurado en modo Pull_down. La acción de este botón debe hacer que al pulsar
+		 * este botón, se enciendan tres Leds (PC10, PC11 y PC12) de forma simultánea y luego de 5 segundos se apaguen en
+		 * cascada:
+			Se apaga primero PC12.
+			Dos segundos después se apaga PC11.
+			Un segundo después se apaga PC10.
+		 *
+		 */
+		if (GPIO_ReadPin (&handlerPinC6)==1) {
+			GPIO_WritePin (&handlerPinC10,SET);
+			GPIOxTooglePin (&handlerPinC11);
+			GPIOxTooglePin (&handlerPinC12);
+			for (i = 0; i <= 600000; i++);
+			GPIOxTooglePin (&handlerPinC12);
+			for (i = 0; i <= 600000; i++);
+			GPIOxTooglePin (&handlerPinC11);
+			for (i = 0; i <= 600000; i++);
+			GPIOxTooglePin (&handlerPinC10);
+		}
 	}
 }
 
