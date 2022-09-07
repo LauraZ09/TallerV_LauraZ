@@ -161,3 +161,10 @@ uint32_t GPIO_ReadPin (GPIO_Handler_t *pPinHandler) {
 
 	return pinValue;
 }
+
+void GPIOxTooglePin(GPIO_Handler_t *pPinHandler) {
+	//
+	pPinHandler->pGPIOx->ODR ^= (0b1 << pPinHandler->GPIO_PinConfig.GPIO_PinNumber);
+
+}
+

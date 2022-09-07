@@ -10,36 +10,31 @@
 #include "stm32f411xx.h"
 #include "GPIOxDriver.h"
 
-void GPIOxTooglePin(GPIO_Handler_t *pPinHandler) {
-	//
-	pPinHandler->pGPIOx->ODR ^= (0b1 << pPinHandler->GPIO_PinConfig.GPIO_PinNumber);
-
-}
-
 int main(void)
 {
+	/* PUNTO 1: La función ReadPin estaba definida como se muestra a continuación:
 
-	/* PUNTO 1:
-	 *
 	 * uint32_t GPIO_ReadPin (GPIO_Handler_t *pPinHandler) {
-		//Creamos una variable auxiliar la cual luego retornaremos
+	   //Creamos una variable auxiliar la cual luego retornaremos:
+
 		uint32_t pinValue = 0;
 
 		//Cargamos el valor específico del registro IDR, desplazado a la derecha tantas veces como la ubicación
-		//del pin específico
+		//del pin específico:
+
 		pinValue = (pPinHandler ->pGPIOx ->IDR  >> pPinHandler->GPIO_PinConfig.GPIO_PinNumber);
 
-		return pinValue;
-	}
-	 * //Cargamos el valor específico del registro IDR, desplazado a la derecha tantas veces como la ubicación
-		//del pin específico
-	 * A. El error es el siguiente: cuando se carga el valor específico del registro IDR, no se limpia el valor
+		return pinValue;}
+
+	 * A. El error es el siguiente: cuando se carga el valor específico del registro IDR, no se "limpia" el valor
 	 * 	  del registro, así, cuando se desplaza a la derecha la cantidad de posiciones correspondientes al PIN, se
-	 * 	  copia en la variable pinValue un valor diferente al estado del pin, ya que se le suman los valores que
-	 * 	  puedan haber en las otras posiciones.
+	 * 	  podría copiar en la variable pinValue un valor diferente al estado del PIN(0 o 1), ya que se le suman los valores que
+	 * 	  puedan haber en las otras posiciones del IDR (posiciones correspondientes a otros PINES), así, el problema en
+	 * 	  particular se presentará al haber varios PINES del mismo puerto  activados al tiempo. Así, por ejemplo, si el PINA5
+	 * 	  se encuentra en 0, pero el PINA6 está en 1, la función leerá el valor 0b10 que es equivalente a 2 en decimal.
 	 *
 	 * B. El problema podría solucionarse haciendo el siguiente procedimiento: Limpiando primero el registro en todas
-	 *    las posiciones excepto la posición correspondiente al pin que se quiere leer.Esto se puede lograr implementando
+	 *    las posiciones excepto la posición correspondiente al PIN que se quiere leer.Esto se puede lograr implementando
 	 *    las siguientes líneas de código:
 	 *
 	 *    mask = 0b1 << pPinHandler->GPIO_PinConfig.GPIO_PinNumber
