@@ -49,11 +49,20 @@ int main(void)
 	 * 	  comprobar que el código queda correcto se realiza el siguiente ejercicio:
 	 *
 	 * 	  Se escriben los pines PIN_C11 y PIN_C12 en 1 con la función GPIO_WritePin, luego, se aplica la
-	 * 	  función a ellos y se comprueba con el debugger si la función sí retorna el estado correcto. Este
-	 * 	  procedimiento se realiza a continuación*/
+	 * 	  función a ellos y se comprueba con el debugger si la función sí retorna el estado correcto, para esto
+	 * 	  se definen unas variables en las que se almacenará el valor que retorne la función, así, en el debugger
+	 * 	  se debe hacer seguimiento al cambio de estas variables. Este procedimiento se realiza a continuación*/
 
-	   //Se definen los handler para los pines que deseamos configurar
+		//Se definen las variables donde se guarda el estado del PIN
+		uint8_t pinC11Value = 0;
+		(void) pinC11Value;
+		uint8_t pinC12Value = 0;
+		(void) pinC12Value;
 
+		//Se define la variable counter_i, la cual servirá como contador para varios ciclos que se usarán en el programa.
+		uint32_t counter_i;
+
+	    //Se definen los handler para los pines que deseamos configurar
 	    GPIO_Handler_t handlerPinC6  = {0};
 	    GPIO_Handler_t handlerPinC10 = {0};
 		GPIO_Handler_t handlerPinC11 = {0};
@@ -62,7 +71,6 @@ int main(void)
 		GPIO_Handler_t handlerPinA5  = {0};
 
 		//Se hace la configuración de los pines
-
 	    handlerPinC6.pGPIOx = GPIOC;
 	    handlerPinC6.GPIO_PinConfig.GPIO_PinNumber 			= PIN_6;
 	    handlerPinC6.GPIO_PinConfig.GPIO_PinMode 		    = GPIO_MODE_IN;
@@ -112,9 +120,7 @@ int main(void)
 	    handlerPinA5.GPIO_PinConfig.GPIO_PinSpeed 		    = GPIO_OSPEED_MEDIUM;
 	    handlerPinA5.GPIO_PinConfig.GPIO_PinAltFunMode 	    = AF0;
 
-
 		//Cargamos la configuración del PIN específico
-
 		GPIO_Config(&handlerPinC6);
 		GPIO_Config(&handlerPinC10);
 		GPIO_Config(&handlerPinC11);
@@ -122,80 +128,82 @@ int main(void)
 		GPIO_Config(&handlerPinC13);
 		GPIO_Config(&handlerPinA5);
 
-
-		//Se definen las variables donde se guarda el estado del PIN
-		uint8_t pinC11Value = 0;
-		(void) pinC11Value;
-		uint8_t pinC12Value = 0;
-		(void) pinC12Value;
-
 		//Se escriben los pines en 1
-		GPIO_WritePin (&handlerPinC10, SET);
 		GPIO_WritePin (&handlerPinC11, SET);
 		GPIO_WritePin (&handlerPinC12, SET);
 
-        //Se leen los pines
+        //Se leen los pines (A pesar de que son PINES de salida, las especificaciones del IDR dan a entender que también
+		//pueden leerse los PINES en modo OUTPUT)
 		pinC11Value = GPIO_ReadPin (&handlerPinC11);
 		pinC12Value = GPIO_ReadPin (&handlerPinC12);
 
 		//Se vuelven a poner los pines en 0
-		GPIO_WritePin (&handlerPinC10, RESET);
 		GPIO_WritePin (&handlerPinC11, RESET);
 		GPIO_WritePin (&handlerPinC12, RESET);
 
+		/* PUNTO 2: Función para cambiar el Estado del PIN:
+		 * void GPIOxTooglePin(GPIO_Handler_t *pPinHandler) {
+	            pPinHandler->pGPIOx->ODR ^= (0b1 << pPinHandler->GPIO_PinConfig.GPIO_PinNumber);}
 
-		/* PUNTO 2:	 Cree una nueva función llamada GPIOxTooglePin, la cual reciba como parámetro solamente un elemento
-		 *
-		 *del tipo GPIO_Handler_t y su función sea cambiar el estado de un PinX (seleccionado en el handler y debidamente
-		 *del  configurado). Cambiar el estado significa: sí está encendido que pase a apagado, si está apagado que pase a
-		 *del  encendido. Hint: La operación XOR puede ser útil.*/
+	    Como se puede ver, se le aplica una máscara de 1 en la posición del PIN en el registro ODR,
+	    y esta máscara se aplica con el operador XOR, así, si el valor del PIN es 1, entonces lo cambiará
+	    a 0 y si es 0 lo cambiará a 1. Esta función se escribió en el GPIOxDriver.c y se definió en el GPIOxDriver.h,
+	    el código a continuación es una forma de probar su funcionamiento. Primero se escribe en 1 el PINA5, y posteriormente
+	    se le pone un delay para poder ver con el ojo el cambio en el PIN, después se cambia el estado del PIN con la función
+	    GPIOxTooglePin y se le aplica el mismo delay para poder ver el cambio en el estado del PIN, este procedimiento se realiza
+	    unas cuantas veces. Así, cuando se cargue el programa al microcontrolador lo que se debe observar es que el USER_LED de la board
+	    titilará varias veces hasta quedarse nuevamente encendido.*/
 
-		GPIO_WritePin (&handlerPinA5, SET);//Se escribe el PINA5 se escribe en 1 (el LED se prende)
-		uint32_t i;
-		for (i = 0; i <= 600000; i++);
-		GPIOxTooglePin (&handlerPinA5);		//Al aplicar la función una vez debe pasar a apagado
-		for (i = 0; i <= 600000; i++);
-		GPIOxTooglePin (&handlerPinA5);		//Al aplicar la función una segunda vez debe prenderse otra vez
-		for (i = 0; i <= 600000; i++);
+		GPIO_WritePin (&handlerPinA5, SET);		//Se escribe el PINA5 se escribe en 1 (el LED se prende)
+		for (counter_i = 0; counter_i <= 600000; counter_i++)			//Este for funciona como Delay
+		{NOP ();}
+		GPIOxTooglePin (&handlerPinA5);			//Al aplicar la función una vez debe pasar a apagado
+		for (counter_i = 0; counter_i <= 600000; counter_i++)
+		{NOP ();}
+		GPIOxTooglePin (&handlerPinA5);         //Al aplicar la función una segunda vez debe prenderse otra vez
+		for (counter_i = 0; counter_i <= 600000; counter_i++)
+		{NOP ();}
 		GPIOxTooglePin (&handlerPinA5);
-		for (i = 0; i <= 600000; i++);
+		for (counter_i = 0; counter_i <= 600000; counter_i++)
+		{NOP ();}
 		GPIOxTooglePin (&handlerPinA5);
-		for (i = 0; i <= 600000; i++);
+		for (counter_i = 0; counter_i <= 600000; counter_i++)
+		{NOP ();}
 
-		/*Como se puede observar, se aplica la función unas cuantas veces y después de aplicarla cada vez se pone un ciclo for,
-		 * este ciclo es un delay para poder alcanzar a ver cada cambio en el estado del PIN, en la práctica este código al
-		 * cargarlo en el micro debe verse como un blinky de unas cuantas repeticiones.
-		 */
-
-    /* Loop forever */ //Preguntar lo de in y out
+    /* Loop forever */
 	while (1) {
 
-		/* PUNTO 3:	 Utilice el “USER_BUTTON” (azul) con la nueva función GPIOxToogle, de forma que el USER_LED (Led verde)
-		 *  cambie de estado cada vez que pulsa USER_BUTTON..*/
+		/* PUNTO 3: Cambiar el USER LED cada que se pulsa el USER BUTTON. A continuación se puede ver el código para lograr este objetivo.
+		 * Como se puede ver se lee el estado del PINC13, el cual corresponde al USER BUTTON, si el estado está en 0 (el botón está apretado),
+		 * entonces se da la orden de que se cambie el estado del PINA5, después de esto se pone un delay para darle tiempo al dedo de retirarse del
+		 * botón y poder ver el cambio en el estado del PIN.
+		 * Este código se escribe dentro del ciclo while, ya que se quiere que el sistema esté constantemente revisando cuál es el estado del PIN para
+		 * poder actuar.*/
 
 		if (GPIO_ReadPin (&handlerPinC13)==0) {
 			GPIOxTooglePin (&handlerPinA5);
-			for (i = 0; i <= 600000; i++);
-
+			for (counter_i = 0; counter_i <= 600000; counter_i++)
+			{NOP ();}
 		}
 
-		/*Agregue un botón externo al PIN_C6, configurado en modo Pull_down. La acción de este botón debe hacer que al pulsar
-		 * este botón, se enciendan tres Leds (PC10, PC11 y PC12) de forma simultánea y luego de 5 segundos se apaguen en
-		 * cascada:
-			Se apaga primero PC12.
-			Dos segundos después se apaga PC11.
-			Un segundo después se apaga PC10.
-		 *
-		 */
+		/* PUNTO 4: Se agrega un botón externo en el PINC6 y se configura en modo Pull Down, se lee el estado de este PIN. Si el estado del PIN es 1
+		 * (apretado), se le da la orden al programa de que encienda los LED de PC10, PC11 y PC12, luego se pone un delay en tiempo con un ciclo for,
+		 * se apaga el primer LED, se pone otro delay se apaga el segundo LED, se pone otro delay se apaga el tercer LED.
+		 * Este código se escribe dentro del ciclo while, ya que se quiere que el sistema esté constantemente revisando cuál es el estado del PIN para
+		 * poder actuar.*/
+
 		if (GPIO_ReadPin (&handlerPinC6)==1) {
-			GPIO_WritePin (&handlerPinC10,SET);
+			GPIOxTooglePin (&handlerPinC10);
 			GPIOxTooglePin (&handlerPinC11);
 			GPIOxTooglePin (&handlerPinC12);
-			for (i = 0; i <= 600000; i++);
+			for (counter_i = 0; counter_i <= 600000; counter_i++)
+			{NOP ();}
 			GPIOxTooglePin (&handlerPinC12);
-			for (i = 0; i <= 600000; i++);
+			for (counter_i = 0; counter_i <= 600000; counter_i++)
+			{NOP ();}
 			GPIOxTooglePin (&handlerPinC11);
-			for (i = 0; i <= 600000; i++);
+			for (counter_i = 0; counter_i <= 600000; counter_i++)
+			{NOP ();}
 			GPIOxTooglePin (&handlerPinC10);
 		}
 	}
