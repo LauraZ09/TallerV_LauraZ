@@ -188,7 +188,8 @@ int main(void)
 
 		/* PUNTO 4: Se agrega un botón externo en el PINC6 y se configura en modo Pull Down, se lee el estado de este PIN. Si el estado del PIN es 1
 		 * (apretado), se le da la orden al programa de que encienda los LED de PC10, PC11 y PC12, luego se pone un delay en tiempo con un ciclo for,
-		 * se apaga el primer LED, se pone otro delay se apaga el segundo LED, se pone otro delay se apaga el tercer LED.
+		 * se apaga el primer LED, se pone otro delay se apaga el segundo LED, se pone otro delay se apaga el tercer LED. Las repeticiones de los ciclos
+		 * for se calcularon aproximadamente para cumplir con los tiempos estipulados.
 		 * Este código se escribe dentro del ciclo while, ya que se quiere que el sistema esté constantemente revisando cuál es el estado del PIN para
 		 * poder actuar.*/
 
@@ -196,13 +197,13 @@ int main(void)
 			GPIOxTooglePin (&handlerPinC10);
 			GPIOxTooglePin (&handlerPinC11);
 			GPIOxTooglePin (&handlerPinC12);
-			for (counter_i = 0; counter_i <= 600000; counter_i++)
+			for (counter_i = 0; counter_i <= 5800000; counter_i++)
 			{NOP ();}
 			GPIOxTooglePin (&handlerPinC12);
-			for (counter_i = 0; counter_i <= 600000; counter_i++)
+			for (counter_i = 0; counter_i <= 2320000; counter_i++)
 			{NOP ();}
 			GPIOxTooglePin (&handlerPinC11);
-			for (counter_i = 0; counter_i <= 600000; counter_i++)
+			for (counter_i = 0; counter_i <= 1160000; counter_i++)
 			{NOP ();}
 			GPIOxTooglePin (&handlerPinC10);
 		}
