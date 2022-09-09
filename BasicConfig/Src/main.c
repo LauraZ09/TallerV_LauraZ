@@ -18,38 +18,54 @@
  */
 
 #include <stdint.h>
+#include "GPIOxDriver.h"
+#include "BasicTimer.h"
 
 /*Función Principal del programa*/
 
-uint16_t data = 0;
-uint16_t *ptrEjemplo;
-uint32_t valorPuntero = 0;
+BasicTimer_Handler_t handlerTimer2 ={0};
+GPIO_Handler_t handlerBlinky = {0};
+uint8_t blinkState = 0;
+
 
 int main(void)
 {
-	//Inicializando el valor
-	data = 57;
 
-	//Cambiando el valor de data en +32
-	data += 32;
+	handlerBlinky.pGPIOx								=GPIOA;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber			=PIN_5;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinMode			=GPIO_MODE_OUT;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinOPType			=GPIO_OSPEED_MEDIUM;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinSpeed			=GPIO_OSPEED_FAST;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinPuPdControl	=GPIO_PUPDR_NOTHING;
 
-	//Cargamos la posición de la memoria de data
-	ptrEjemplo = &data;
+	GPIO_Config(&handlerBlinky);
+	GPIO_WritePin(&handlerBlinky, SET);
 
-	//Para ver la posición de memoria
-	valorPuntero = (uint32_t) ptrEjemplo;
+	handlerTimer2.ptrTIMx					= TIM2;
+	handlerTimer2.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
+	handlerTimer2.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100us;
+	handlerTimer2.TIMx_Config.TIMx_period 	= 2500; //periodo de 250ms
 
-	//Escribir el valor en esa posición de memoria
-	*ptrEjemplo+=2;
-	//Moverse de posición de memoria
-	ptrEjemplo++;
-	//Escribo en la nueva posición
-	*ptrEjemplo+=0xAC;
+	BasicTimer_Config(&handlerTimer2);
 
-    /* Loop forever */
-	while (1) {
+	while(1){
 
 	}
-
-	return 0;
+ return 0;
 }
+
+/*Callback de la interrupción del timer2*/
+
+void BasicTimer2_Callback(void) {
+	blinkState = !blinkState;
+
+	if (blinkState){
+		GPIO_WritePin(&handlerBlinky, SET);
+	}else{
+		GPIO_WritePin(&handlerBlinky, RESET);
+	}
+}
+
+
+
+
