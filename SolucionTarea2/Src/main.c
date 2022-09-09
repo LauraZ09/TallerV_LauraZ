@@ -194,17 +194,21 @@ int main(void)
 		 * poder actuar.*/
 
 		if (GPIO_ReadPin (&handlerPinC6)==1) {
+			//Se encienden los LEDs
 			GPIOxTooglePin (&handlerPinC10);
 			GPIOxTooglePin (&handlerPinC11);
 			GPIOxTooglePin (&handlerPinC12);
-			for (counter_i = 0; counter_i <= 5800000; counter_i++)
+			for (counter_i = 0; counter_i <= 5800000; counter_i++)  //Delay
 			{NOP ();}
+			//Se apaga el primero
 			GPIOxTooglePin (&handlerPinC12);
-			for (counter_i = 0; counter_i <= 2320000; counter_i++)
+			for (counter_i = 0; counter_i <= 2320000; counter_i++)	//Delay
 			{NOP ();}
+			//Se apaga el segundo
 			GPIOxTooglePin (&handlerPinC11);
-			for (counter_i = 0; counter_i <= 1160000; counter_i++)
+			for (counter_i = 0; counter_i <= 1160000; counter_i++)	//Delay
 			{NOP ();}
+			//Se apaga el tercero
 			GPIOxTooglePin (&handlerPinC10);
 		}
 	}
