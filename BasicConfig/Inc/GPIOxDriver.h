@@ -12,7 +12,7 @@
 #define INC_GPIOXDRIVER_H_
 
 // Incluyendo este archivo estamos incluyendo también el correspondiente al GPIOx
-#include "stm32f411xx.h"
+#include "stm32f4xx.h"
 
 typedef struct
 {
@@ -32,7 +32,7 @@ typedef struct
  */
 typedef struct
 {
-	GPIOx_RegDef_t 		*pGPIOx;		/*! Dirección del puerto al que el PIN corresponde*/
+	GPIO_TypeDef 		*pGPIOx;		/*! Dirección del puerto al que el PIN corresponde*/
 	GPIO_PinConfig_t 	GPIO_PinConfig; /* Configuración del PIN*/
 
 }GPIO_Handler_t;
