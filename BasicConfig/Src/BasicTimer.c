@@ -90,6 +90,9 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		 * Este es el valor con el que el counter comienza */
 		ptrBTimerHandler->ptrTIMx->CNT = ptrBTimerHandler->TIMx_Config.TIMx_period - 1;
 	}
+	else{
+		__NOP();
+	}
 
 	/* 4. Activamos el Timer (el CNT debe comenzar a contar*/
 	ptrBTimerHandler->ptrTIMx->CR1 |= TIM_CR1_CEN;
