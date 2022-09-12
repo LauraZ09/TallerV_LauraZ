@@ -23,7 +23,7 @@
 
 /*Función Principal del programa*/
 
-BasicTimer_Handler_t handlerTimer2 ={0};
+BasicTimer_Handler_t handlerTimer5 ={0};
 GPIO_Handler_t handlerBlinky = {0};
 uint8_t blinkState = 0;
 
@@ -34,19 +34,19 @@ int main(void)
 	handlerBlinky.pGPIOx								=GPIOA;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber			=PIN_5;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinMode			=GPIO_MODE_OUT;
-	handlerBlinky.GPIO_PinConfig.GPIO_PinOPType			=GPIO_OSPEED_MEDIUM;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinOPType			=GPIO_OTYPE_PUSHPULL;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinSpeed			=GPIO_OSPEED_FAST;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinPuPdControl	=GPIO_PUPDR_NOTHING;
 
 	GPIO_Config(&handlerBlinky);
 	GPIO_WritePin(&handlerBlinky, SET);
 
-	handlerTimer2.ptrTIMx					= TIM2;
-	handlerTimer2.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
-	handlerTimer2.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100us;
-	handlerTimer2.TIMx_Config.TIMx_period 	= 2500; //periodo de 250ms
+	handlerTimer5.ptrTIMx					= TIM5;
+	handlerTimer5.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
+	handlerTimer5.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100us;
+	handlerTimer5.TIMx_Config.TIMx_period 	= 2500; //periodo de 250ms
 
-	BasicTimer_Config(&handlerTimer2);
+	BasicTimer_Config(&handlerTimer5);
 
 	while(1){
 
@@ -56,14 +56,8 @@ int main(void)
 
 /*Callback de la interrupción del timer2*/
 
-void BasicTimer2_Callback(void) {
-	blinkState = !blinkState;
-
-	if (blinkState){
-		GPIO_WritePin(&handlerBlinky, SET);
-	}else{
-		GPIO_WritePin(&handlerBlinky, RESET);
-	}
+void BasicTimer5_Callback(void) {
+	 GPIOxTooglePin(&handlerBlinky);
 }
 
 
