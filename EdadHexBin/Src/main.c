@@ -145,6 +145,8 @@ int main(void) //Se crea la función main.
 	* ejercicio 2, teniendo en cuenta los cálculos anteriormente descritos:*/
 
 	days_since_born = (age*days_per_year) + (31-9) + 181 + 17;
+	// Laura, acá te sobra un dia, no deberia ser 17 sino 16 porque del 17 solo han pasado 12 horas...
+	// En total debian ser 219 días + 12h y no 220 dias +12h porque el 17 aun no ha terminado....
 
 	/*A continuación, se le asigna un valor distinto de 0 a las variables creadas para el
 	* ejercicio 3, teniendo en cuenta los cálculos anteriormente descritos:*/
@@ -199,6 +201,9 @@ int main(void) //Se crea la función main.
 
 	bin_days_since_born = 0b10000000111010;
 	bin_hours_since_born = 0b110000010101110011;
+	// Esto no lo deberias hacer porque estas sobreescribiendo las variables. Los valores deberian venir de un calculo
+	// Estos valores deberian estar mostrados en un comentario.
+	// Además, tienes un error de 1 dia, o sea 24 horas, o sea un monton de segundos de mas.
 
 	/*Ahora, para expresar el número de segundos en Hexadecimal:
 	 * Básicamente el procedimiento es el mismo explicado anteriormente, ya que cuando se pasa
@@ -210,6 +215,7 @@ int main(void) //Se crea la función main.
 	 * Realizando este procedimiento, se obtiene el número: hex_seconds_since_born = 0x2A7CA130*/
 
 	hex_seconds_since_born = 0x2A7CA130;
+	// De nuevo, la nota de arriba.
 
 	/*A cerca del tipo de variable:
 	 *
@@ -256,6 +262,7 @@ int main(void) //Se crea la función main.
 
 	/*En esta ocasión, se puede observar que al aplicar la operación 4 veces se obtiene el número original multiplicado
 	 * por el valor 2^4.*/
+	// Excelente!
 
 
 	/*Ejercicio 7: Operación Shift derecha.
@@ -292,6 +299,8 @@ int main(void) //Se crea la función main.
 	 * está aplicando la máscara binaria 1111 a esa posición hexadecimal) y se pone la máscara con el operador and.*/
 
 	pos1_pos5_seconds_since_born = seconds_since_born & 0x00F000F0;
+	// Y cual es el resultado?
+	// Ademas, tu valor es incorrecto, en el caso correcto el número es 0cB y todo cambia...
 
 	/*Ejercicio 10: Se le aplica la máscara 0x040 a la variable número de segundos.
 	 *
@@ -301,6 +310,8 @@ int main(void) //Se crea la función main.
 
 	hex_seconds_since_born = seconds_since_born & 0x040;
 	hex_seconds_since_born = seconds_since_born & 0xFFFF0FFF;
+	// De nuevo, cual es el resultado? solo lo dejas indicado...
+	// Además, segun m
 
 	/*Ejercicio 11: Se utilizará la variable seconds_per_hour.
 	 *
