@@ -62,6 +62,8 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	 */
 	ptrBTimerHandler->ptrTIMx->PSC = ptrBTimerHandler->TIMx_Config.TIMx_speed;
 
+	/*SE DEBE CONFIGURAR EL CENTER ALIGNED MODE SELECTION, 00 ES EDGE ALIGNED
+
 	/* 3. Configuramos la dirección del counter (up/down)*/
 	if(ptrBTimerHandler->TIMx_Config.TIMx_mode == BTIMER_MODE_UP){
 
@@ -80,7 +82,7 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 		/* 3a. Estamos en DOWN_Mode, el limite se carga en ARR (0) y se comienza en un valor alto
 		 * Trabaja contando en direccion descendente*/
-		ptrBTimerHandler->ptrTIMx->CR1 |= TIM_CR1_DIR;
+		ptrBTimerHandler->ptrTIMx->CR1 |= ~TIM_CR1_DIR;
 
 		/* 3b. Configuramos el Auto-reload. Este es el "limite" hasta donde el CNT va a contar
 		 * En modo descendente, con numero positivos, cual es el minimo valor al que ARR puede llegar*/
@@ -186,4 +188,3 @@ void TIM5_IRQHandler(void){
 	/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
 	BasicTimer5_Callback();
 }
-

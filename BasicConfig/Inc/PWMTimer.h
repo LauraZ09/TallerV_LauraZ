@@ -1,22 +1,23 @@
 /*
- * BasicTimer.h
+ * PWMTimer.h
  *
- *  Created on: Apr 18, 2022
- *      Author: namontoy
+ *  Created on: 12/09/2022
+ *      Author: maria
  */
 
-#ifndef INC_BASICTIMER_H_
-#define INC_BASICTIMER_H_
+#ifndef PWMTIMER_H_
+#define PWMTIMER_H_
 
 #include "stm32f4xx.h"
 
 #define BTIMER_MODE_UP		0
 #define BTIMER_MODE_DOWN	1
 
-#define BTIMER_SPEED_1us	16
 #define BTIMER_SPEED_10us	160
 #define BTIMER_SPEED_100us	1600
 #define BTIMER_SPEED_1ms	16000
+
+#define
 
 
 
@@ -42,4 +43,4 @@ void BasicTimer3_Callback(void);
 void BasicTimer4_Callback(void);
 void BasicTimer5_Callback(void);
 
-#endif /* INC_BASICTIMER_H_ */
+#endif /* PWMTIMER_H_ */
