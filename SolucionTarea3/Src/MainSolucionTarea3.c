@@ -24,11 +24,13 @@ BasicTimer_Handler_t handlerBlinkyTimer = {0}; //Handler para el TIMER2, con est
 USART_Handler_t handlerUsart6           = {0}; //Handler para el USART
 
 //Definición de otras variables
-char dataToSend1[] = "Princess Consuela BananaHammock";
+uint8_t positionDataToSend = 0;
+uint8_t userButtonState    = 0;
+char dataToSend1[]         = "Princess Consuela BananaHammock";
 
 //Definición de funciones
 void initSystem(void);
-
+void movePositionDataToSend(void);
 
 int main(void) {
 
@@ -55,7 +57,7 @@ void initSystem(void) {
 		GPIO_Config(&handlerBlinkyPin);
 		GPIO_WritePin(&handlerBlinkyPin, RESET);
 
-	//Se configura el TxPin (PIN por el cual se hace la transmisión).
+	//Se configura el TxPin (PIN por el cual se hace la transmisión)
 		//Este PIN se configura en la función alternativa AF08 que para el PIN C6 corresponde al USART6
 		handlerTxPin.pGPIOx 							= GPIOC;
 		handlerTxPin.GPIO_PinConfig.GPIO_PinNumber 		= PIN_6;
@@ -67,6 +69,17 @@ void initSystem(void) {
 
 		//Se carga la configuración
 		GPIO_Config(&handlerTxPin);
+
+	//Se configura el UserButton
+		handlerUserButton.pGPIOx 							 = GPIOC;
+		handlerUserButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_13;
+		handlerUserButton.GPIO_PinConfig.GPIO_PinMode   	 = GPIO_MODE_IN;
+		handlerUserButton.GPIO_PinConfig.GPIO_PinOPType      = GPIO_OTYPE_PUSHPULL;
+		handlerUserButton.GPIO_PinConfig.GPIO_PinSpeed 		 = GPIO_OSPEED_FAST;
+		handlerUserButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
+
+		//Se carga la configuración
+		GPIO_Config(&handlerUserButton);
 
 	//Se configura el BlinkyTimer
 		handlerBlinkyTimer.ptrTIMx 					= TIM2;
@@ -109,12 +122,33 @@ void initSystem(void) {
  * callback, el Char se escribirá cada 250ms que es el período de update.
  */
 
+/*EJERCICIO 3:Hacer que el carácter cambie si el botón USER_BUTTON es presionado. Para este ejercicio,
+ * además de que se utilizará la función callback, se utilizará una función adicional para cambiar el
+ * carácter que se envía.
+ */
+
 void BasicTimer2_Callback(void) {
 	//En la siguiente línea se le indica al programa que con cada update se cambie el estado del BlinkyPin
 	GPIOxTooglePin(&handlerBlinkyPin);
 	//A continuación se le indica al programa que con cada update escriba dataToSend1 en el DR del USART6
-	writeChar(&handlerUsart6, dataToSend1[0]);
+	writeChar(&handlerUsart6, dataToSend1[positionDataToSend]);
+	movePositionDataToSend();
 }
+
+void movePositionDataToSend(void) {
+	userButtonState = GPIO_ReadPin(&handlerUserButton);
+
+	if (userButtonState == 0 && positionDataToSend<30) {
+		positionDataToSend++;
+	}
+	else if (userButtonState == 0 && positionDataToSend>=30) {
+		positionDataToSend = 0;
+	}
+	else {
+		__NOP();
+	}
+}
+
 
 
 
