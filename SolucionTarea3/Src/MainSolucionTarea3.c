@@ -145,10 +145,10 @@ void movePositionDataToSend(void) {
 		positionDataToSend = 0;
 	}
 	else {
-		__NOP();
+		positionDataToSend = 0;
 	}
 }
-
+//HACER LA LISTA DE PREGUNTAS
 
 
 
