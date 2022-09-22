@@ -94,7 +94,7 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		__NOP();
 	}
 
-	/* 4. Activamos el Timer (el CNT debe comenzar a contar*/
+	/* 4. Activamos el Timer (el CNT debe comenzar a contar)*/
 	ptrBTimerHandler->ptrTIMx->CR1 |= TIM_CR1_CEN;
 
 	/* 5. Activamos la interrupción debida al Timerx Utilizado
