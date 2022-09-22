@@ -111,7 +111,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	}
 
 	default: {
-		// En el casopor defecto seleccionamos 1 bit de parada
+		// En el caso por defecto seleccionamos 1 bit de parada
 		ptrUsartHandler->ptrUSARTx->CR2 &= ~USART_CR2_STOP;
 		break;
 	}
@@ -187,7 +187,7 @@ This bit enables the receiver. It is set and cleared by software.
 	{
 
 		/*Bit 13 UE: USART enable
-		When this bit is cleared, the USART prescalers and outputs are stopped and the end of the
+		When this bit is cleared, the USART prescalers and outputs are ped and the end of the
 		current byte transfer in order to reduce power consumption. This bit is set and cleared by
 		software.
 		0: USART prescaler and outputs disabled
