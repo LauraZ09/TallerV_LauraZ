@@ -26,7 +26,7 @@ USART_Handler_t handlerUsart6           = {0}; //Handler para el USART
 //Definición de otras variables
 uint8_t positionDataToSend = 0;
 uint8_t userButtonState    = 0;
-char dataToSend1[]         = "Princess Consuela BananaHammock";
+char dataToSend1[]         = "Princess Consuela BananaHammock.";
 
 //Definición de funciones
 void initSystem(void);
@@ -93,7 +93,7 @@ void initSystem(void) {
 	//Se configura el USART 6
 		handlerUsart6.ptrUSARTx 				  = USART6;                //USART 6
 		handlerUsart6.USART_Config.USART_mode     = USART_MODE_TX;         //Modo de solo transmisión
-		handlerUsart6.USART_Config.USART_baudrate = USART_BAUDRATE_9600;   //9600 bps
+		handlerUsart6.USART_Config.USART_baudrate = USART_BAUDRATE_115200;   //9600 bps
 		handlerUsart6.USART_Config.USART_datasize = USART_DATASIZE_9BIT;   //Size: 9 bits(8 + 1 parity bit)
 		handlerUsart6.USART_Config.USART_parity   = USART_PARITY_EVEN;     //Parity:EVEN
 		handlerUsart6.USART_Config.USART_stopbits = USART_STOPBIT_1;	   //Un stopbit
@@ -138,10 +138,10 @@ void BasicTimer2_Callback(void) {
 void movePositionDataToSend(void) {
 	userButtonState = GPIO_ReadPin(&handlerUserButton);
 
-	if (userButtonState == 0 && positionDataToSend<30) {
+	if (userButtonState == 0 && positionDataToSend<31) {
 		positionDataToSend++;
 	}
-	else if (userButtonState == 0 && positionDataToSend>=30) {
+	else if (userButtonState == 0 && positionDataToSend>=31) {
 		positionDataToSend = 0;
 	}
 	else {
