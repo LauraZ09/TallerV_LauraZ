@@ -10,6 +10,7 @@
  *********************************************************************************************************
  */
 
+//TODO IMPORTANTE PREGUNTAR LO DEL PARITY BIT EN PULSE VIEW
 #include <stdint.h>
 #include "stm32f4xx.h"
 #include "GPIOxDriver.h"
@@ -33,10 +34,10 @@ char dataToSend1[]         = "Princess Consuela BananaHammock.";
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
 void initSystem(void);             //Función para inicializar el sistema
-void movePositionDataToSend(void); //Función que mueve la posición a enviar de arreglo de datos
+void movePositionDataToSend(void); //Función que mueve la posición a enviar del arreglo de datos
 
 
-//DESARROLLO DE LA TAREA:
+//DESARROLLO DE LA TAREA: TODO PREGUNTAR SI LE MOLESTA QUE ALL EL DESARROLLO ESTÉ ACÁ
 
 /*EJERCICIO 1:Blinky de 250ms. Para el desarrollo de este ejercicio, se utiliza la Función Callback del
  * timer. La cabecera de esta función ya se encuentra definida en la librería PeripheralDrivers, así, no
@@ -59,7 +60,7 @@ void movePositionDataToSend(void); //Función que mueve la posición a enviar de
  * el estado del PIN se almacena en la variable userButtonState.
  *
  * 2. La función realizará diferentes acciones dependiendo del valor de las variables userButtonState y
- * positionDataToSend (recordar que en esta variable se almacena ela posición del arreglo de datos que
+ * positionDataToSend (recordar que en esta variable se almacena la posición del arreglo de datos que
  * se quiere enviar por el PIN TX, esta variable inicialmente se inicializa en 0):
  *
  *   - Si el userButton está presionado (userButtonState == 0) y el mensaje completo aún no se ha enviado
@@ -79,6 +80,7 @@ void movePositionDataToSend(void); //Función que mueve la posición a enviar de
 /* EJERCICIO 2:Enviar un carácter cada 250ms. Para el desarrollo de este ejercicio se usa la variable
  * interruptionFlag a modo de bandera, esta variable se inicializa en 0 al inicio de este código y
  * en el callback del timer se cambia este valor a 1, así, en cada update del timer se sube la bandera.
+ *
  * En el ciclo infinito de la función main, se tiene un if en el cual, cuando la bandera es igual a 1
  * se corren las funciones movePositionDataToSend y writeChar, y luego, se restablece la bandera en 0.
  * De este modo, con cada update la bandera cambiará su estado a 1, así, se aplicará el código del main,
@@ -113,10 +115,12 @@ int main(void) {
 
 	while (1) {
 
+		//TODO PREGUNTAR SI ES MEJOR HACER ESTO CON UN SWICTH
 		if(interruptionFlag == 1) { //Cuando se activa la bandera, se empieza a aplicar el código de abajo
 
 			//En la próxima línea se le indica al programa que lea el estado del USER_BUTTON para decidir cómo es
 			//el envío de datos
+			//TODO PREGUNTAR SI ES MALO USAR DOS FUNCIONES SEGUIDAS, ES INEFICIENTE?
 			movePositionDataToSend();
 			//A continuación se le indica al programa que escriba la posición correspondiente al valor de
 			//positionDataToSend del arreglo dataToSend en el DR del USART6
@@ -182,15 +186,17 @@ void initSystem(void) {
 	    //Se configura el USART 6
 		handlerUsart6.ptrUSARTx 				  = USART6;                //USART 6
 		handlerUsart6.USART_Config.USART_mode     = USART_MODE_TX;         //Modo de solo transmisión
-		handlerUsart6.USART_Config.USART_baudrate = USART_BAUDRATE_115200; //115200 bps
-		handlerUsart6.USART_Config.USART_datasize = USART_DATASIZE_9BIT;   //Size: 9 bits(8 + 1 parity bit)
-		handlerUsart6.USART_Config.USART_parity   = USART_PARITY_EVEN;     //Parity:EVEN
-		handlerUsart6.USART_Config.USART_stopbits = USART_STOPBIT_1;	   //Un stopbit
+		handlerUsart6.USART_Config.USART_baudrate = USART_BAUDRATE_9600;   //115200 bps
+		handlerUsart6.USART_Config.USART_datasize = USART_DATASIZE_8BIT;   //Size: 9 bits(8 + 1 parity bit)
+		//TODO ELIMINO ESE DATASIZE? EN EL PARITY YA SE ESTÁ CONFIGURANDO AUTOMÁTICAMENTE
+		handlerUsart6.USART_Config.USART_parity   = USART_PARITY_ODD;     //Parity:EVEN
+		handlerUsart6.USART_Config.USART_stopbits = USART_STOPBIT_0_5;	   //Un stopbit
 
 		//Se carga la configuración del USART
 		USART_Config(&handlerUsart6);
 }
 
+//Función que mueve la posición que senvía del arreglo de datos
 void movePositionDataToSend(void) {
 	userButtonState = GPIO_ReadPin(&handlerUserButton); //Se lee el estado del USER_BUTTON
 
@@ -205,6 +211,7 @@ void movePositionDataToSend(void) {
 	}
 }
 
+//Función Callback del timer
 void BasicTimer2_Callback(void) {
 	//En la siguiente línea se le indica al programa que con cada update se cambie el estado del BlinkyPin
 	GPIOxTooglePin(&handlerBlinkyPin);

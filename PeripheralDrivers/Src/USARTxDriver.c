@@ -75,7 +75,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_M;   //Tamaño de datos:Para 8 bits se pone el bit M en 0
 	}
 
-	// 2.3 Configuramos el tamaño del dato
+	// 2.3 Configuramos el tamaño del dato //TODO ELIMINO ESTO?
 
 	//Para 8 Bits:
 	if(ptrUsartHandler->USART_Config.USART_datasize == USART_DATASIZE_8BIT){
