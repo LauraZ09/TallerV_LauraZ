@@ -47,7 +47,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	ptrUsartHandler->ptrUSARTx->CR1 = 0;
 	ptrUsartHandler->ptrUSARTx->CR2 = 0;
 
-	// 2.2 Configuracion del Parity: PREGUNTA, ACÁ SE DEBE PONER QUE AUTOMÁTICAMENTE SE LLENE EL TAMAÑO DE DATO? sí
+	// 2.2 Configuracion del Parity:
 	// Verificamos si el parity está activado o no
     // Tenga cuidado, el parity hace parte del tamaño de los datos...
 	if(ptrUsartHandler->USART_Config.USART_parity != USART_PARITY_NONE){
@@ -57,14 +57,22 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 			
 			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_PCE; //Enable
 			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_PS;  //Parity Selection: 1 Even.
+			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_M;   //Tamaño de datos: Para 9 bits se pone el bit M del CR1 en 1
 
-		} else{
-			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_PCE; //Enable
-			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_PS; //Parity Selection: 0 Odd.
 		}
 
-	} else{
+		else{
+
+			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_PCE; //Enable
+			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_PS; //Parity Selection: 0 Odd.
+			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_M;   //Tamaño de datos: Para 9 bits se pone el bit M del CR1 en 1
+
+		}
+	}
+
+	else{
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_PCE; //disable
+		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_M;   //Tamaño de datos:Para 8 bits se pone el bit M en 0
 	}
 
 	// 2.3 Configuramos el tamaño del dato
@@ -83,7 +91,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		__NOP();
 	}
 
-	// 2.4 Configuramos los stop bits (SFR USART_CR2) //PREGUNTAR LO DEL OR CUANDO HAY 0 Y 1
+	// 2.4 Configuramos los stop bits (SFR USART_CR2)
 	switch(ptrUsartHandler->USART_Config.USART_stopbits){
 
 	case USART_STOPBIT_1: {
@@ -147,17 +155,15 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	// 2.6 Configuramos el modo: TX only, RX only, RXTX, disable
 	switch(ptrUsartHandler->USART_Config.USART_mode){
 
-	/*Bit 3 TE: Transmitter enable
-This bit enables the transmitter. It is set and cleared by software.
-0: Transmitter is disabled
-1: Transmitter is enabled
-Note: During transmission, a “0” pulse on the TE bit (“0” followed by “1”) sends a preamble
-(idle line) after the current word, except in smartcard mode.
-When TE is set, there is a 1 bit-time delay before the transmission starts.
-Bit 2 RE: Receiver enable
-This bit enables the receiver. It is set and cleared by software.
-0: Receiver is disabled
-1: Receiver is enabled and begins searching for a start bit*/
+	/*Bit 3 TE: Transmitter enable. This bit enables the transmitter. It is set and cleared by software.
+		0: Transmitter is disabled
+		1: Transmitter is enabled
+		When TE is set, there is a 1 bit-time delay before the transmission starts.
+
+		Bit 2 RE: Receiver enable
+		This bit enables the receiver. It is set and cleared by software.
+		0: Receiver is disabled
+		1: Receiver is enabled and begins searching for a start bit*/
 
 	case USART_MODE_TX:
 	{
@@ -192,8 +198,8 @@ This bit enables the receiver. It is set and cleared by software.
 		software.
 		0: USART prescaler and outputs disabled
 		1: USART enabled*/
-		// TODO
-		// Desactivamos ambos canales PREGUNTAR SI ES NECESARIO DESACTIVAR LOS DOS CANALES O ES SUFICIENTE CON LA USART
+
+		// Desactivamos ambos canales
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_UE;  //0: USART prescaler and outputs disabled
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_TE;  //0: Transmitter is disabled
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_RE;  //0: Receiver is disabled
@@ -203,6 +209,7 @@ This bit enables the receiver. It is set and cleared by software.
 	default:
 	{
 		// Actuando por defecto, desactivamos ambos canales EL USART TAMBIÉN?
+		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_UE;  //0: USART prescaler and outputs disabled
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_RE;  //0: Receiver is disabled
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_TE;  //0: Transmitter is disabled
 
@@ -211,7 +218,7 @@ This bit enables the receiver. It is set and cleared by software.
 
 	}
 
-	// 2.7 Activamos el modulo serial. ACÁ ES EDITAR SOLO EL 13 O QUÉ PEDO
+	// 2.7 Activamos el modulo serial.
 	if(ptrUsartHandler->USART_Config.USART_mode != USART_MODE_DISABLE){
 		ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_UE;   //1: USART enabled
 	}
