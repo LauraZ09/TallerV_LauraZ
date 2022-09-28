@@ -47,7 +47,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	ptrUsartHandler->ptrUSARTx->CR1 = 0;
 	ptrUsartHandler->ptrUSARTx->CR2 = 0;
 
-	// 2.2 Configuracion del Parity: PREGUNTA, ACÁ SE DEBE PONER QUE AUTOMÁTICAMENTE SE LLENE EL TAMAÑO DE DATO?
+	// 2.2 Configuracion del Parity: PREGUNTA, ACÁ SE DEBE PONER QUE AUTOMÁTICAMENTE SE LLENE EL TAMAÑO DE DATO? sí
 	// Verificamos si el parity está activado o no
     // Tenga cuidado, el parity hace parte del tamaño de los datos...
 	if(ptrUsartHandler->USART_Config.USART_parity != USART_PARITY_NONE){
@@ -192,6 +192,7 @@ This bit enables the receiver. It is set and cleared by software.
 		software.
 		0: USART prescaler and outputs disabled
 		1: USART enabled*/
+		// TODO
 		// Desactivamos ambos canales PREGUNTAR SI ES NECESARIO DESACTIVAR LOS DOS CANALES O ES SUFICIENTE CON LA USART
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_UE;  //0: USART prescaler and outputs disabled
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_TE;  //0: Transmitter is disabled
