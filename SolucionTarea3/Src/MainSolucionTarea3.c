@@ -10,7 +10,6 @@
  *********************************************************************************************************
  */
 
-//TODO IMPORTANTE PREGUNTAR LO DEL PARITY BIT EN PULSE VIEW
 #include <stdint.h>
 #include "stm32f4xx.h"
 #include "GPIOxDriver.h"
@@ -36,8 +35,7 @@ char dataToSend1[]         = "Princess Consuela BananaHammock.";
 void initSystem(void);             //Función para inicializar el sistema
 void movePositionDataToSend(void); //Función que mueve la posición a enviar del arreglo de datos
 
-
-//DESARROLLO DE LA TAREA: TODO PREGUNTAR SI LE MOLESTA QUE ALL EL DESARROLLO ESTÉ ACÁ
+//DESARROLLO DE LA TAREA: TODO PREGUNTAR SI LE MOLESTA QUE ALL EL DESARROLLO ESTÉ ACÁ al inicio y pedacitos
 
 /*EJERCICIO 1:Blinky de 250ms. Para el desarrollo de este ejercicio, se utiliza la Función Callback del
  * timer. La cabecera de esta función ya se encuentra definida en la librería PeripheralDrivers, así, no
@@ -115,12 +113,10 @@ int main(void) {
 
 	while (1) {
 
-		//TODO PREGUNTAR SI ES MEJOR HACER ESTO CON UN SWICTH
 		if(interruptionFlag == 1) { //Cuando se activa la bandera, se empieza a aplicar el código de abajo
 
 			//En la próxima línea se le indica al programa que lea el estado del USER_BUTTON para decidir cómo es
 			//el envío de datos
-			//TODO PREGUNTAR SI ES MALO USAR DOS FUNCIONES SEGUIDAS, ES INEFICIENTE?
 			movePositionDataToSend();
 			//A continuación se le indica al programa que escriba la posición correspondiente al valor de
 			//positionDataToSend del arreglo dataToSend en el DR del USART6
@@ -186,11 +182,9 @@ void initSystem(void) {
 	    //Se configura el USART 6
 		handlerUsart6.ptrUSARTx 				  = USART6;                //USART 6
 		handlerUsart6.USART_Config.USART_mode     = USART_MODE_TX;         //Modo de solo transmisión
-		handlerUsart6.USART_Config.USART_baudrate = USART_BAUDRATE_9600;   //115200 bps
-		handlerUsart6.USART_Config.USART_datasize = USART_DATASIZE_8BIT;   //Size: 9 bits(8 + 1 parity bit)
-		//TODO ELIMINO ESE DATASIZE? EN EL PARITY YA SE ESTÁ CONFIGURANDO AUTOMÁTICAMENTE
-		handlerUsart6.USART_Config.USART_parity   = USART_PARITY_ODD;     //Parity:EVEN
-		handlerUsart6.USART_Config.USART_stopbits = USART_STOPBIT_0_5;	   //Un stopbit
+		handlerUsart6.USART_Config.USART_baudrate = USART_BAUDRATE_115200; //115200 bps
+		handlerUsart6.USART_Config.USART_parity   = USART_PARITY_EVEN;     //Parity:EVEN
+		handlerUsart6.USART_Config.USART_stopbits = USART_STOPBIT_1;	   //Un stopbit
 
 		//Se carga la configuración del USART
 		USART_Config(&handlerUsart6);

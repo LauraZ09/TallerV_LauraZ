@@ -56,7 +56,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		if(ptrUsartHandler->USART_Config.USART_parity == USART_PARITY_EVEN){
 			
 			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_PCE; //Enable
-			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_PS;  //Parity Selection: 1 Even.
+			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_PS; //Parity Selection: 0 Even.
 			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_M;   //Tamaño de datos: Para 9 bits se pone el bit M del CR1 en 1
 
 		}
@@ -64,7 +64,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		else{
 
 			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_PCE; //Enable
-			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_PS; //Parity Selection: 0 Odd.
+			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_PS;  //Parity Selection: 1 Odd.
 			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_M;   //Tamaño de datos: Para 9 bits se pone el bit M del CR1 en 1
 
 		}
@@ -75,21 +75,21 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_M;   //Tamaño de datos:Para 8 bits se pone el bit M en 0
 	}
 
-	// 2.3 Configuramos el tamaño del dato //TODO ELIMINO ESTO?
+	// 2.3 Configuramos el tamaño del dato: Ya se configuró en el parity
 
 	//Para 8 Bits:
-	if(ptrUsartHandler->USART_Config.USART_datasize == USART_DATASIZE_8BIT){
-		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_M; //Para 8 bits se pone el bit M en 0
-		}
+	//if(ptrUsartHandler->USART_Config.USART_datasize == USART_DATASIZE_8BIT){
+		//ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_M; //Para 8 bits se pone el bit M en 0
+		//}
 
 	//Para 9 Bits (con bit de paridad):
-	else if (ptrUsartHandler->USART_Config.USART_datasize == USART_DATASIZE_9BIT){
-		ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_M; //Para 9 bits se pone el bit M en 1
-		}
+	//else if (ptrUsartHandler->USART_Config.USART_datasize == USART_DATASIZE_9BIT){
+		//ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_M; //Para 9 bits se pone el bit M en 1
+		//}
 
-	else {
-		__NOP();
-	}
+	//else {
+	//	__NOP();
+	//}
 
 	// 2.4 Configuramos los stop bits (SFR USART_CR2)
 	switch(ptrUsartHandler->USART_Config.USART_stopbits){
