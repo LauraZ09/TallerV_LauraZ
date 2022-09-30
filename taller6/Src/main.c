@@ -19,12 +19,16 @@
 
 #include <stdint.h>
 
-#if !defined(__SOFT_FP__) && defined(__ARM_FP)
-  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
-#endif
+void duplicar(uint8_t numero);
+void duplicarReferencia(uint8_t *numero);
 
 int main(void)
 {
-    /* Loop forever */
-	for(;;);
+	//*nombrearreglo = valor de la posición 0
+	//*(nombrearreglo ++
+	while (1 ){
+
+	}
 }
+
+void stringCaseConverter (uint)

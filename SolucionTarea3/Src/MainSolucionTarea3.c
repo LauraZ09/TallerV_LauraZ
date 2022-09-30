@@ -35,7 +35,7 @@ char dataToSend1[]         = "Princess Consuela BananaHammock.";
 void initSystem(void);             //Función para inicializar el sistema
 void movePositionDataToSend(void); //Función que mueve la posición a enviar del arreglo de datos
 
-//DESARROLLO DE LA TAREA: TODO PREGUNTAR SI LE MOLESTA QUE ALL EL DESARROLLO ESTÉ ACÁ al inicio y pedacitos
+//DESARROLLO DE LA TAREA:
 
 /*EJERCICIO 1:Blinky de 250ms. Para el desarrollo de este ejercicio, se utiliza la Función Callback del
  * timer. La cabecera de esta función ya se encuentra definida en la librería PeripheralDrivers, así, no
@@ -63,8 +63,8 @@ void movePositionDataToSend(void); //Función que mueve la posición a enviar de
  *
  *   - Si el userButton está presionado (userButtonState == 0) y el mensaje completo aún no se ha enviado
  *     (es decir, la variable positionDataToSend aún no ha llegado a su valor máximo que es 31 ya que son
- *     32 caracteres), entonces la función le sumará 1 a la variable positionDataToSend, así, la función
- *     writeChar escribirá el caracter correspondiente a la siguiente posición en el DR.
+ *     32 carácteres), entonces la función le sumará 1 a la variable positionDataToSend,
+ *     así, la función writeChar escribirá el caracter correspondiente a la siguiente posición en el DR.
  *
  *   - Si el userButton está presionado y ya se envió el mensaje completo (positionDataToSend>=31), se
  *     reinicia la variable positionDataToSend, es decir, se escribe en 0, así se vuelve a empezar a
@@ -183,14 +183,14 @@ void initSystem(void) {
 		handlerUsart6.ptrUSARTx 				  = USART6;                //USART 6
 		handlerUsart6.USART_Config.USART_mode     = USART_MODE_TX;         //Modo de solo transmisión
 		handlerUsart6.USART_Config.USART_baudrate = USART_BAUDRATE_115200; //115200 bps
-		handlerUsart6.USART_Config.USART_parity   = USART_PARITY_EVEN;     //Parity:EVEN
+		handlerUsart6.USART_Config.USART_parity   = USART_PARITY_EVEN;     //Parity:EVEN, acá viene configurado el tamaño de dato
 		handlerUsart6.USART_Config.USART_stopbits = USART_STOPBIT_1;	   //Un stopbit
 
 		//Se carga la configuración del USART
 		USART_Config(&handlerUsart6);
 }
 
-//Función que mueve la posición que senvía del arreglo de datos
+//Función que mueve la posición que se envía del arreglo de datos
 void movePositionDataToSend(void) {
 	userButtonState = GPIO_ReadPin(&handlerUserButton); //Se lee el estado del USER_BUTTON
 
