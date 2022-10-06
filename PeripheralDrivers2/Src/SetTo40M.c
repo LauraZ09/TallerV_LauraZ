@@ -6,6 +6,8 @@
  *				el micro trabaja
  */
 #include "stm32f4xx.h"
+#include "RccConfig.h"
+//#include "system_stm32f4xx.h"
 
 void setTo40M(void)
 {
@@ -125,8 +127,8 @@ void setTo40M(void)
 	//Se hace un delay mientras el PLL está listo para usarse como system clock
 	while (!(RCC->CFGR & RCC_CFGR_SWS_1));
 
-	SystemCoreClockUpdate();
-	(void) SystemCoreClock;
+	//SystemCoreClockUpdate(); TODO
+	//(void) SystemCoreClock;
 
 }
 

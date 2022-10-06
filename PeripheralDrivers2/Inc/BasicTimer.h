@@ -13,12 +13,13 @@
 #define BTIMER_MODE_UP		0
 #define BTIMER_MODE_DOWN	1
 
-#define BTIMER_SPEED_1us	16
-#define BTIMER_SPEED_10us	160
-#define BTIMER_SPEED_100us	1600
-#define BTIMER_SPEED_1ms	16000
-
-
+#define BTIMER_SPEED_0_025us	1
+#define BTIMER_SPEED_0_05us		2
+#define BTIMER_SPEED_0_1us		4
+#define BTIMER_SPEED_1us		40
+#define BTIMER_SPEED_10us		400
+#define BTIMER_SPEED_100us		4000
+#define BTIMER_SPEED_1ms		40000
 
 /* Estructura que contiene la configuración mínima necesaria para el manejo del Timer.*/
 typedef struct
