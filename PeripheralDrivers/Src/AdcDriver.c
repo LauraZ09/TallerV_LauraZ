@@ -88,12 +88,12 @@ void adc_Config(ADC_Config_t *adcConfig){
 	ADC1->CR2 &= ~ADC_CR2_CONT;
 
 	/* 7. Acá se debería configurar el sampling...*/
-	//15 Ciclos 0b001 TODO
+	//15 Ciclos 0b001 TODO TODO  cambiar a 100: 84 cycles
 	if(adcConfig->channel <= ADC_CHANNEL_9){
 		ADC1->SMPR2 |= 0b1 << (3*(adcConfig->channel));
 	}
 	else{
-		ADC1->SMPR1 |= 0b1 << (3*(adcConfig->channel));
+		ADC1->SMPR1 |= 0b1 << (3*(adcConfig->channel-10));
 	}
 
 	/* 8. Configuramos la secuencia y cuantos elementos hay en la secuencia */

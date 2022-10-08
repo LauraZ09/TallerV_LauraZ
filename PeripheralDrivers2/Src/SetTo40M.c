@@ -105,9 +105,32 @@ void setTo40M(void)
 	 */
 	RCC->CFGR &= ~RCC_CFGR_HPRE;
 
-	//TODO SE SUPONE QUE YA DEBERÍA FUNCIONAR
+	/*5. Se activan los pines para ver el reloj: MCO2[1:0]: Microcontroller clock output 2
+	Set and cleared by software. Clock source selection may generate glitches on MCO2. It is
+	highly recommended to configure these bits only after reset before enabling the external
+	oscillators and the PLLs.
+	00: System clock (SYSCLK) selected
+	01: PLLI2S clock selected
+	10: HSE oscillator clock selected
+	11: PLL clock selected*/
+	RCC->CFGR &= ~RCC_CFGR_MCO2; //Primero se limpian los bits
+	RCC->CFGR |=  RCC_CFGR_MCO2; //Se ponen en 11 : PLL
 
-	/*5.Se activa el PLL: RCC_CR
+	/*Ahora el prescaler:
+	 * Set and cleared by software to configure the prescaler of the MCO2. Modification of this
+	 prescaler may generate glitches on MCO2. It is highly recommended to change this
+	 prescaler only after reset before enabling the external oscillators and the PLLs.
+	 0xx: no division
+	 100: division by 2
+	 101: division by 3
+	 110: division by 4
+	 111: division by 5
+	 */
+
+	RCC->CFGR &= ~RCC_CFGR_MCO2PRE;   //Primero se limpian los bits
+	//RCC->CFGR |=  RCC_CFGR_MCO2PRE_2; //Se ponen en 100 : División x2
+
+	/*6.Se activa el PLL: RCC_CR
 	 * 0: PLL OFF
 	 * 1: PLL ON
 	 */
@@ -115,7 +138,7 @@ void setTo40M(void)
 	//Se hace un delay mientras el PLL está listo para usarse:
 	while (!(RCC->CR & RCC_CR_PLLRDY));
 
-	/*6. Se selecciona el PLL como System Clock: RCC_CFGR
+	/*7. Se selecciona el PLL como System Clock: RCC_CFGR
 	 *00: HSI oscillator selected as system clock
 	 *01: HSE oscillator selected as system clock
 	 *10: PLL selected as system clock
