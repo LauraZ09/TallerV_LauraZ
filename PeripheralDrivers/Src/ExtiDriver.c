@@ -8,7 +8,6 @@
 #include "ExtiDriver.h"
 #include "GPIOxDriver.h"
 
-// Haciendo prueba con PC15
 void extInt_Config(EXTI_Config_t *extiConfig){
 
 	/* 1.0 Se carga la configuración, que debe ser el PINx como entrada "simple" */
@@ -1179,6 +1178,10 @@ void EXTI9_5_IRQHandler(void){
 		// llamamos al callback
 		callback_extInt9();
 	}
+
+	else {
+		__NOP();
+	}
 }
 
 /* ISR de la interrupción canales 15_10
@@ -1187,19 +1190,63 @@ void EXTI9_5_IRQHandler(void){
  * (pending register -> EXTI_PR)
  */
 void EXTI15_10_IRQHandler(void){
-	// Evaluamos si la interrupción que se lanzo corresponde al PIN_Y_15
+	// Evaluamos si la interrupción que se lanzo corresponde al PIN_10
 	if(EXTI->PR & EXTI_PR_PR10){
 		// Bajamos la bandera correspondiente
 		EXTI->PR |= EXTI_PR_PR10;
 
 		// llamamos al callback
 		callback_extInt10();
+	}
 
+	// Evaluamos si la interrupción que se lanzo corresponde al PIN_11
+	else if(EXTI->PR & EXTI_PR_PR11){
+		// Bajamos la bandera correspondiente
+		EXTI->PR |= EXTI_PR_PR11;
+
+		// llamamos al callback
+		callback_extInt11();
+	}
+
+	// Evaluamos si la interrupción que se lanzo corresponde al PIN_12
+	else if(EXTI->PR & EXTI_PR_PR12){
+		// Bajamos la bandera correspondiente
+		EXTI->PR |= EXTI_PR_PR12;
+
+		// llamamos al callback
+		callback_extInt12();
+	}
+
+	// Evaluamos si la interrupción que se lanzo corresponde al PIN_13
+	else if(EXTI->PR & EXTI_PR_PR13){
+		// Bajamos la bandera correspondiente
+		EXTI->PR |= EXTI_PR_PR13;
+
+		// llamamos al callback
+		callback_extInt13();
+	}
+
+	// Evaluamos si la interrupción que se lanzo corresponde al PIN_14
+	else if(EXTI->PR & EXTI_PR_PR14){
+		// Bajamos la bandera correspondiente
+		EXTI->PR |= EXTI_PR_PR14;
+
+		// llamamos al callback
+		callback_extInt14();
 	}
 	
-    /* .....
-     * .....
-     * ..... 
-     * y así hasta el ultimo caso */
+	// Evaluamos si la interrupción que se lanzo corresponde al PIN_15
+	else if(EXTI->PR & EXTI_PR_PR15){
+		// Bajamos la bandera correspondiente
+		EXTI->PR |= EXTI_PR_PR15;
+
+		// llamamos al callback
+		callback_extInt15();
+	}
 	
+	else {
+		__NOP();
+	}
+
 }
+
