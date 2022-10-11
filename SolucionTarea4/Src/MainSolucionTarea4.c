@@ -41,15 +41,15 @@ EXTI_Config_t ButtonExtiConfig           = {0}; //Exti Configuration para el But
 
 
 //Definición de otras variables necesarias para el desarrollo de los ejercicios:
-uint8_t PinClockFlag = 0; //Bandera del PinClock
-uint8_t ButtonFlag   = 0; //Bandera del Button
-uint8_t CounterTens	 = 0; //En esta variable se almacenan las decenas del contador
-uint8_t CounterUnits = 0; //En esta variable se almacenan las unidades del contador
-uint8_t Counter_i 	 = 0; //En esta variable se almacena el contador que controla el número del display
-						  //y cuenta las vueltas del encoder
-uint8_t PinDataState;     //En esta variable se almacena la lectura del estado del PinData
+uint8_t PinClockFlag = 0;  //Bandera del PinClock
+uint8_t ButtonFlag   = 0;  //Bandera del Button
+uint8_t CounterTens	 = 0;  //En esta variable se almacenan las decenas del contador
+uint8_t CounterUnits = 0;  //En esta variable se almacenan las unidades del contador
+uint8_t Counter_i 	 = 0;  //En esta variable se almacena el contador que controla el número del display
+						   //y cuenta las vueltas del encoder
+uint8_t PinDataState;      //En esta variable se almacena la lectura del estado del PinData
 char MessageToSend[] = "El botón está siendo presionado."; //Mensaje a enviar
-char Buffer[20]      = {0};
+char Buffer[20]      = {0};//En esta variable se almacenará el mensaje con el número y la dirección
 
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
@@ -71,7 +71,7 @@ int main(void) {
 
 			if (( PinDataState== 1) & (Counter_i < 50)){
 				Counter_i++;
-
+				//Se envía el mensaje por USART:
 				sprintf(Buffer, "El giro es CW %u", Counter_i );
 				writeMsg(&handlerUsart2, Buffer);
 
@@ -79,6 +79,9 @@ int main(void) {
 				}
 			else if ((PinClockFlag == 0) & (Counter_i  > 50)) {
 				Counter_i--;
+				//Se envía el mensaje por USART:
+				sprintf(Buffer, "El giro es CCW %u", Counter_i );
+				writeMsg(&handlerUsart2, Buffer);
 
 			}
 			else {
@@ -123,8 +126,8 @@ void initSystem(void) {
 
 	//Se configura el TxPin (PIN por el cual se hace la transmisión)
 	//Este PIN se configura en la función alternativa AF08 que para el PIN A2 corresponde al USART2
-	handlerTxPin.pGPIOx 							= GPIOA;
-	handlerTxPin.GPIO_PinConfig.GPIO_PinNumber 		= PIN_2;
+	handlerTxPin.pGPIOx 							= GPIOD;
+	handlerTxPin.GPIO_PinConfig.GPIO_PinNumber 		= PIN_5;
 	handlerTxPin.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_ALTFN; //Función alternativa
 	handlerTxPin.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
 	handlerTxPin.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
@@ -198,8 +201,8 @@ void initSystem(void) {
 	GPIO_Config(&handlerPinUnitsTransistor);
 
 	//Se configura el PinSegmentA
-	handlerPinSegmentA.pGPIOx 				         	  = GPIOC;
-	handlerPinSegmentA.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_4;
+	handlerPinSegmentA.pGPIOx 				         	  = GPIOA;
+	handlerPinSegmentA.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_6;
 	handlerPinSegmentA.GPIO_PinConfig.GPIO_PinMode 		  = GPIO_MODE_OUT;
 	handlerPinSegmentA.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
 	handlerPinSegmentA.GPIO_PinConfig.GPIO_PinSpeed 	  = GPIO_OSPEED_FAST;
@@ -209,8 +212,8 @@ void initSystem(void) {
 	GPIO_Config(&handlerPinSegmentA);
 
 	//Se configura el PinSegmentB
-	handlerPinSegmentB.pGPIOx 				         	  = GPIOC;
-	handlerPinSegmentB.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_4;
+	handlerPinSegmentB.pGPIOx 				         	  = GPIOA;
+	handlerPinSegmentB.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_7;
 	handlerPinSegmentB.GPIO_PinConfig.GPIO_PinMode 		  = GPIO_MODE_OUT;
 	handlerPinSegmentB.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
 	handlerPinSegmentB.GPIO_PinConfig.GPIO_PinSpeed 	  = GPIO_OSPEED_FAST;
@@ -221,8 +224,8 @@ void initSystem(void) {
 
 
 	//Se configura el PinSegmentC
-	handlerPinSegmentC.pGPIOx 				         	  = GPIOC;
-	handlerPinSegmentC.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_4;
+	handlerPinSegmentC.pGPIOx 				         	  = GPIOA;
+	handlerPinSegmentC.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_8;
 	handlerPinSegmentC.GPIO_PinConfig.GPIO_PinMode 		  = GPIO_MODE_OUT;
 	handlerPinSegmentC.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
 	handlerPinSegmentC.GPIO_PinConfig.GPIO_PinSpeed 	  = GPIO_OSPEED_FAST;
@@ -232,8 +235,8 @@ void initSystem(void) {
 	GPIO_Config(&handlerPinSegmentC);
 
 	//Se configura el PinSegmentD
-	handlerPinSegmentD.pGPIOx 				         	  = GPIOC;
-	handlerPinSegmentD.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_4;
+	handlerPinSegmentD.pGPIOx 				         	  = GPIOA;
+	handlerPinSegmentD.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_9;
 	handlerPinSegmentD.GPIO_PinConfig.GPIO_PinMode 		  = GPIO_MODE_OUT;
 	handlerPinSegmentD.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
 	handlerPinSegmentD.GPIO_PinConfig.GPIO_PinSpeed 	  = GPIO_OSPEED_FAST;
@@ -243,8 +246,8 @@ void initSystem(void) {
 	GPIO_Config(&handlerPinSegmentD);
 
 	//Se configura el PinSegmentE
-	handlerPinSegmentE.pGPIOx 				         	  = GPIOC;
-	handlerPinSegmentE.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_4;
+	handlerPinSegmentE.pGPIOx 				         	  = GPIOA;
+	handlerPinSegmentE.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_10;
 	handlerPinSegmentE.GPIO_PinConfig.GPIO_PinMode 		  = GPIO_MODE_OUT;
 	handlerPinSegmentE.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
 	handlerPinSegmentE.GPIO_PinConfig.GPIO_PinSpeed 	  = GPIO_OSPEED_FAST;
@@ -254,8 +257,8 @@ void initSystem(void) {
 	GPIO_Config(&handlerPinSegmentE);
 
 	//Se configura el PinSegmentF
-	handlerPinSegmentF.pGPIOx 				         	  = GPIOC;
-	handlerPinSegmentF.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_4;
+	handlerPinSegmentF.pGPIOx 				         	  = GPIOA;
+	handlerPinSegmentF.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_11;
 	handlerPinSegmentF.GPIO_PinConfig.GPIO_PinMode 		  = GPIO_MODE_OUT;
 	handlerPinSegmentF.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
 	handlerPinSegmentF.GPIO_PinConfig.GPIO_PinSpeed 	  = GPIO_OSPEED_FAST;
@@ -265,8 +268,8 @@ void initSystem(void) {
 	GPIO_Config(&handlerPinSegmentF);
 
 	//Se configura el PinSegmentG
-	handlerPinSegmentG.pGPIOx 				         	  = GPIOC;
-	handlerPinSegmentG.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_4;
+	handlerPinSegmentG.pGPIOx 				         	  = GPIOA;
+	handlerPinSegmentG.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_12;
 	handlerPinSegmentG.GPIO_PinConfig.GPIO_PinMode 		  = GPIO_MODE_OUT;
 	handlerPinSegmentG.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
 	handlerPinSegmentG.GPIO_PinConfig.GPIO_PinSpeed 	  = GPIO_OSPEED_FAST;
@@ -338,38 +341,38 @@ void displayTens(uint8_t counter){
 
 	case 0: {
 
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, SET);
-		GPIO_WritePin(&handlerPinSegmentE, SET);
-		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, RESET);
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
+		GPIO_WritePin(&handlerPinSegmentE, RESET);
+		GPIO_WritePin(&handlerPinSegmentF, RESET);
+		GPIO_WritePin(&handlerPinSegmentG, SET);
 
 		break;
 	}
 
 	case 1: {
 
-		GPIO_WritePin(&handlerPinSegmentA, RESET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, RESET);
-		GPIO_WritePin(&handlerPinSegmentE, RESET);
-		GPIO_WritePin(&handlerPinSegmentF, RESET);
-		GPIO_WritePin(&handlerPinSegmentG, RESET);
+		GPIO_WritePin(&handlerPinSegmentA, SET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, SET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, SET);
+		GPIO_WritePin(&handlerPinSegmentG, SET);
 
 		break;
 	}
 
 	case 2: {
 
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, RESET);
-		GPIO_WritePin(&handlerPinSegmentD, SET);
-		GPIO_WritePin(&handlerPinSegmentE, SET);
-		GPIO_WritePin(&handlerPinSegmentF, RESET);
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, SET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
+		GPIO_WritePin(&handlerPinSegmentE, RESET);
+		GPIO_WritePin(&handlerPinSegmentF, SET);
 		GPIO_WritePin(&handlerPinSegmentG, SET);
 
 		break;
@@ -377,10 +380,49 @@ void displayTens(uint8_t counter){
 
 	case 3: {
 
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, SET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
+
+		break;
+	}
+
+	case 4: {
+
 		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
 		GPIO_WritePin(&handlerPinSegmentD, SET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, RESET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
+
+		break;
+	}
+
+	case 5: {
+
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, SET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, RESET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
+
+		break;
+	}
+
+	case 6: {
+
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, SET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
 		GPIO_WritePin(&handlerPinSegmentE, RESET);
 		GPIO_WritePin(&handlerPinSegmentF, RESET);
 		GPIO_WritePin(&handlerPinSegmentG, SET);
@@ -388,37 +430,11 @@ void displayTens(uint8_t counter){
 		break;
 	}
 
-	case 4: {
+	case 7: {
 
 		GPIO_WritePin(&handlerPinSegmentA, RESET);
 		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, RESET);
-		GPIO_WritePin(&handlerPinSegmentE, RESET);
-		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
-
-		break;
-	}
-
-	case 5: {
-
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, RESET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, SET);
-		GPIO_WritePin(&handlerPinSegmentE, RESET);
-		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
-
-		break;
-	}
-
-	case 6: {
-
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, RESET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
 		GPIO_WritePin(&handlerPinSegmentD, SET);
 		GPIO_WritePin(&handlerPinSegmentE, SET);
 		GPIO_WritePin(&handlerPinSegmentF, SET);
@@ -427,41 +443,28 @@ void displayTens(uint8_t counter){
 		break;
 	}
 
-	case 7: {
+	case 8: {
 
-		GPIO_WritePin(&handlerPinSegmentA, SET);
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
 		GPIO_WritePin(&handlerPinSegmentB, RESET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
 		GPIO_WritePin(&handlerPinSegmentD, RESET);
 		GPIO_WritePin(&handlerPinSegmentE, RESET);
 		GPIO_WritePin(&handlerPinSegmentF, RESET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
-
-		break;
-	}
-
-	case 8: {
-
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, SET);
-		GPIO_WritePin(&handlerPinSegmentE, SET);
-		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
 
 		break;
 	}
 
 	case 9: {
 
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, SET);
-		GPIO_WritePin(&handlerPinSegmentE, RESET);
-		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, RESET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
 
 		break;
 	}
@@ -471,8 +474,8 @@ void displayTens(uint8_t counter){
 	}
 
 	}
-
 }
+
 
 void displayUnits(uint8_t counter){
 
@@ -482,38 +485,38 @@ void displayUnits(uint8_t counter){
 
 	case 0: {
 
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, SET);
-		GPIO_WritePin(&handlerPinSegmentE, SET);
-		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, RESET);
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
+		GPIO_WritePin(&handlerPinSegmentE, RESET);
+		GPIO_WritePin(&handlerPinSegmentF, RESET);
+		GPIO_WritePin(&handlerPinSegmentG, SET);
 
 		break;
 	}
 
 	case 1: {
 
-		GPIO_WritePin(&handlerPinSegmentA, RESET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, RESET);
-		GPIO_WritePin(&handlerPinSegmentE, RESET);
-		GPIO_WritePin(&handlerPinSegmentF, RESET);
-		GPIO_WritePin(&handlerPinSegmentG, RESET);
+		GPIO_WritePin(&handlerPinSegmentA, SET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, SET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, SET);
+		GPIO_WritePin(&handlerPinSegmentG, SET);
 
 		break;
 	}
 
 	case 2: {
 
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, RESET);
-		GPIO_WritePin(&handlerPinSegmentD, SET);
-		GPIO_WritePin(&handlerPinSegmentE, SET);
-		GPIO_WritePin(&handlerPinSegmentF, RESET);
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, SET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
+		GPIO_WritePin(&handlerPinSegmentE, RESET);
+		GPIO_WritePin(&handlerPinSegmentF, SET);
 		GPIO_WritePin(&handlerPinSegmentG, SET);
 
 		break;
@@ -521,10 +524,49 @@ void displayUnits(uint8_t counter){
 
 	case 3: {
 
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, SET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
+
+		break;
+	}
+
+	case 4: {
+
 		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
 		GPIO_WritePin(&handlerPinSegmentD, SET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, RESET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
+
+		break;
+	}
+
+	case 5: {
+
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, SET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, RESET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
+
+		break;
+	}
+
+	case 6: {
+
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, SET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
 		GPIO_WritePin(&handlerPinSegmentE, RESET);
 		GPIO_WritePin(&handlerPinSegmentF, RESET);
 		GPIO_WritePin(&handlerPinSegmentG, SET);
@@ -532,37 +574,11 @@ void displayUnits(uint8_t counter){
 		break;
 	}
 
-	case 4: {
+	case 7: {
 
 		GPIO_WritePin(&handlerPinSegmentA, RESET);
 		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, RESET);
-		GPIO_WritePin(&handlerPinSegmentE, RESET);
-		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
-
-		break;
-	}
-
-	case 5: {
-
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, RESET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, SET);
-		GPIO_WritePin(&handlerPinSegmentE, RESET);
-		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
-
-		break;
-	}
-
-	case 6: {
-
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, RESET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
 		GPIO_WritePin(&handlerPinSegmentD, SET);
 		GPIO_WritePin(&handlerPinSegmentE, SET);
 		GPIO_WritePin(&handlerPinSegmentF, SET);
@@ -571,41 +587,28 @@ void displayUnits(uint8_t counter){
 		break;
 	}
 
-	case 7: {
+	case 8: {
 
-		GPIO_WritePin(&handlerPinSegmentA, SET);
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
 		GPIO_WritePin(&handlerPinSegmentB, RESET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
 		GPIO_WritePin(&handlerPinSegmentD, RESET);
 		GPIO_WritePin(&handlerPinSegmentE, RESET);
 		GPIO_WritePin(&handlerPinSegmentF, RESET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
-
-		break;
-	}
-
-	case 8: {
-
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, SET);
-		GPIO_WritePin(&handlerPinSegmentE, SET);
-		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
 
 		break;
 	}
 
 	case 9: {
 
-		GPIO_WritePin(&handlerPinSegmentA, SET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
-		GPIO_WritePin(&handlerPinSegmentC, SET);
-		GPIO_WritePin(&handlerPinSegmentD, SET);
-		GPIO_WritePin(&handlerPinSegmentE, RESET);
-		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
+		GPIO_WritePin(&handlerPinSegmentA, RESET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
+		GPIO_WritePin(&handlerPinSegmentC, RESET);
+		GPIO_WritePin(&handlerPinSegmentD, RESET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, RESET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
 
 		break;
 	}
