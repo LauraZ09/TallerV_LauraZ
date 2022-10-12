@@ -261,7 +261,7 @@ void extInt_Config(EXTI_Config_t *extiConfig){
 		// Ahora seleccionamos el valor a cargar en la posición, segun sea la selección
 		// del puerto que vamos a utilizar: GPIOA_7, ó GPIOB_7, ó GPIOC_7, etc
 		if (extiConfig->pGPIOHandler->pGPIOx == GPIOA) {
-			SYSCFG->EXTICR[1] |= (SYSCFG_EXTICR2_EXTI5_PA);
+			SYSCFG->EXTICR[1] |= (SYSCFG_EXTICR2_EXTI7_PA);
 
 		} else if (extiConfig->pGPIOHandler->pGPIOx == GPIOB) {
 			SYSCFG->EXTICR[1] |= (SYSCFG_EXTICR2_EXTI7_PB);

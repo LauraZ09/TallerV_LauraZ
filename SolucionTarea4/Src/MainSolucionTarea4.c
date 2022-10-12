@@ -21,6 +21,7 @@ GPIO_Handler_t handlerButton        	 = {0}; //Handler para el botón
 GPIO_Handler_t handlerPinClock		     = {0}; //Handler para el Encoder entrada A
 GPIO_Handler_t handlerPinData		     = {0}; //Handler para el Encoder entrada B
 GPIO_Handler_t handlerTxPin              = {0}; //Handler para el PIN por el cual se hará la transmisión
+GPIO_Handler_t handlerRxPin				 = {0}; //Handler para el PIN por el cual se hará la recepción
 GPIO_Handler_t handlerPinTensTransistor  = {0}; //Handler para el PIN del transistor que switchea las decenas
 GPIO_Handler_t handlerPinUnitsTransistor = {0}; //Handler para el PIN del transistor que switchea las unidades
 GPIO_Handler_t handlerPinSegmentA        = {0}; //Handler para el PIN del segmento A del display
@@ -52,7 +53,6 @@ char Buffer[20]      = {0};//En esta variable se almacenará el mensaje con el n
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
 void initSystem(void);               //Función para inicializar el sistema
-void displayNumber(uint8_t counter); //Función para encender el número en el display
 void displayTens(uint8_t counter);   //Función para encender las decenas
 void displayUnits(uint8_t counter);  //Función para encender las unidades
 
@@ -66,7 +66,6 @@ int main(void) {
 		//Con este if se cambia el display de 7 segmentos cada vez que se enciende la bandera del PinClock
 		if (PinClockFlag == 1) {
 
-			PinClockFlag = 0;
 			PinDataState = GPIO_ReadPin(&handlerPinData);
 
 			if (( PinDataState == 1) & (Counter_i < 50)){
@@ -89,6 +88,7 @@ int main(void) {
 			}
 			displayUnits(Counter_i);
 			//displayTens(Counter_i);
+			PinClockFlag = 0;
 
 		}
 
@@ -112,8 +112,6 @@ int main(void) {
 
 	return 0;
 }
-
-
 
 
 //Función que inicializa el sistema con la configuración de los periféricos a usar
@@ -144,6 +142,19 @@ void initSystem(void) {
 	//Se carga la configuración
 	GPIO_Config(&handlerTxPin);
 
+	//Se configura el TxPin (PIN por el cual se hace la transmisión)
+	//Este PIN se configura en la función alternativa AF08 que para el PIN A2 corresponde al USART2
+	handlerRxPin.pGPIOx 							= GPIOA;
+	handlerRxPin.GPIO_PinConfig.GPIO_PinNumber 		= PIN_3;
+	handlerRxPin.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_ALTFN; //Función alternativa
+	handlerRxPin.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
+	handlerRxPin.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
+	handlerRxPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerRxPin.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF7;	//AF07 para PIN A2
+
+	//Se carga la configuración
+	GPIO_Config(&handlerRxPin);
+
 	//Se configura el Button
 	handlerButton.pGPIOx 							 = GPIOC;
 	handlerButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_13;
@@ -153,22 +164,22 @@ void initSystem(void) {
 	handlerButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP; //Se le pone un PullUp
 
 	ButtonExtiConfig.pGPIOHandler = &handlerButton;
-	ButtonExtiConfig.edgeType 	  = EXTERNAL_INTERRUPT_FALLING_EDGE;
+	ButtonExtiConfig.edgeType 	  = EXTERNAL_INTERRUPT_RISING_EDGE;
 
 	//Se carga la configuración
-	GPIO_Config(&handlerButton);
+	//GPIO_Config(&handlerButton);
 	extInt_Config(&ButtonExtiConfig);
 
 	//Se configura el PinClock
-	handlerPinClock.pGPIOx  							= GPIOC;
-	handlerPinClock.GPIO_PinConfig.GPIO_PinNumber 		= PIN_9;
+	handlerPinClock.pGPIOx  							= GPIOB;
+	handlerPinClock.GPIO_PinConfig.GPIO_PinNumber 		= PIN_4;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_IN;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinSpeed 	 	= GPIO_OSPEED_FAST;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinPuPdControl 	= GPIO_PUPDR_PULLUP;
 	//Configurando el Exti:
 	PinClockExtiConfig.pGPIOHandler = &handlerPinClock;
-	PinClockExtiConfig.edgeType 	= EXTERNAL_INTERRUPT_FALLING_EDGE;
+	PinClockExtiConfig.edgeType 	= EXTERNAL_INTERRUPT_RISING_EDGE;
 
 	//Se carga la configuración
 	//GPIO_Config(&handlerPinClock); //TODO ESTA LÍNEA ME LA PUEDO SALTAR?
@@ -314,7 +325,7 @@ void initSystem(void) {
 
 	//Se configura el USART 2
 	handlerUsart2.ptrUSARTx					  = USART2;                //USART 2
-	handlerUsart2.USART_Config.USART_mode 	  = USART_MODE_TX;         //Modo de solo transmisión
+	handlerUsart2.USART_Config.USART_mode 	  = USART_MODE_RXTX;       //Modo de solo transmisión
 	handlerUsart2.USART_Config.USART_baudrate = USART_BAUDRATE_115200; //115200 bps
 	handlerUsart2.USART_Config.USART_parity   = USART_PARITY_NONE;     //Parity:NONE, acá viene configurado el tamaño de dato
 	handlerUsart2.USART_Config.USART_stopbits = USART_STOPBIT_1;	   //Un stopbit
@@ -340,8 +351,8 @@ void BasicTimer3_Callback(void) {
 
 }
 
-void callback_extInt9(void) {
-	PinClockFlag++; //Se sube la bandera del PinClock a 1
+void callback_extInt4(void) {
+	PinClockFlag = 1; //Se sube la bandera del PinClock a 1
 }
 
 /*Función Callback de la EXTI del Button: Esta interrupción está configurada en flanco de bajada, así
