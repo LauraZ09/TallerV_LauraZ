@@ -36,16 +36,14 @@ BasicTimer_Handler_t handlerAuxTimer 	 = {0}; //Handler para el TIMER3, con este
 EXTI_Config_t PinClockExtiConfig         = {0}; //Exti Configuration para el PinClock
 EXTI_Config_t ButtonExtiConfig           = {0}; //Exti Configuration para el Button
 
-
-
-
-
 //Definición de otras variables necesarias para el desarrollo de los ejercicios:
+uint8_t TimerFlag1   = 0;  //Bandera 1 del timer
+uint8_t TimerFlag2   = 0;  //Bandera 2 del Timer
 uint8_t PinClockFlag = 0;  //Bandera del PinClock
 uint8_t ButtonFlag   = 0;  //Bandera del Button
 uint8_t CounterTens	 = 0;  //En esta variable se almacenan las decenas del contador
 uint8_t CounterUnits = 0;  //En esta variable se almacenan las unidades del contador
-uint8_t Counter_i 	 = 0;  //En esta variable se almacena el contador que controla el número del display
+uint8_t Counter_i 	 = 1;  //En esta variable se almacena el contador que controla el número del display
 						   //y cuenta las vueltas del encoder
 uint8_t PinDataState;      //En esta variable se almacena la lectura del estado del PinData
 char MessageToSend[] = "El botón está siendo presionado."; //Mensaje a enviar
@@ -67,45 +65,54 @@ int main(void) {
 
 		//Con este if se cambia el display de 7 segmentos cada vez que se enciende la bandera del PinClock
 		if (PinClockFlag == 1) {
+
+			PinClockFlag = 0;
 			PinDataState = GPIO_ReadPin(&handlerPinData);
 
-			if (( PinDataState== 1) & (Counter_i < 50)){
+			if (( PinDataState == 1) & (Counter_i < 50)){
 				Counter_i++;
 				//Se envía el mensaje por USART:
 				sprintf(Buffer, "El giro es CW %u", Counter_i );
 				writeMsg(&handlerUsart2, Buffer);
+			}
 
-				//writeMsg(&handlerUsart2,); //TODO CÓMO ENVIAR UN MENSAJE CON EL VALOR DE UNA VARIABLE
-				}
-			else if ((PinClockFlag == 0) & (Counter_i  > 50)) {
+			else if ((PinDataState == 0) & (Counter_i  > 0)) {
 				Counter_i--;
 				//Se envía el mensaje por USART:
 				sprintf(Buffer, "El giro es CCW %u", Counter_i );
 				writeMsg(&handlerUsart2, Buffer);
 
 			}
+
 			else {
 				__NOP();
 			}
-
-			displayTens(Counter_i);
 			displayUnits(Counter_i);
-			PinClockFlag = 0;
+			//displayTens(Counter_i);
+
 		}
 
 		//En caso de que la que se haya encendido sea la bandera ButtonFlag, se envía un mensaje y se baja la bandera
 		else if (ButtonFlag == 1){
-			writeMsg(&handlerUsart2, MessageToSend);
+			//writeMsg(&handlerUsart2, MessageToSend);
+
+			GPIO_WritePin(&handlerPinSegmentA, SET);
+			GPIO_WritePin(&handlerPinSegmentB, RESET);
+			GPIO_WritePin(&handlerPinSegmentC, RESET);
+			GPIO_WritePin(&handlerPinSegmentD, SET);
+			GPIO_WritePin(&handlerPinSegmentE, SET);
+			GPIO_WritePin(&handlerPinSegmentF, RESET);
+			GPIO_WritePin(&handlerPinSegmentG, RESET);
+
 			ButtonFlag = 0;
 		}
 
-		else {
-			__NOP();
-		}
 	}
+
 
 	return 0;
 }
+
 
 
 
@@ -139,7 +146,7 @@ void initSystem(void) {
 
 	//Se configura el Button
 	handlerButton.pGPIOx 							 = GPIOC;
-	handlerButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_6;
+	handlerButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_13;
 	handlerButton.GPIO_PinConfig.GPIO_PinMode 		 = GPIO_MODE_IN;
 	handlerButton.GPIO_PinConfig.GPIO_PinOPType 	 = GPIO_OTYPE_PUSHPULL;
 	handlerButton.GPIO_PinConfig.GPIO_PinSpeed 		 = GPIO_OSPEED_FAST;
@@ -154,26 +161,26 @@ void initSystem(void) {
 
 	//Se configura el PinClock
 	handlerPinClock.pGPIOx  							= GPIOC;
-	handlerPinClock.GPIO_PinConfig.GPIO_PinNumber 		= PIN_11;
+	handlerPinClock.GPIO_PinConfig.GPIO_PinNumber 		= PIN_9;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_IN;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinSpeed 	 	= GPIO_OSPEED_FAST;
-	handlerPinClock.GPIO_PinConfig.GPIO_PinPuPdControl 	= GPIO_PUPDR_NOTHING;
+	handlerPinClock.GPIO_PinConfig.GPIO_PinPuPdControl 	= GPIO_PUPDR_PULLUP;
 	//Configurando el Exti:
 	PinClockExtiConfig.pGPIOHandler = &handlerPinClock;
 	PinClockExtiConfig.edgeType 	= EXTERNAL_INTERRUPT_FALLING_EDGE;
 
 	//Se carga la configuración
-	GPIO_Config(&handlerPinClock); //TODO ESTA LÍNEA ME LA PUEDO SALTAR?
+	//GPIO_Config(&handlerPinClock); //TODO ESTA LÍNEA ME LA PUEDO SALTAR?
 	extInt_Config(&PinClockExtiConfig);
 
 	//Se configura el PinData
 	handlerPinData.pGPIOx 							  = GPIOC;
-	handlerPinData.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_12;
+	handlerPinData.GPIO_PinConfig.GPIO_PinNumber 	  = PIN_8;
 	handlerPinData.GPIO_PinConfig.GPIO_PinMode 		  = GPIO_MODE_IN;
 	handlerPinData.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
 	handlerPinData.GPIO_PinConfig.GPIO_PinSpeed 	  = GPIO_OSPEED_FAST;
-	handlerPinData.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerPinData.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinData);
@@ -188,6 +195,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinTensTransistor);
+	GPIO_WritePin(&handlerPinTensTransistor, RESET);
 
 	//Se configura el PinData
 	handlerPinUnitsTransistor.pGPIOx 				         	 = GPIOC;
@@ -199,6 +207,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinUnitsTransistor);
+	GPIO_WritePin(&handlerPinUnitsTransistor, SET);
 
 	//Se configura el PinSegmentA
 	handlerPinSegmentA.pGPIOx 				         	  = GPIOA;
@@ -210,6 +219,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinSegmentA);
+	GPIO_WritePin(&handlerPinSegmentA, SET);
 
 	//Se configura el PinSegmentB
 	handlerPinSegmentB.pGPIOx 				         	  = GPIOA;
@@ -221,6 +231,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinSegmentB);
+	GPIO_WritePin(&handlerPinSegmentB, SET);
 
 
 	//Se configura el PinSegmentC
@@ -233,6 +244,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinSegmentC);
+	GPIO_WritePin(&handlerPinSegmentC, SET);
 
 	//Se configura el PinSegmentD
 	handlerPinSegmentD.pGPIOx 				         	  = GPIOA;
@@ -244,6 +256,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinSegmentD);
+	GPIO_WritePin(&handlerPinSegmentD, SET);
 
 	//Se configura el PinSegmentE
 	handlerPinSegmentE.pGPIOx 				         	  = GPIOA;
@@ -255,6 +268,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinSegmentE);
+	GPIO_WritePin(&handlerPinSegmentE, SET);
 
 	//Se configura el PinSegmentF
 	handlerPinSegmentF.pGPIOx 				         	  = GPIOA;
@@ -266,6 +280,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinSegmentF);
+	GPIO_WritePin(&handlerPinSegmentF, SET);
 
 	//Se configura el PinSegmentG
 	handlerPinSegmentG.pGPIOx 				         	  = GPIOA;
@@ -277,6 +292,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinSegmentG);
+	GPIO_WritePin(&handlerPinSegmentG, SET);
 
 	//Se configura el BlinkyTimer
 	handlerBlinkyTimer.ptrTIMx 					= TIM2;
@@ -318,23 +334,24 @@ void BasicTimer2_Callback(void) {
 
 void BasicTimer3_Callback(void) {
 	//Se switchean los transistores, de forma que se muestre un número y luego el otro lo suficientemente rápido
-	GPIOxTooglePin(&handlerPinTensTransistor);
 	GPIOxTooglePin(&handlerPinUnitsTransistor);
+	GPIOxTooglePin(&handlerPinTensTransistor);
+	TimerFlag1++;
 
 }
 
-void callback_extInt11(void) {
+void callback_extInt9(void) {
 	PinClockFlag++; //Se sube la bandera del PinClock a 1
 }
 
 /*Función Callback de la EXTI del Button: Esta interrupción está configurada en flanco de bajada, así
   siempre que haya un flanco de bajada en el Botón (es decir, cuando este es presionado),se sube la
   bandera*/
-void callback_extInt6(void) {
+void callback_extInt13(void) {
 	ButtonFlag++;  //Se sube la bandera del ButtonFlag a 1
 }
 
-void displayTens(uint8_t counter){
+void displayUnits(uint8_t counter){
 	CounterUnits = counter - (counter/10)*10;
 
 	switch(CounterUnits) {
@@ -373,7 +390,7 @@ void displayTens(uint8_t counter){
 		GPIO_WritePin(&handlerPinSegmentD, RESET);
 		GPIO_WritePin(&handlerPinSegmentE, RESET);
 		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
 
 		break;
 	}
@@ -425,7 +442,7 @@ void displayTens(uint8_t counter){
 		GPIO_WritePin(&handlerPinSegmentD, RESET);
 		GPIO_WritePin(&handlerPinSegmentE, RESET);
 		GPIO_WritePin(&handlerPinSegmentF, RESET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
 
 		break;
 	}
@@ -433,12 +450,12 @@ void displayTens(uint8_t counter){
 	case 7: {
 
 		GPIO_WritePin(&handlerPinSegmentA, RESET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
 		GPIO_WritePin(&handlerPinSegmentC, RESET);
 		GPIO_WritePin(&handlerPinSegmentD, SET);
 		GPIO_WritePin(&handlerPinSegmentE, SET);
 		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, RESET);
+		GPIO_WritePin(&handlerPinSegmentG, SET);
 
 		break;
 	}
@@ -470,14 +487,20 @@ void displayTens(uint8_t counter){
 	}
 
 	default: {
-		__NOP();
+		GPIO_WritePin(&handlerPinSegmentA, SET);
+		GPIO_WritePin(&handlerPinSegmentB, SET);
+		GPIO_WritePin(&handlerPinSegmentC, SET);
+		GPIO_WritePin(&handlerPinSegmentD, SET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, SET);
+		GPIO_WritePin(&handlerPinSegmentG, SET);
 	}
 
 	}
 }
 
 
-void displayUnits(uint8_t counter){
+void displayTens(uint8_t counter){
 
 	CounterTens = counter/10;
 
@@ -517,7 +540,7 @@ void displayUnits(uint8_t counter){
 		GPIO_WritePin(&handlerPinSegmentD, RESET);
 		GPIO_WritePin(&handlerPinSegmentE, RESET);
 		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
 
 		break;
 	}
@@ -569,7 +592,7 @@ void displayUnits(uint8_t counter){
 		GPIO_WritePin(&handlerPinSegmentD, RESET);
 		GPIO_WritePin(&handlerPinSegmentE, RESET);
 		GPIO_WritePin(&handlerPinSegmentF, RESET);
-		GPIO_WritePin(&handlerPinSegmentG, SET);
+		GPIO_WritePin(&handlerPinSegmentG, RESET);
 
 		break;
 	}
@@ -577,12 +600,12 @@ void displayUnits(uint8_t counter){
 	case 7: {
 
 		GPIO_WritePin(&handlerPinSegmentA, RESET);
-		GPIO_WritePin(&handlerPinSegmentB, SET);
+		GPIO_WritePin(&handlerPinSegmentB, RESET);
 		GPIO_WritePin(&handlerPinSegmentC, RESET);
 		GPIO_WritePin(&handlerPinSegmentD, SET);
 		GPIO_WritePin(&handlerPinSegmentE, SET);
 		GPIO_WritePin(&handlerPinSegmentF, SET);
-		GPIO_WritePin(&handlerPinSegmentG, RESET);
+		GPIO_WritePin(&handlerPinSegmentG, SET);
 
 		break;
 	}
@@ -614,7 +637,13 @@ void displayUnits(uint8_t counter){
 	}
 
 	default: {
-		__NOP();
+		GPIO_WritePin(&handlerPinSegmentA, SET);
+		GPIO_WritePin(&handlerPinSegmentB, SET);
+		GPIO_WritePin(&handlerPinSegmentC, SET);
+		GPIO_WritePin(&handlerPinSegmentD, SET);
+		GPIO_WritePin(&handlerPinSegmentE, SET);
+		GPIO_WritePin(&handlerPinSegmentF, SET);
+		GPIO_WritePin(&handlerPinSegmentG, SET);
 	}
 
 	}
