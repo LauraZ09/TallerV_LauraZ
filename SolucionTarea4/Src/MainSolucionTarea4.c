@@ -44,9 +44,11 @@ uint8_t PinClockFlag = 0;  //Bandera del PinClock
 uint8_t ButtonFlag   = 0;  //Bandera del Button
 uint8_t CounterTens	 = 0;  //En esta variable se almacenan las decenas del contador
 uint8_t CounterUnits = 0;  //En esta variable se almacenan las unidades del contador
-uint8_t Counter_i 	 = 1;  //En esta variable se almacena el contador que controla el número del display
+uint8_t Counter_i 	 = 0;  //En esta variable se almacena el contador que controla el número del display
 						   //y cuenta las vueltas del encoder
-uint8_t PinDataState;      //En esta variable se almacena la lectura del estado del PinData
+uint8_t PinDataState = 0;      //En esta variable se almacena la lectura del estado del PinData
+uint8_t UnitsTransistorState = 0;
+uint8_t TensTransistorState = 0;
 char MessageToSend[] = "El botón está siendo presionado."; //Mensaje a enviar
 char Buffer[20]      = {0};//En esta variable se almacenará el mensaje con el número y la dirección
 
@@ -68,14 +70,15 @@ int main(void) {
 
 			PinDataState = GPIO_ReadPin(&handlerPinData);
 
-			if (( PinDataState == 0) & (Counter_i < 50)){
+			if (( PinDataState == 1) & (Counter_i < 50)){
 				Counter_i++;
 				//Se envía el mensaje por USART:
 				sprintf(Buffer, "El giro es CW %u", Counter_i );
 				writeMsg(&handlerUsart2, Buffer);
+
 			}
 
-			else if ((PinDataState == 1) & (Counter_i  > 0)) {
+			else if ((PinDataState == 0) & (Counter_i  > 0)) {
 				Counter_i--;
 				//Se envía el mensaje por USART:
 				sprintf(Buffer, "El giro es CCW %u", Counter_i );
@@ -85,15 +88,15 @@ int main(void) {
 			else {
 				__NOP();
 			}
-			displayUnits(Counter_i);
+
 			PinClockFlag = 0;
 
 		}
 
 		//En caso de que la que se haya encendido sea la bandera ButtonFlag, se envía un mensaje y se baja la bandera
 		else if (ButtonFlag == 1){
-			//writeMsg(&handlerUsart2, MessageToSend);
 
+			writeMsg(&handlerUsart2, MessageToSend);
 			GPIO_WritePin(&handlerPinSegmentA, SET);
 			GPIO_WritePin(&handlerPinSegmentB, RESET);
 			GPIO_WritePin(&handlerPinSegmentC, RESET);
@@ -101,13 +104,28 @@ int main(void) {
 			GPIO_WritePin(&handlerPinSegmentE, SET);
 			GPIO_WritePin(&handlerPinSegmentF, RESET);
 			GPIO_WritePin(&handlerPinSegmentG, RESET);
-
 			ButtonFlag = 0;
 		}
 
+		else {
+			__NOP();
+		}
+
+		TensTransistorState  = GPIO_ReadPin(&handlerPinTensTransistor);
+		UnitsTransistorState = GPIO_ReadPin(&handlerPinUnitsTransistor);
+
+		if (TensTransistorState == 0) {
+			displayTens(Counter_i);
+		}
+
+		else if (UnitsTransistorState == 0) {
+			displayUnits(Counter_i);
+		}
 	}
 	return 0;
 }
+
+
 
 
 //Función que inicializa el sistema con la configuración de los periféricos a usar
@@ -152,15 +170,15 @@ void initSystem(void) {
 	GPIO_Config(&handlerRxPin);
 
 	//Se configura el Button
-	handlerButton.pGPIOx 							 = GPIOC;
-	handlerButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_13;
+	handlerButton.pGPIOx 							 = GPIOB;
+	handlerButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_8;
 	handlerButton.GPIO_PinConfig.GPIO_PinMode 		 = GPIO_MODE_IN;
 	handlerButton.GPIO_PinConfig.GPIO_PinOPType 	 = GPIO_OTYPE_PUSHPULL;
 	handlerButton.GPIO_PinConfig.GPIO_PinSpeed 		 = GPIO_OSPEED_FAST;
 	handlerButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP; //Se le pone un PullUp
 
 	ButtonExtiConfig.pGPIOHandler = &handlerButton;
-	ButtonExtiConfig.edgeType 	  = EXTERNAL_INTERRUPT_RISING_EDGE;
+	ButtonExtiConfig.edgeType 	  = EXTERNAL_INTERRUPT_FALLING_EDGE;
 
 	//Se carga la configuración
 	//GPIO_Config(&handlerButton);
@@ -168,14 +186,14 @@ void initSystem(void) {
 
 	//Se configura el PinClock
 	handlerPinClock.pGPIOx  							= GPIOB;
-	handlerPinClock.GPIO_PinConfig.GPIO_PinNumber 		= PIN_4;
+	handlerPinClock.GPIO_PinConfig.GPIO_PinNumber 		= PIN_3;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_IN;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinSpeed 	 	= GPIO_OSPEED_FAST;
 	handlerPinClock.GPIO_PinConfig.GPIO_PinPuPdControl 	= GPIO_PUPDR_PULLUP;
 	//Configurando el Exti:
 	PinClockExtiConfig.pGPIOHandler = &handlerPinClock;
-	PinClockExtiConfig.edgeType 	= EXTERNAL_INTERRUPT_RISING_EDGE;
+	PinClockExtiConfig.edgeType 	= EXTERNAL_INTERRUPT_FALLING_EDGE;
 
 	//Se carga la configuración
 	//GPIO_Config(&handlerPinClock); //TODO ESTA LÍNEA ME LA PUEDO SALTAR?
@@ -202,7 +220,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinTensTransistor);
-	GPIO_WritePin(&handlerPinTensTransistor, RESET);
+	GPIO_WritePin(&handlerPinTensTransistor, SET);
 
 	//Se configura el PinData
 	handlerPinUnitsTransistor.pGPIOx 				         	 = GPIOC;
@@ -214,7 +232,7 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPinUnitsTransistor);
-	GPIO_WritePin(&handlerPinUnitsTransistor, SET);
+	GPIO_WritePin(&handlerPinUnitsTransistor, RESET);
 
 	//Se configura el PinSegmentA
 	handlerPinSegmentA.pGPIOx 				         	  = GPIOA;
@@ -314,7 +332,7 @@ void initSystem(void) {
 	handlerAuxTimer.ptrTIMx 				= TIM3;
 	handlerAuxTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
 	handlerAuxTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100us;
-	handlerAuxTimer.TIMx_Config.TIMx_period = 10; //Update period= 100us*10 = 1000us = 1ms
+	handlerAuxTimer.TIMx_Config.TIMx_period = 100; //Update period= 100us*10 = 1000us = 1ms
 
 	//Se carga la configuración del AuxTimer
 	BasicTimer_Config(&handlerAuxTimer);
@@ -340,23 +358,25 @@ void BasicTimer2_Callback(void) {
   siempre que haya un flanco de bajada en la señal del PinClock, se sube la bandera*/
 
 void BasicTimer3_Callback(void) {
+	TimerFlag1++;
+	GPIOxTooglePin(&handlerPinUnitsTransistor);
+	GPIOxTooglePin(&handlerPinTensTransistor);
 	//Se switchean los transistores, de forma que se muestre un número y luego el otro lo suficientemente rápido
-		GPIOxTooglePin(&handlerPinUnitsTransistor);
-		GPIOxTooglePin(&handlerPinTensTransistor);
 }
 
-void callback_extInt4(void) {
+void callback_extInt3(void) {
 	PinClockFlag = 1; //Se sube la bandera del PinClock a 1
 }
 
 /*Función Callback de la EXTI del Button: Esta interrupción está configurada en flanco de bajada, así
   siempre que haya un flanco de bajada en el Botón (es decir, cuando este es presionado),se sube la
   bandera*/
-void callback_extInt13(void) {
-	ButtonFlag++;  //Se sube la bandera del ButtonFlag a 1
+void callback_extInt8(void) {
+	ButtonFlag = 1;  //Se sube la bandera del ButtonFlag a 1
 }
 
 void displayUnits(uint8_t counter){
+
 	CounterUnits = counter - (counter/10)*10;
 
 	switch(CounterUnits) {
