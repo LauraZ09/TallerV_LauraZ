@@ -68,26 +68,24 @@ int main(void) {
 
 			PinDataState = GPIO_ReadPin(&handlerPinData);
 
-			if (( PinDataState == 1) & (Counter_i < 50)){
+			if (( PinDataState == 0) & (Counter_i < 50)){
 				Counter_i++;
 				//Se envía el mensaje por USART:
 				sprintf(Buffer, "El giro es CW %u", Counter_i );
 				writeMsg(&handlerUsart2, Buffer);
 			}
 
-			else if ((PinDataState == 0) & (Counter_i  > 0)) {
+			else if ((PinDataState == 1) & (Counter_i  > 0)) {
 				Counter_i--;
 				//Se envía el mensaje por USART:
 				sprintf(Buffer, "El giro es CCW %u", Counter_i );
 				writeMsg(&handlerUsart2, Buffer);
-
 			}
 
 			else {
 				__NOP();
 			}
 			displayUnits(Counter_i);
-			//displayTens(Counter_i);
 			PinClockFlag = 0;
 
 		}
@@ -108,8 +106,6 @@ int main(void) {
 		}
 
 	}
-
-
 	return 0;
 }
 
@@ -345,10 +341,8 @@ void BasicTimer2_Callback(void) {
 
 void BasicTimer3_Callback(void) {
 	//Se switchean los transistores, de forma que se muestre un número y luego el otro lo suficientemente rápido
-	GPIOxTooglePin(&handlerPinUnitsTransistor);
-	GPIOxTooglePin(&handlerPinTensTransistor);
-	TimerFlag1++;
-
+		GPIOxTooglePin(&handlerPinUnitsTransistor);
+		GPIOxTooglePin(&handlerPinTensTransistor);
 }
 
 void callback_extInt4(void) {
