@@ -17,11 +17,10 @@
 
 //Definición de los handlers necesarios
 GPIO_Handler_t handlerBlinkyPin          = {0}; //Handler para el USER_LED
-GPIO_Handler_t handlerButton        	 = {0}; //Handler para el botón
+GPIO_Handler_t handlerButton        	 = {0}; //Handler para el Botón
 GPIO_Handler_t handlerPinClock		     = {0}; //Handler para el Encoder entrada A
 GPIO_Handler_t handlerPinData		     = {0}; //Handler para el Encoder entrada B
 GPIO_Handler_t handlerTxPin              = {0}; //Handler para el PIN por el cual se hará la transmisión
-GPIO_Handler_t handlerRxPin				 = {0}; //Handler para el PIN por el cual se hará la recepción
 GPIO_Handler_t handlerPinTensTransistor  = {0}; //Handler para el PIN del transistor que switchea las decenas
 GPIO_Handler_t handlerPinUnitsTransistor = {0}; //Handler para el PIN del transistor que switchea las unidades
 GPIO_Handler_t handlerPinSegmentA        = {0}; //Handler para el PIN del segmento A del display
@@ -30,34 +29,30 @@ GPIO_Handler_t handlerPinSegmentC        = {0}; //Handler para el PIN del segmen
 GPIO_Handler_t handlerPinSegmentD        = {0}; //Handler para el PIN del segmento D del display
 GPIO_Handler_t handlerPinSegmentE        = {0}; //Handler para el PIN del segmento E del display
 GPIO_Handler_t handlerPinSegmentG        = {0}; //Handler para el PIN del segmento G del display
-GPIO_Handler_t handlerPinSegmentF        = {0}; //Handler para el PIN del segmento A del display
-USART_Handler_t handlerUsart2            = {0}; //Handler para el USART
+GPIO_Handler_t handlerPinSegmentF        = {0}; //Handler para el PIN del segmento F del display
+USART_Handler_t handlerUsart2            = {0}; //Handler para el USART2
 BasicTimer_Handler_t handlerBlinkyTimer  = {0}; //Handler para el TIMER2, con este se hará el Blinky
 BasicTimer_Handler_t handlerAuxTimer 	 = {0}; //Handler para el TIMER3, con este se controla el Display
 EXTI_Config_t PinClockExtiConfig         = {0}; //Exti Configuration para el PinClock
 EXTI_Config_t ButtonExtiConfig           = {0}; //Exti Configuration para el Button
 
 //Definición de otras variables necesarias para el desarrollo de los ejercicios:
-uint8_t TimerFlag1   = 0;  //Bandera 1 del timer
-uint8_t TimerFlag2   = 0;  //Bandera 2 del Timer
 uint8_t PinClockFlag = 0;  //Bandera del PinClock
 uint8_t ButtonFlag   = 0;  //Bandera del Button
 uint8_t CounterTens	 = 0;  //En esta variable se almacenan las decenas del contador
 uint8_t CounterUnits = 0;  //En esta variable se almacenan las unidades del contador
 uint8_t Counter_i 	 = 0;  //En esta variable se almacena el contador que controla el número del display
 						   //y cuenta las vueltas del encoder
-uint8_t PinDataState = 0;      //En esta variable se almacena la lectura del estado del PinData
-uint8_t UnitsTransistorState = 0;
-uint8_t TensTransistorState = 0;
+uint8_t PinDataState = 0;  //En esta variable se almacena la lectura del estado del PinData
+uint8_t UnitsTransistorState = 0; //En esta variable se almacena la lectura del estado del UnitsTransistor
+uint8_t TensTransistorState = 0;  //En esta variable se almacena la lectura del estado del TensTransistor
+char Buffer[32]      = {0};       //En esta variable se almacenará el mensaje con el número y la dirección
 char MessageToSend[] = "El botón está siendo presionado."; //Mensaje a enviar
-char Buffer[20]      = {0};//En esta variable se almacenará el mensaje con el número y la dirección
-
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
 void initSystem(void);               //Función para inicializar el sistema
 void displayTens(uint8_t counter);   //Función para encender las decenas
 void displayUnits(uint8_t counter);  //Función para encender las unidades
-
 
 int main(void) {
 
@@ -65,23 +60,29 @@ int main(void) {
 
 	while (1) {
 
+		TensTransistorState  = GPIO_ReadPin(&handlerPinTensTransistor); //Se guarda el estado del TensTransistor
+																		//en la variable
+		UnitsTransistorState = GPIO_ReadPin(&handlerPinUnitsTransistor);//Se guarda el estado del TensTransistor
+																		//en la variable
+
+
 		//Con este if se cambia el display de 7 segmentos cada vez que se enciende la bandera del PinClock
 		if (PinClockFlag == 1) {
-
+			//Se Guarda el estado del PinData en la variable
 			PinDataState = GPIO_ReadPin(&handlerPinData);
 
+			//Si
 			if (( PinDataState == 1) & (Counter_i < 50)){
 				Counter_i++;
 				//Se envía el mensaje por USART:
-				sprintf(Buffer, "El giro es CW %u", Counter_i );
+				sprintf(Buffer, "El giro es CW %u \n", Counter_i );
 				writeMsg(&handlerUsart2, Buffer);
-
 			}
 
 			else if ((PinDataState == 0) & (Counter_i  > 0)) {
 				Counter_i--;
 				//Se envía el mensaje por USART:
-				sprintf(Buffer, "El giro es CCW %u", Counter_i );
+				sprintf(Buffer, "El giro es CCW %u \n", Counter_i);
 				writeMsg(&handlerUsart2, Buffer);
 			}
 
@@ -90,12 +91,11 @@ int main(void) {
 			}
 
 			PinClockFlag = 0;
-
 		}
 
 		//En caso de que la que se haya encendido sea la bandera ButtonFlag, se envía un mensaje y se baja la bandera
-		else if (ButtonFlag == 1){
 
+		if (ButtonFlag == 1) {
 			writeMsg(&handlerUsart2, MessageToSend);
 			GPIO_WritePin(&handlerPinSegmentA, SET);
 			GPIO_WritePin(&handlerPinSegmentB, RESET);
@@ -106,18 +106,13 @@ int main(void) {
 			GPIO_WritePin(&handlerPinSegmentG, RESET);
 			ButtonFlag = 0;
 		}
-
 		else {
 			__NOP();
 		}
 
-		TensTransistorState  = GPIO_ReadPin(&handlerPinTensTransistor);
-		UnitsTransistorState = GPIO_ReadPin(&handlerPinUnitsTransistor);
-
 		if (TensTransistorState == 0) {
 			displayTens(Counter_i);
 		}
-
 		else if (UnitsTransistorState == 0) {
 			displayUnits(Counter_i);
 		}
@@ -145,8 +140,8 @@ void initSystem(void) {
 
 	//Se configura el TxPin (PIN por el cual se hace la transmisión)
 	//Este PIN se configura en la función alternativa AF08 que para el PIN A2 corresponde al USART2
-	handlerTxPin.pGPIOx 							= GPIOD;
-	handlerTxPin.GPIO_PinConfig.GPIO_PinNumber 		= PIN_5;
+	handlerTxPin.pGPIOx 							= GPIOA;
+	handlerTxPin.GPIO_PinConfig.GPIO_PinNumber 		= PIN_2;
 	handlerTxPin.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_ALTFN; //Función alternativa
 	handlerTxPin.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
 	handlerTxPin.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
@@ -156,32 +151,20 @@ void initSystem(void) {
 	//Se carga la configuración
 	GPIO_Config(&handlerTxPin);
 
-	//Se configura el TxPin (PIN por el cual se hace la transmisión)
-	//Este PIN se configura en la función alternativa AF08 que para el PIN A2 corresponde al USART2
-	handlerRxPin.pGPIOx 							= GPIOA;
-	handlerRxPin.GPIO_PinConfig.GPIO_PinNumber 		= PIN_3;
-	handlerRxPin.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_ALTFN; //Función alternativa
-	handlerRxPin.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
-	handlerRxPin.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
-	handlerRxPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	handlerRxPin.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF7;	//AF07 para PIN A2
-
-	//Se carga la configuración
-	GPIO_Config(&handlerRxPin);
-
 	//Se configura el Button
-	handlerButton.pGPIOx 							 = GPIOB;
-	handlerButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_8;
+
+	handlerButton.pGPIOx 							 = GPIOC;
+	handlerButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_6;
 	handlerButton.GPIO_PinConfig.GPIO_PinMode 		 = GPIO_MODE_IN;
 	handlerButton.GPIO_PinConfig.GPIO_PinOPType 	 = GPIO_OTYPE_PUSHPULL;
-	handlerButton.GPIO_PinConfig.GPIO_PinSpeed 		 = GPIO_OSPEED_FAST;
+	handlerButton.GPIO_PinConfig.GPIO_PinSpeed 		 = GPIO_OSPEED_MEDIUM;
 	handlerButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP; //Se le pone un PullUp
 
 	ButtonExtiConfig.pGPIOHandler = &handlerButton;
 	ButtonExtiConfig.edgeType 	  = EXTERNAL_INTERRUPT_FALLING_EDGE;
 
 	//Se carga la configuración
-	//GPIO_Config(&handlerButton);
+	GPIO_Config(&handlerButton);
 	extInt_Config(&ButtonExtiConfig);
 
 	//Se configura el PinClock
@@ -332,7 +315,7 @@ void initSystem(void) {
 	handlerAuxTimer.ptrTIMx 				= TIM3;
 	handlerAuxTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
 	handlerAuxTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100us;
-	handlerAuxTimer.TIMx_Config.TIMx_period = 100; //Update period= 100us*10 = 1000us = 1ms
+	handlerAuxTimer.TIMx_Config.TIMx_period = 100; //Update period= 100us*100 = 10000us = 10ms
 
 	//Se carga la configuración del AuxTimer
 	BasicTimer_Config(&handlerAuxTimer);
@@ -358,10 +341,9 @@ void BasicTimer2_Callback(void) {
   siempre que haya un flanco de bajada en la señal del PinClock, se sube la bandera*/
 
 void BasicTimer3_Callback(void) {
-	TimerFlag1++;
+//Se switchean los transistores, de forma que se muestre un número y luego el otro lo suficientemente rápido
 	GPIOxTooglePin(&handlerPinUnitsTransistor);
 	GPIOxTooglePin(&handlerPinTensTransistor);
-	//Se switchean los transistores, de forma que se muestre un número y luego el otro lo suficientemente rápido
 }
 
 void callback_extInt3(void) {
@@ -371,7 +353,7 @@ void callback_extInt3(void) {
 /*Función Callback de la EXTI del Button: Esta interrupción está configurada en flanco de bajada, así
   siempre que haya un flanco de bajada en el Botón (es decir, cuando este es presionado),se sube la
   bandera*/
-void callback_extInt8(void) {
+void callback_extInt6(void) {
 	ButtonFlag = 1;  //Se sube la bandera del ButtonFlag a 1
 }
 
@@ -670,6 +652,5 @@ void displayTens(uint8_t counter){
 		GPIO_WritePin(&handlerPinSegmentF, SET);
 		GPIO_WritePin(&handlerPinSegmentG, SET);
 	}
-
 	}
 }
