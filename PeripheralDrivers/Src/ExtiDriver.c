@@ -5,6 +5,7 @@
  *      Author: namontoy
  */
 
+#include "stm32f4xx.h"
 #include "ExtiDriver.h"
 #include "GPIOxDriver.h"
 
@@ -562,9 +563,6 @@ void extInt_Config(EXTI_Config_t *extiConfig){
 		 0: Falling trigger disabled (for Event and Interrupt) for input line
 		 1: Falling trigger enabled (for Event and Interrupt) for input line.*/
 
-		//Primero se limpia el registro:
-		EXTI->FTSR = 0;
-
 		switch (extiConfig->pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber) {
 
 		/* Configurando para todos los pines GPIOX_0*/
@@ -675,9 +673,6 @@ void extInt_Config(EXTI_Config_t *extiConfig){
 	}
 
 	else if (extiConfig->edgeType == EXTERNAL_INTERRUPT_RISING_EDGE){
-
-		//Primero se limpia el registro:
-		EXTI->RTSR = 0;
 
 		switch (extiConfig->pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber) {
 
@@ -797,9 +792,6 @@ void extInt_Config(EXTI_Config_t *extiConfig){
 
 	/* 6.0 Activamos la interrupción del canal que estamos configurando */
 	// Interrupt Mask register
-
-	//Primero se limpia el registro:
-	EXTI->IMR = 0;
 
 	//Ahora, se configura según el número del PIN
 	switch (extiConfig->pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber) {

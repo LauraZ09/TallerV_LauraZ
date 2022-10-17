@@ -59,7 +59,7 @@ void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 		//else active. In downcounting, channel 1 is active as long as TIMx_CNT>TIMx_CCR1 else
 		//inactive.
 		ptrPwmHandler->ptrTIMx->CCMR1 |= TIM_CCMR1_OC1M;
-		ptrPwmHandler->ptrTIMx->
+		//ptrPwmHandler->ptrTIMx->
 
 
 
