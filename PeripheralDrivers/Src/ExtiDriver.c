@@ -12,6 +12,7 @@
 void extInt_Config(EXTI_Config_t *extiConfig){
 
 	/* 1.0 Se carga la configuración, que debe ser el PINx como entrada "simple" */
+	extiConfig->pGPIOHandler->GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
 	GPIO_Config(extiConfig->pGPIOHandler);
 
 	/* 2.0 Activamos el acceso al SYSCFG */
