@@ -52,7 +52,7 @@ handlerMCO_2.GPIO_PinConfig.GPIO_PinAltFunMode  = AF0;
 GPIO_Config(&handlerMCO_2);
 
 
-handlerTimer3.ptrTIMx 					= TIM3;
+handlerTimer3.ptrTIMx 					= TIM2;
 handlerTimer3.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
 handlerTimer3.TIMx_Config.TIMx_speed	= BTIMER_SPEED_0_05us;
 handlerTimer3.TIMx_Config.TIMx_period 	= 2500;
@@ -76,7 +76,7 @@ while (1)
 return 0;
 }
 
-void BasicTimer3_Callback(void) {
+void BasicTimer2_Callback(void) {
 	//LedFlagCounter++;
 	GPIOxTooglePin(&handlerBlinky);
 	}

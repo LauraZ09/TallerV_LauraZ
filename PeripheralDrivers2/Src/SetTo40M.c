@@ -16,7 +16,7 @@ void setTo40M(void)
 	//Primero se limpian los registros:
 	//Primero se limpia el registro RCC->PLLCFGR TODO PUEDO LIMPIAR TAMBIÉN EL Q]
 	//RCC->PLLCFGR = 0; QUÉ PASA CON LOS RESERVADOS SI HAGO ESTO
-	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLSRC;
+	//RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLSRC;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLN;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLP;
@@ -128,7 +128,10 @@ void setTo40M(void)
 	 */
 
 	RCC->CFGR &= ~RCC_CFGR_MCO2PRE;   //Primero se limpian los bits
-	//RCC->CFGR |=  RCC_CFGR_MCO2PRE_2; //Se ponen en 100 : División x2
+	//RCC->CFGR |=  RCC_CFGR_MCO2PRE; //Se ponen en 111 : División x5
+	RCC->CFGR |=  RCC_CFGR_MCO2PRE_1;
+	RCC->CFGR |=  RCC_CFGR_MCO2PRE_2;
+
 
 	/*6.Se activa el PLL: RCC_CR
 	 * 0: PLL OFF

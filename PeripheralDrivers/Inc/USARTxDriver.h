@@ -78,6 +78,6 @@ void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSend);
 void usart2Rx_Callback(void); /* Esta función debe ser sobre-escrita en el main para que el sistema funcione*/
 void usart1Rx_Callback(void);
 void usart6Rx_Callback(void);
-
+uint8_t getRxData(void);
 
 #endif /* INC_USARTXDRIVER_H_ */

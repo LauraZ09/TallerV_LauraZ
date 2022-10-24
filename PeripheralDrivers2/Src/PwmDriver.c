@@ -55,10 +55,13 @@ void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 		ptrPwmHandler->ptrTIMx->CCMR1 &= ~TIM_CCMR1_CC1S;
 
 		// Configuramos el canal como PWM
-		//111: PWM mode 2 - In upcounting, channel 1 is inactive as long as TIMx_CNT<TIMx_CCR1
-		//else active. In downcounting, channel 1 is active as long as TIMx_CNT>TIMx_CCR1 else
-		//inactive.
-		ptrPwmHandler->ptrTIMx->CCMR1 |= TIM_CCMR1_OC1M;
+		//110:PWM mode 1 - In upcounting, channel 1 is active as long as TIMx_CNT<TIMx_CCR1
+		//else it is inactive. In downcounting, channel 1 is inactive (OC1REF=‘0) as long as
+		//TIMx_CNT>TIMx_CCR1, else it is active (OC1REF=’1’)
+
+		ptrPwmHandler->ptrTIMx->CCMR1 |= TIM_CCMR1_OC1M_1;
+		ptrPwmHandler->ptrTIMx->CCMR1 |= TIM_CCMR1_OC1M_2;
+
 
 		//Configuramos la polaridad:
         //CC1P: Capture/Compare 1 output Polarity.
@@ -140,7 +143,7 @@ void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 		ptrPwmHandler->ptrTIMx->CCMR2 &= ~TIM_CCMR2_CC4S;
 
 		// Configuramos el canal como PWM
-		//111: PWM mode 2 - In upcounting, channel 1 is inactive as long as TIMx_CNT<TIMx_CCR1
+		//111: PWM mode 1 - In upcounting, channel 1 is inactive as long as TIMx_CNT<TIMx_CCR1
 		//else active. In downcounting, channel 1 is active as long as TIMx_CNT>TIMx_CCR1 else
 		//inactive.
 		ptrPwmHandler->ptrTIMx->CCMR2 |= TIM_CCMR2_OC4M;
