@@ -387,6 +387,7 @@ void BasicTimer3_Callback(void) {
 //Se switchean los transistores, de forma que se muestre un número y luego el otro lo suficientemente rápido
 	GPIOxTooglePin(&handlerPinUnitsTransistor);
 	GPIOxTooglePin(&handlerPinTensTransistor);
+	// Hacer esto así genera un efecto en el que se observa una pequeña sombra en fondo del display
 }
 
 /*Función Callback de la EXTI del PinClock: Esta interrupción está configurada en flanco de subida, así
