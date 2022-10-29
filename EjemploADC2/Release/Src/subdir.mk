@@ -5,17 +5,23 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Src/MainSolucionTarea4.c \
+../Src/MainADC.c \
+../Src/MainMCADC.c \
+../Src/MainTimerEvent.c \
 ../Src/syscalls.c \
 ../Src/sysmem.c 
 
 OBJS += \
-./Src/MainSolucionTarea4.o \
+./Src/MainADC.o \
+./Src/MainMCADC.o \
+./Src/MainTimerEvent.o \
 ./Src/syscalls.o \
 ./Src/sysmem.o 
 
 C_DEPS += \
-./Src/MainSolucionTarea4.d \
+./Src/MainADC.d \
+./Src/MainMCADC.d \
+./Src/MainTimerEvent.d \
 ./Src/syscalls.d \
 ./Src/sysmem.d 
 

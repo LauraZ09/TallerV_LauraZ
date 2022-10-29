@@ -23,9 +23,11 @@
 
 PWM_Handler_t handlerPWMTimer 	        = { 0 };  //Handler para el PWM (Timer)
 BasicTimer_Handler_t handlerBlinkyTimer = { 0 };  //Handler para el BlinkyTimer
+BasicTimer_Handler_t handlerIntTimer    = { 0 };
 GPIO_Handler_t handlerBlinkyPin 	    = { 0 };  //Handler para el LED de estado
 GPIO_Handler_t handlerMCO_2  			= { 0 };  //Handler para el PIN de salida del Clock
 GPIO_Handler_t handlerPWMOutput 		= { 0 };  //Handler para la salida del PWM
+
 
 
 uint8_t flag 			= 0;
@@ -56,14 +58,45 @@ int main(void)
 
 	while (1)
 	{
+
 		//Primero se llena el arreglo con una secuencia consecutiva de verde, rojo y azul
 		for (uint8_t i = 0; i < 180; i += 9) {
-			LED_data[i] = 25; //Se usan valores bajos para no gastar mucha corriente
-			LED_data[i + 4] = 25; //Se usan valores bajos para no gastar mucha corriente
-			LED_data[i + 8] = 25; //Se usan valores bajos para no gastar mucha corriente
+			LED_data[i] = 255; //Se usan valores bajos para no gastar mucha corriente
+			LED_data[i + 4] = 255; //Se usan valores bajos para no gastar mucha corriente
+			LED_data[i + 8] = 255; //Se usan valores bajos para no gastar mucha corriente
+		}
+		show_neopixels();  //transmit the data to the neopixel strip.
+		if(flag == 50){
+			if (position < sizeof(LED_data)) {
+
+						if (LED_data[position] & mask) {
+							updateDuttyCycle(&handlerPWMTimer, high_CCR1);
+							updateFrequency(&handlerPWMTimer, high_ARR);
+						}
+
+						else {
+							updateDuttyCycle(&handlerPWMTimer, low_CCR1);
+							updateFrequency(&handlerPWMTimer, low_ARR);
+						}
+
+						if (mask == 1) {
+							mask = 0b10000000;
+							position++;
+						}
+
+						else {
+							mask = mask >> 1;
+						}
+
+					}
+					else {
+						updateDuttyCycle(&handlerPWMTimer, 0);
+						updateFrequency(&handlerPWMTimer, TRESET);
+						position = 0;
+					}
+			flag = 0;
 		}
 
-		show_neopixels();  //transmit the data to the neopixel strip.
 	}
 
 	return 0;
@@ -89,32 +122,11 @@ void BasicTimer2_Callback(void) {
 	}
 
 void BasicTimer5_Callback(void){
-	if (position < sizeof(LED_data)) {
+	flag++;
+}
+void BasicTimer3_Callback(void){
 
-		if (LED_data[position] & mask) {
-			updateDuttyCycle(&handlerPWMTimer, high_CCR1);
-			updateFrequency(&handlerPWMTimer, high_ARR);
-		}
 
-		else {
-			updateDuttyCycle(&handlerPWMTimer, low_CCR1);
-			updateFrequency(&handlerPWMTimer, low_ARR);
-		}
-
-		if (mask == 1) {
-			mask = 0b10000000;
-			position++;
-		}
-
-		else {
-			mask = mask >> 1;
-		}
-
-	}
-	else {
-		updateDuttyCycle(&handlerPWMTimer, 0);
-		updateFrequency(&handlerPWMTimer, TRESET);
-	}
 }
 
 void initSystem(void) {
@@ -144,10 +156,18 @@ void initSystem(void) {
 	handlerPWMTimer.config.channel     = PWM_CHANNEL_1;
 	handlerPWMTimer.config.prescaler   = PWMTIMER_SPEED_0_025us;
 	handlerPWMTimer.config.periodo     = 50;
-	handlerPWMTimer.config.duttyCicle  = 34;
+	handlerPWMTimer.config.duttyCicle  = 32;
+
+	pwm_Config(&handlerPWMTimer);
+
+	//Se configura el Timer de las interrupciones
+	handlerIntTimer.ptrTIMx 				= TIM3;
+	handlerIntTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
+	handlerIntTimer.TIMx_Config.TIMx_speed 	= PWMTIMER_SPEED_0_025us;
+	handlerIntTimer.TIMx_Config.TIMx_period = 50; //Update period= 0.025us*50 = 1.25us
 
 	//Se carga la configuración
-	pwm_Config(&handlerPWMTimer);
+	BasicTimer_Config(&handlerIntTimer);
 
 	//Se configura la salida del PWM
 	handlerPWMOutput.pGPIOx 						      = GPIOA;

@@ -1243,3 +1243,50 @@ void EXTI15_10_IRQHandler(void){
 
 }
 
+void configExternalTrigger(EXTEN_Config_t *extenConfig){
+
+	//Se activa el acceso al SYSCFG:
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
+	//Asignamos el canal EXTI que corresponde al PIN_11 del puerto GPIO_X:
+	if(extenConfig->pGPIOHandler->pGPIOx == GPIOA) {
+		SYSCFG->EXTICR[2] |= (SYSCFG_EXTICR3_EXTI11_PA);
+
+	} else if (extenConfig->pGPIOHandler->pGPIOx == GPIOB) {
+		SYSCFG->EXTICR[2] |= (SYSCFG_EXTICR3_EXTI11_PB);
+
+	} else if (extenConfig->pGPIOHandler->pGPIOx == GPIOC) {
+		SYSCFG->EXTICR[2] |= (SYSCFG_EXTICR3_EXTI11_PC);
+
+	} else if (extenConfig->pGPIOHandler->pGPIOx == GPIOD) {
+		SYSCFG->EXTICR[2] |= (SYSCFG_EXTICR3_EXTI11_PD);
+
+	} else if (extenConfig->pGPIOHandler->pGPIOx == GPIOE) {
+		SYSCFG->EXTICR[2] |= (SYSCFG_EXTICR3_EXTI11_PE);
+
+	} else if (extenConfig->pGPIOHandler->pGPIOx == GPIOH) {
+		SYSCFG->EXTICR[2] |= (SYSCFG_EXTICR3_EXTI11_PH);
+
+	} else {
+		__NOP();
+	}
+
+	//Seleccionamos el tipo de flanco:
+	if(extenConfig->edgeType == EXTERNAL_EVENT_FALLING_EDGE){
+		EXTI->FTSR |= EXTI_FTSR_TR11;
+	}
+
+	else if(extenConfig->edgeType == EXTERNAL_EVENT_RISING_EDGE){
+		EXTI->RTSR |= EXTI_RTSR_TR11;
+	}
+
+	else {
+	__NOP();
+	}
+
+	//Activamos el evento del canal 11:
+	EXTI->EMR |= EXTI_EMR_MR11;
+}
+
+
+

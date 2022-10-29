@@ -237,6 +237,60 @@ void enableOutput(PWM_Handler_t *ptrPwmHandler) {
 	}
 }
 
+/* Función encargada de desactivar cada uno de los canales con los que cuenta el TimerX */
+void disableOutput(PWM_Handler_t *ptrPwmHandler) {
+	switch (ptrPwmHandler->config.channel) {
+	case PWM_CHANNEL_1: {
+		// Activamos la salida del canal 1
+	    //CC1E: Capture/Compare 1 output enable.
+	    //CC1 channel configured as output:
+	    //0: Off - OC1 is not active
+	    //1: On - OC1 signal is output on the corresponding output pin
+		ptrPwmHandler->ptrTIMx->CCER &= ~TIM_CCER_CC1E;
+
+	    break;
+	}
+
+	case PWM_CHANNEL_2: {
+		// Activamos la salida del canal 1
+	    //CC1E: Capture/Compare 1 output enable.
+	    //CC1 channel configured as output:
+	    //0: Off - OC1 is not active
+	    //1: On - OC1 signal is output on the corresponding output pin
+		ptrPwmHandler->ptrTIMx->CCER &= ~TIM_CCER_CC2E;
+
+	    break;
+	}
+
+	case PWM_CHANNEL_3: {
+			// Activamos la salida del canal 1
+		    //CC1E: Capture/Compare 1 output enable.
+		    //CC1 channel configured as output:
+		    //0: Off - OC1 is not active
+		    //1: On - OC1 signal is output on the corresponding output pin
+			ptrPwmHandler->ptrTIMx->CCER &= ~TIM_CCER_CC3E;
+
+		    break;
+		}
+
+	case PWM_CHANNEL_4: {
+			// Activamos la salida del canal 1
+		    //CC1E: Capture/Compare 1 output enable.
+		    //CC1 channel configured as output:
+		    //0: Off - OC1 is not active
+		    //1: On - OC1 signal is output on the corresponding output pin
+			ptrPwmHandler->ptrTIMx->CCER &= ~TIM_CCER_CC4E;
+
+		    break;
+		}
+
+	default: {
+		break;
+	}
+
+	}
+}
+
 /* 
  * La frecuencia es definida por el conjunto formado por el preescaler (PSC)
  * y el valor límite al que llega el Timer (ARR), con estos dos se establece
@@ -304,6 +358,76 @@ void updateDuttyCycle(PWM_Handler_t *ptrPwmHandler, uint16_t newDutty){
 	// Llamamos a la fucnión que cambia el dutty y cargamos el nuevo valor
 		setDuttyCycle(ptrPwmHandler);
 }
+
+void enableEvent(PWM_Handler_t *ptrPwmHandler){
+	switch (ptrPwmHandler->config.channel) {
+
+	case PWM_CHANNEL_1: {
+		//Activamos el evento en el canal 1
+		ptrPwmHandler->ptrTIMx->EGR |= TIM_EGR_CC1G;
+		break;
+	}
+
+	case PWM_CHANNEL_2: {
+		//Activamos el evento en el canal 1
+		ptrPwmHandler->ptrTIMx->EGR |= TIM_EGR_CC2G;
+		break;
+	}
+
+	case PWM_CHANNEL_3: {
+		//Activamos el evento en el canal 1
+		ptrPwmHandler->ptrTIMx->EGR |= TIM_EGR_CC3G;
+		break;
+	}
+
+	case PWM_CHANNEL_4: {
+		//Activamos el evento en el canal 1
+		ptrPwmHandler->ptrTIMx->EGR |= TIM_EGR_CC4G;
+		break;
+	}
+
+	default: {
+		break;
+	}
+	}
+}
+
+void disableEvent(PWM_Handler_t *ptrPwmHandler){
+	switch (ptrPwmHandler->config.channel) {
+
+	case PWM_CHANNEL_1: {
+		//Activamos el evento en el canal 1
+		ptrPwmHandler->ptrTIMx->EGR &= ~TIM_EGR_CC1G;
+		break;
+	}
+
+	case PWM_CHANNEL_2: {
+		//Activamos el evento en el canal 1
+		ptrPwmHandler->ptrTIMx->EGR &= ~TIM_EGR_CC2G;
+		break;
+	}
+
+	case PWM_CHANNEL_3: {
+		//Activamos el evento en el canal 1
+		ptrPwmHandler->ptrTIMx->EGR &= ~TIM_EGR_CC3G;
+		break;
+	}
+
+	case PWM_CHANNEL_4: {
+		//Activamos el evento en el canal 1
+		ptrPwmHandler->ptrTIMx->EGR &= ~TIM_EGR_CC4G;
+		break;
+	}
+
+	default: {
+		break;
+	}
+	}
+}
+
+
+
+
 
 
 

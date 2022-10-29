@@ -4,15 +4,15 @@
  *  Created on: Month XX, 2022
  *      Author: namontoy
  */
-#include "AdcDriver.h"
+#include "AdcMCDriver.h"
 #include "GPIOxDriver.h"
 
 GPIO_Handler_t handlerAdcPin = {0};
 uint16_t	adcRawData = 0;
 
-void adc_Config(ADC_Config_t *adcConfig){
+void adcMC_Config(ADC_Config_t *adcConfig){
 	/* 1. Configuramos el PinX para que cumpla la función de canal análogo deseado. */
-	for(uint8_t i = 0; i <= (adcConfig->numberOfChannels); i++){
+	for(uint8_t i = 0; i < (adcConfig->numberOfChannels); i++){
 		configAnalogPin(*(adcConfig->channels+i));
 	}
 
@@ -65,16 +65,11 @@ void adc_Config(ADC_Config_t *adcConfig){
 	}
 	}
 
-	/* 4. Configuramos el modo Scan como desactivado:
+	/* 4. Configuramos el modo Scan como activado:
 	 * 0: Scan mode disabled
 	 * 1: Scan mode enabled */
 
-	if((adcConfig->numberOfChannels + 1) == 1){
-		ADC1->CR1 &= ~ADC_CR1_SCAN; //disabled
-	}
-	else{
-		ADC1->CR1 |= ADC_CR1_SCAN;  //enabled
-	}
+	ADC1->CR1 |= ADC_CR1_SCAN;
 
 	/* 5. Configuramos la alineación de los datos (derecha o izquierda):
 	 * 0: Right alignment
@@ -97,42 +92,53 @@ void adc_Config(ADC_Config_t *adcConfig){
 	/* 7. Acá se debería configurar el sampling...*/
 	//15 Ciclos 0b001 TODO TODO  cambiar a 100: 84 cycles
 
+	//Para el canal 1:
 	//Primero limpio los bits:
-	for(uint8_t i = 0; i <= (adcConfig->numberOfChannels); i++){
+	ADC1->SMPR2 &= ~0b111 << (3*(adcConfig->channel1));
+	ADC1->SMPR1 &= ~0b111 << (3*(adcConfig->channel1));
 
-		ADC1->SMPR2 = 0;
-		ADC1->SMPR1 = 0;
+	if(adcConfig->channel1 <= ADC_CHANNEL_9){
+		ADC1->SMPR2 |= adcConfig->samplingPeriod << (3*(adcConfig->channel1));
+	}
+	else{
+		ADC1->SMPR1 |= adcConfig->samplingPeriod << (3*(adcConfig->channel1-10));
 
-		if (*(adcConfig->channels+i) <= ADC_CHANNEL_9) {
-			ADC1->SMPR2 |= adcConfig->samplingPeriod << (3 * (*(adcConfig->channels+i)));
-		} else {
-			ADC1->SMPR1 |= adcConfig->samplingPeriod << (3 * (*(adcConfig->channels+i)- 10));
-		}
+	}
+
+	//Para el canal 2:
+	//Primero limpio los bits:
+	ADC1->SMPR2 &= ~0b111 << (3*(adcConfig->channel2));
+	ADC1->SMPR1 &= ~0b111 << (3*(adcConfig->channel2));
+
+	if(adcConfig->channel2 <= ADC_CHANNEL_9){
+		ADC1->SMPR2 |= adcConfig->samplingPeriod << (3*(adcConfig->channel2));
+	}
+	else{
+		ADC1->SMPR1 |= adcConfig->samplingPeriod << (3*(adcConfig->channel2-10));
 	}
 
 	/* 8. Configuramos la secuencia y cuantos elementos hay en la secuencia */
-	// Al hacerlo todo 0, estamos seleccionando solo 1 elemento en el conteo de la secuencia
+
+	//L[3:0]: Regular channel sequence length
+	//These bits are written by software to define the total number of conversions in the regular
+	//channel conversion sequence.
+	//0000: 1 conversion
+	//0001: 2 conversions
+	//...
+	//1111: 16 conversions
+
+	//Primero limpiamos el registro
 	ADC1->SQR1 = 0;
 	ADC1->SQR3 = 0;
 
-	//Longitud de la secuencia
 	ADC1->SQR1 |= adcConfig->numberOfChannels << ADC_SQR1_L_Pos;
 
-	// Asignamos los canales a la secuencia
-	for(uint8_t i = 0; i <= (adcConfig->numberOfChannels); i++){
-		if (i <= 5) {
-			ADC1->SQR3 |= (*(adcConfig->channels + i) << 5 * i);
-		}
+	// Asignamos los canales a la secuencia:
+	for(uint8_t i = 0; i < (adcConfig->numberOfChannels); i++){
 
-		else if((5 < i) & (i < 12)){
-			ADC1->SQR2 |= (*(adcConfig->channels+i) << 5 * (i-6));
-		}
-
-		else {
-			ADC1->SQR1 |= (*(adcConfig->channels+i) << 5 * (i-12));
-		}
+		ADC1->SQR3 |= (adcConfig->channel1 << 0);
 	}
-
+	ADC1->SQR3 |= (adcConfig->channel2 << 5);
 
 	/* 9. Configuramos el preescaler del ADC en 2:1 (el mas rápido que se puede tener) */
 	ADC->CCR |= ADC_CCR_ADCPRE_0;
@@ -205,6 +211,7 @@ void startSingleADC(void){
 	1: Starts conversion of regular channels
 	Note: This bit can be set only when ADON = 1 */
 	ADC1->CR2 |= ADC_CR2_SWSTART;
+
 }
 
 /* 
@@ -214,6 +221,7 @@ void startSingleADC(void){
  * Solo es necesario activar una sola vez dicho bit y las conversiones posteriores se lanzan
  * automaticamente.
  * */
+
 void startContinousADC(void){
 
 	/* Activamos el modo continuo de ADC */
@@ -221,7 +229,6 @@ void startContinousADC(void){
 
 	/* Iniciamos un ciclo de conversión ADC */
 	ADC1->CR2 |= ADC_CR2_SWSTART;
-
 }
 
 /* 
@@ -233,22 +240,6 @@ uint16_t getADC(void){
 	// Esta variable es actualizada en la ISR de la conversión, cada vez que se obtiene
 	// un nuevo valor.
 	return adcRawData;
-}
-
-void adcConfigExternal(ADC_Config_Event_t *adcConfigEvent){
-	//Se selecciona el flanco del evento
-
-	//Primero se limpian los bits:
-	ADC1->CR2 &= ~(0b11 << ADC_CR2_EXTEN_Pos);
-	//Se selecciona el flanco:
-	ADC1->CR2 |= ((adcConfigEvent -> extEventTrigger) << ADC_CR2_EXTEN_Pos);
-
-	//Seleccionamos el tipo de evento externo
-
-	//Primero se limpian los bits:
-	ADC1->CR2 &= ~(0b1111 << ADC_CR2_EXTSEL_Pos);
-	//Se selecciona el tipo de evento:
-	ADC1->CR2 |= ((adcConfigEvent -> extEventTypeSelect) << ADC_CR2_EXTSEL_Pos);
 }
 
 /* 
