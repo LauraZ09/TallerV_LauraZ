@@ -46,5 +46,6 @@ void startPwmSignal(PWM_Handler_t *ptrPwmHandler);
 void stopPwmSignal(PWM_Handler_t *ptrPwmHandler);
 void enableEvent(PWM_Handler_t *ptrPwmHandler);
 void disableEvent(PWM_Handler_t *ptrPwmHandler);
+uint32_t getDuttyCycleValue(PWM_Handler_t *ptrPwmHandler);
 
 #endif /* PWMDRIVER_H_ */

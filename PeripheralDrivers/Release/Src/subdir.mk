@@ -5,6 +5,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Src/ADXL345.c \
 ../Src/AdcDriver.c \
 ../Src/AdcMCDriver.c \
 ../Src/BasicTimer.c \
@@ -17,6 +18,7 @@ C_SRCS += \
 ../Src/sysmem.c 
 
 OBJS += \
+./Src/ADXL345.o \
 ./Src/AdcDriver.o \
 ./Src/AdcMCDriver.o \
 ./Src/BasicTimer.o \
@@ -29,6 +31,7 @@ OBJS += \
 ./Src/sysmem.o 
 
 C_DEPS += \
+./Src/ADXL345.d \
 ./Src/AdcDriver.d \
 ./Src/AdcMCDriver.d \
 ./Src/BasicTimer.d \

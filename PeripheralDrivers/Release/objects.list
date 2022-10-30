@@ -1,3 +1,4 @@
+"./Src/ADXL345.o"
 "./Src/AdcDriver.o"
 "./Src/AdcMCDriver.o"
 "./Src/BasicTimer.o"

@@ -15,7 +15,7 @@
  * y con las resistencias en modo pull-up.
  */
 
-void i2c_Config (I2C_Handler_t *ptrHandlerI2C){
+void i2c_config (I2C_Handler_t *ptrHandlerI2C){
 
 	/* 1. Activamos la señal de reloj para el módulo I2C seleccionado */
 	if(ptrHandlerI2C->ptrI2Cx == I2C1){
@@ -217,7 +217,7 @@ uint8_t i2c_readSingleRegister(I2C_Handler_t *ptrHandlerI2C, uint8_t regToRead){
 }
 
 /***/
-void i2c_writeSignalRegister(I2C_Handler_t *ptrHandlerI2C, uint8_t regToRead, uint8_t newValue){
+void i2c_writeSingleRegister(I2C_Handler_t *ptrHandlerI2C, uint8_t regToRead, uint8_t newValue){
 
 	/* 1. Generamos la condición de satrt*/
 	i2c_startTransaction(ptrHandlerI2C);

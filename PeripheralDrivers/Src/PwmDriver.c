@@ -6,6 +6,8 @@
  */
 #include "PwmDriver.h"
 
+uint32_t duttyCicleValue;
+
 /**/
 void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 
@@ -423,6 +425,38 @@ void disableEvent(PWM_Handler_t *ptrPwmHandler){
 		break;
 	}
 	}
+}
+
+uint32_t getDuttyCycleValue(PWM_Handler_t *ptrPwmHandler){
+
+	switch(ptrPwmHandler->config.channel){
+
+		case PWM_CHANNEL_1:{
+			duttyCicleValue = ptrPwmHandler->ptrTIMx->CCR1;
+			break;
+		}
+
+		case PWM_CHANNEL_2:{
+			duttyCicleValue = ptrPwmHandler->ptrTIMx->CCR2;
+			break;
+		}
+
+		case PWM_CHANNEL_3:{
+			duttyCicleValue = ptrPwmHandler->ptrTIMx->CCR3;
+			break;
+		}
+
+		case PWM_CHANNEL_4:{
+			duttyCicleValue = ptrPwmHandler->ptrTIMx->CCR4;
+			break;
+		}
+
+		default:{
+			break;
+		}
+		}
+
+	return duttyCicleValue;
 }
 
 
