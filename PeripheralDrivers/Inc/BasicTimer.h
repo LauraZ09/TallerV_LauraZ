@@ -41,5 +41,7 @@ void BasicTimer2_Callback(void); /* Esta función debe ser sobre-escrita en el m
 void BasicTimer3_Callback(void);
 void BasicTimer4_Callback(void);
 void BasicTimer5_Callback(void);
+void delayus(uint32_t delayTime);
+void delayms(uint32_t delayTime);
 
 #endif /* INC_BASICTIMER_H_ */

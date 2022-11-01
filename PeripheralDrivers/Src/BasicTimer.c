@@ -7,6 +7,9 @@
 
 #include "BasicTimer.h"
 
+uint32_t delay_i = 0;
+BasicTimer_Handler_t handlerDelayTimer = {0};
+
 /* Variable que guarda la referencia del periférico que se esta utilizando*/
 TIM_TypeDef	*ptrTimerUsed;
 
@@ -167,6 +170,9 @@ void TIM3_IRQHandler(void){
 	/* Limpiamos la bandera que indica que la interrupción se ha generado */
 	TIM3->SR &= ~TIM_SR_UIF;
 
+	/*Se llena la variable de la función delay*/
+	delay_i++;
+
 	/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
 	BasicTimer3_Callback();
 }
@@ -185,5 +191,41 @@ void TIM5_IRQHandler(void){
 
 	/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
 	BasicTimer5_Callback();
+}
+
+//Esta función trabaja ÚNICAMENTE con el Timer3
+void delayus(uint32_t delayTime){
+
+	handlerDelayTimer.ptrTIMx 					= TIM3;
+	handlerDelayTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
+	handlerDelayTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_1us;
+	handlerDelayTimer.TIMx_Config.TIMx_period 	= 1; //Update period= 1us
+
+	//Se carga la configuración del Timer
+	BasicTimer_Config(&handlerDelayTimer);
+
+
+	while(delay_i < delayTime){
+		__NOP();
+	}
+
+}
+
+//Esta función trabaja ÚNICAMENTE con el Timer3
+void delayms(uint32_t delayTime){
+
+	handlerDelayTimer.ptrTIMx 					= TIM3;
+	handlerDelayTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
+	handlerDelayTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_1ms;
+	handlerDelayTimer.TIMx_Config.TIMx_period 	= 1; //Update period = 1ms
+
+	//Se carga la configuración del Timer
+	BasicTimer_Config(&handlerDelayTimer);
+
+
+	while(delay_i < delayTime){
+		__NOP();
+	}
+
 }
 

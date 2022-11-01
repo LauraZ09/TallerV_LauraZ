@@ -12,6 +12,7 @@ C_SRCS += \
 ../Src/ExtiDriver.c \
 ../Src/GPIOxDriver.c \
 ../Src/I2CDriver.c \
+../Src/LCD2004A.c \
 ../Src/PwmDriver.c \
 ../Src/USARTxDriver.c \
 ../Src/syscalls.c \
@@ -25,6 +26,7 @@ OBJS += \
 ./Src/ExtiDriver.o \
 ./Src/GPIOxDriver.o \
 ./Src/I2CDriver.o \
+./Src/LCD2004A.o \
 ./Src/PwmDriver.o \
 ./Src/USARTxDriver.o \
 ./Src/syscalls.o \
@@ -38,6 +40,7 @@ C_DEPS += \
 ./Src/ExtiDriver.d \
 ./Src/GPIOxDriver.d \
 ./Src/I2CDriver.d \
+./Src/LCD2004A.d \
 ./Src/PwmDriver.d \
 ./Src/USARTxDriver.d \
 ./Src/syscalls.d \

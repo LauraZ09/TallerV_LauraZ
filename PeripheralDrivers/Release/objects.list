@@ -5,6 +5,7 @@
 "./Src/ExtiDriver.o"
 "./Src/GPIOxDriver.o"
 "./Src/I2CDriver.o"
+"./Src/LCD2004A.o"
 "./Src/PwmDriver.o"
 "./Src/USARTxDriver.o"
 "./Src/syscalls.o"

@@ -34,7 +34,7 @@ ADC_Config_Event_t adcConfigEvent		 = {0}; //Configuración del evento externo
 PWM_Handler_t handlerPWMTimer 	         = {0}; //Handler para el PWM (Timer)
 
 //Definición de otras variables necesarias para el desarrollo de los ejercicios:
-uint8_t i 		   = 0;      //Contador
+uint8_t i          = 0;      //Contador
 uint8_t rxData     = 0;      //Datos de recepción
 uint8_t channels[2]= {ADC_CHANNEL_0, ADC_CHANNEL_1};
 uint16_t adcData[2]= {0,0};  //Datos del ADC
