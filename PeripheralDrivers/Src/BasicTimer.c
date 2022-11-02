@@ -170,9 +170,6 @@ void TIM3_IRQHandler(void){
 	/* Limpiamos la bandera que indica que la interrupción se ha generado */
 	TIM3->SR &= ~TIM_SR_UIF;
 
-	/*Se llena la variable de la función delay*/
-	delay_i++;
-
 	/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
 	BasicTimer3_Callback();
 }
@@ -180,6 +177,9 @@ void TIM3_IRQHandler(void){
 void TIM4_IRQHandler(void){
 	/* Limpiamos la bandera que indica que la interrupción se ha generado */
 	TIM4->SR &= ~TIM_SR_UIF;
+
+	/*Se llena la variable de la función delay*/
+	delay_i++;
 
 	/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
 	BasicTimer4_Callback();
@@ -193,7 +193,7 @@ void TIM5_IRQHandler(void){
 	BasicTimer5_Callback();
 }
 
-//Esta función trabaja ÚNICAMENTE con el Timer3
+//Esta función trabaja ÚNICAMENTE con el Timer4
 void delayus(uint32_t delayTime){
 
 	handlerDelayTimer.ptrTIMx 					= TIM3;
@@ -211,10 +211,10 @@ void delayus(uint32_t delayTime){
 
 }
 
-//Esta función trabaja ÚNICAMENTE con el Timer3
+//Esta función trabaja ÚNICAMENTE con el Timer4
 void delayms(uint32_t delayTime){
 
-	handlerDelayTimer.ptrTIMx 					= TIM3;
+	handlerDelayTimer.ptrTIMx 					= TIM4;
 	handlerDelayTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
 	handlerDelayTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_1ms;
 	handlerDelayTimer.TIMx_Config.TIMx_period 	= 1; //Update period = 1ms

@@ -18,7 +18,8 @@
 #include "USARTxDriver.h"
 #include "ADXL345.h"
 #include "I2CDriver.h"
-
+#include "PwmDriver.h"
+#include "DriverRTC.h"
 
 //Definición de los handlers necesarios
 GPIO_Handler_t handlerBlinkyPin          = {0}; //Handler para el USER_LED
@@ -26,22 +27,35 @@ GPIO_Handler_t handlerTxPin              = {0}; //Handler para el PIN por el cua
 GPIO_Handler_t handlerRxPin              = {0}; //Handler para el PIN por el cual se hará la transmisión
 GPIO_Handler_t handlerSDAPin			 = {0}; //Handler para el PIN DATA del I2C del acelerómetro
 GPIO_Handler_t handlerSCLPin			 = {0}; //Handler para el PIN CLOCK del I2C del acelerómetro
+GPIO_Handler_t handlerBlueRGB            = {0}; //Handler para el azul del RGB
+GPIO_Handler_t handlerRedRGB             = {0}; //Handler para el rojo del RGB
+GPIO_Handler_t handlerGreenRGB           = {0}; //Handler para el verde del RGB
 USART_Handler_t handlerUsart2            = {0}; //Handler para el USART2
-BasicTimer_Handler_t handlerBlinkyTimer  = {0}; //Handler para el TIMER2, con este se hará el Blinky
+PWM_Handler_t handlerPWMTimerB 	         = {0}; //Handler para el PWM (Timer)
+PWM_Handler_t handlerPWMTimerR 	         = {0}; //Handler para el PWM (Timer)
+PWM_Handler_t handlerPWMTimerG 	         = {0}; //Handler para el PWM (Timer)
 ADXL345_Handler_t handlerAccel   		 = {0}; //Handler para el acelerómetro
 I2C_Handler_t handlerI2CAccel			 = {0}; //Handler para el I2C del acelerómetro
+BasicTimer_Handler_t handlerBlinkyTimer  = {0}; //Handler para el TIMER2, con este se hará el Blinky
+
 
 //Definición de otras variables necesarias para el desarrollo de los ejercicios:
-uint8_t rxData     = 0;      //Datos de recepción
-int16_t accX	   = 0;
-int16_t accY	   = 0;
-int16_t accZ	   = 0;
-uint8_t accFlag	   = 0;
-char Buffer[64]    = {0};    //En esta variable se almacenarán mensajes
-char greetingMsg[] = "SIUU \n\r"; //Mensaje que se imprime
+uint8_t timeFlag 	  = 0;
+uint8_t segundos = 0;
+uint8_t minutos = 0;
+uint8_t updateRGBFlag = 0;
+uint8_t rxData        = 0;      //Datos de recepción
+int16_t accX	      = 0;
+int16_t accY	      = 0;
+int16_t accZ	      = 0;
+uint8_t accFlag	      = 0;
+char Buffer[64]       = {0};    //En esta variable se almacenarán mensajes
+char greetingMsg[]    = "SIUU \n\r"; //Mensaje que se imprime
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
 void initSystem(void);       //Función para inicializar el sistema
+void updateRGB(uint8_t xAccel, uint8_t yAccel); //Función para actualizar el RGB
+uint32_t absValue(int32_t);
 
 int main(void) {
 
@@ -50,7 +64,7 @@ int main(void) {
 
 	while (1) {
 
-		if(accFlag == 4){
+		if(accFlag == 1){
 			accFlag = 0;
 			accX = getXData(&handlerAccel);
 			sprintf(Buffer, "\n\rACCx: %d\n", accX);
@@ -59,7 +73,11 @@ int main(void) {
 			accY = getYData(&handlerAccel);
 			sprintf(Buffer, "ACCy: %d\n", accY);
 			writeMsg(&handlerUsart2, Buffer);
+		}
 
+		if(updateRGBFlag == 1){
+			updateRGBFlag = 0;
+			updateRGB(accX, accY);
 		}
 
 
@@ -222,13 +240,85 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	init_ADXL345(&handlerAccel);
+
+	//Se configura el Timer del PWM Azul
+	handlerPWMTimerB.ptrTIMx 		   = TIM3;
+	handlerPWMTimerB.config.channel    = PWM_CHANNEL_1;
+	handlerPWMTimerB.config.prescaler  = BTIMER_SPEED_1us;
+	handlerPWMTimerB.config.periodo    = 255;
+	handlerPWMTimerB.config.duttyCicle = 50;
+
+	pwm_Config(&handlerPWMTimerB);
+
+	//Se configura el Timer del PWM Rojo
+	handlerPWMTimerR.ptrTIMx 			= TIM3;
+	handlerPWMTimerR.config.channel 	= PWM_CHANNEL_2;
+	handlerPWMTimerR.config.prescaler   = BTIMER_SPEED_1us;
+	handlerPWMTimerR.config.periodo 	= 255;
+	handlerPWMTimerR.config.duttyCicle  = 10;
+
+	pwm_Config(&handlerPWMTimerR);
+
+	//Se configura el Timer del PWM Verde
+	handlerPWMTimerG.ptrTIMx 			= TIM3;
+	handlerPWMTimerG.config.channel 	= PWM_CHANNEL_3;
+	handlerPWMTimerG.config.prescaler   = BTIMER_SPEED_1us;
+	handlerPWMTimerG.config.periodo 	= 255;
+	handlerPWMTimerG.config.duttyCicle  = 10;
+
+	pwm_Config(&handlerPWMTimerG);
+
+	//Se configura la salida del PWM Azul:
+	handlerBlueRGB.pGPIOx 						      = GPIOB;
+	handlerBlueRGB.GPIO_PinConfig.GPIO_PinNumber      = PIN_4;
+	handlerBlueRGB.GPIO_PinConfig.GPIO_PinMode 	      = GPIO_MODE_ALTFN;
+	handlerBlueRGB.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
+	handlerBlueRGB.GPIO_PinConfig.GPIO_PinSpeed 	  = GPIO_OSPEED_FAST;
+	handlerBlueRGB.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerBlueRGB.GPIO_PinConfig.GPIO_PinAltFunMode  = AF2; //AF02: TIM5_CH1;
+
+	GPIO_Config(&handlerBlueRGB);
+
+	//Se configura la salida del PWM Verde:
+	handlerGreenRGB.pGPIOx 						      = GPIOB;
+	handlerGreenRGB.GPIO_PinConfig.GPIO_PinNumber     = PIN_0;
+	handlerGreenRGB.GPIO_PinConfig.GPIO_PinMode 	  = GPIO_MODE_ALTFN;
+	handlerGreenRGB.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
+	handlerGreenRGB.GPIO_PinConfig.GPIO_PinSpeed 	  = GPIO_OSPEED_FAST;
+	handlerGreenRGB.GPIO_PinConfig.GPIO_PinPuPdControl= GPIO_PUPDR_NOTHING;
+	handlerGreenRGB.GPIO_PinConfig.GPIO_PinAltFunMode = AF2; //AF02: TIM5_CH1;
+
+	GPIO_Config(&handlerGreenRGB);
+
+	//Se configura la salida del PWM Rojo:
+	handlerRedRGB.pGPIOx 						      = GPIOB;
+	handlerRedRGB.GPIO_PinConfig.GPIO_PinNumber       = PIN_5;
+	handlerRedRGB.GPIO_PinConfig.GPIO_PinMode 	      = GPIO_MODE_ALTFN;
+	handlerRedRGB.GPIO_PinConfig.GPIO_PinOPType 	  = GPIO_OTYPE_PUSHPULL;
+	handlerRedRGB.GPIO_PinConfig.GPIO_PinSpeed 	      = GPIO_OSPEED_FAST;
+	handlerRedRGB.GPIO_PinConfig.GPIO_PinPuPdControl  = GPIO_PUPDR_NOTHING;
+	handlerRedRGB.GPIO_PinConfig.GPIO_PinAltFunMode   = AF2; //AF02: TIM5_CH1;
+
+	GPIO_Config(&handlerRedRGB);
+
+	enableOutput(&handlerPWMTimerG);
+	enableOutput(&handlerPWMTimerR);
+	enableOutput(&handlerPWMTimerB);
+
+	startPwmSignal(&handlerPWMTimerG);
+	startPwmSignal(&handlerPWMTimerR);
+	startPwmSignal(&handlerPWMTimerB);
+
+	enableRTC();
 }
 
 //Función Callback del BlinkyTimer
 void BasicTimer2_Callback(void) {
 	//Blinky del LED de estado
 	GPIOxTooglePin(&handlerBlinkyPin);
-	accFlag++;
+	accFlag = 1;
+	updateRGBFlag = 1;
+	segundos = RTC_get_time();
 }
 
 /*Función Callback de la recepción del USART2
@@ -240,6 +330,31 @@ void usart2Rx_Callback(void){
 	rxData = getRxData();
 }
 
+void updateRGB(uint8_t xAccel, uint8_t yAccel){
+
+	uint8_t newDuttyR = 5*(absValue(xAccel)) + 150;
+	uint8_t newDuttyB = 5*(absValue(yAccel)) + 150;
+	uint8_t newDuttyG = absValue(-5*(absValue(yAccel)) + 150);
+
+	updateDuttyCycle(&handlerPWMTimerR, newDuttyR);
+	updateDuttyCycle(&handlerPWMTimerG, newDuttyG);
+	updateDuttyCycle(&handlerPWMTimerB, newDuttyB);
+}
+
+uint32_t absValue(int32_t negValue){
+
+	uint32_t posValue;
+
+	if( negValue < 0 ){
+		posValue = negValue*(-1);
+	}
+
+	else {
+		posValue = negValue;
+	}
+
+	return posValue;
+}
 
 
 

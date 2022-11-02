@@ -5,6 +5,9 @@
  *      Author: Laura Zuluaga
  */
 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdbool.h>
 #include "ADXL345.h"
 #include "I2CDriver.h"
 #include "I2CDriver.c"
@@ -14,6 +17,10 @@ uint8_t BW_RATE_R_VALUE = 0;
 uint8_t POWER_CTL_R_VALUE = 0;
 uint8_t DATA_FORMAT_R_VALUE = 0;
 uint8_t DEVID_R_VALUE = 0;
+int16_t xData = 0;
+int16_t yData = 0;
+int16_t zData = 0;
+
 
 uint8_t init_ADXL345(ADXL345_Handler_t *ptrADXL345Handler){
 
@@ -56,4 +63,34 @@ uint8_t init_ADXL345(ADXL345_Handler_t *ptrADXL345Handler){
 	DEVID_R_VALUE = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DEVID_R);
 	
 	return DEVID_R_VALUE;
+}
+
+int16_t getXData(ADXL345_Handler_t *ptrADXL345Handler){
+
+	int8_t xDataL = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAX0_R);
+	int8_t xDataH = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAX1_R);
+
+	xData = (xDataH << 8  | xDataL);
+
+	return xData;
+}
+
+int16_t getYData(ADXL345_Handler_t *ptrADXL345Handler){
+
+	int8_t yDataL = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAY0_R);
+	int8_t yDataH = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAY1_R);
+
+	yData = (yDataH << 8  | yDataL);
+
+	return yData;
+}
+
+int16_t getZData(ADXL345_Handler_t *ptrADXL345Handler){
+
+	int8_t zDataL = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAZ0_R);
+	int8_t zDataH = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAZ1_R);
+
+	zData = (zDataH << 8  | zDataL);
+
+	return zData;
 }

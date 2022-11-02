@@ -75,5 +75,8 @@ typedef struct
 
 
 uint8_t init_ADXL345(ADXL345_Handler_t *ptrADXL345Handler);
+int16_t getXData(ADXL345_Handler_t *ptrADXL345Handler);
+int16_t getYData(ADXL345_Handler_t *ptrADXL345Handler);
+int16_t getZData(ADXL345_Handler_t *ptrADXL345Handler);
 
 #endif /* ADXL345_H_ */
