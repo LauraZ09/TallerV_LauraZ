@@ -36,6 +36,6 @@ uint8_t BCD_To_Decimal(uint8_t BCDValue);
 uint8_t RTC_Get_Date(void);
 uint8_t RTC_Get_Month(void);
 uint8_t RTC_Get_Year(void);
-char RTC_Get_WeekDay(void);
+char* RTC_Get_WeekDay(void);
 
 #endif /*RTC_H_ */

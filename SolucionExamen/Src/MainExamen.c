@@ -45,19 +45,23 @@ uint8_t timeFlag 	  = 0;  //Bandera para la actualización de la hora
 uint8_t segundos      = 0;	//Variable para almacenar los segundos
 uint8_t minutos       = 0;  //Variable para almacenar los minutos
 uint8_t horas		  = 0;  //Variable para almacenar las horas
+uint8_t mes			  = 0;  //Variable en la que se almacena el mes
+uint8_t year		  = 0;  //Variable en la que se almacena el año
+uint8_t fecha		  = 0;  //Variable en la que se almacena la fecha
 uint8_t updateRGBFlag = 0;	//Bandera para actualizar el PWM del LED RGB
 uint8_t rxData        = 0;  //Datos de recepción
 int16_t accX	      = 0;  //Variable para almacenar la aceleración en X
 int16_t accY	      = 0;	//Variable para almacenar la aceleración en Y
 uint8_t accFlag	      = 0;	//Bandera para actualizar los datos de la aceleración
 char Buffer[64]       = {0};//En esta variable se almacenarán mensajes
+char* diaSemana       = {0};//En esta variable se almacena el día de la semana (arreglo, se almacena un string)
 char greetingMsg[]    = "SIUU \n\r"; //Mensaje que se imprime
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
 void initSystem(void);       				    //Función para inicializar el sistema
 void updateRGB(uint8_t xAccel, uint8_t yAccel); //Función para actualizar el RGB
 uint32_t absValue(int32_t);						//Función para obtener valor absoluto
-char PrintWeekDay(uint8_t Day);
+void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds);
 
 int main(void) {
 
@@ -83,16 +87,20 @@ int main(void) {
 		}*/
 
 		if(timeFlag == 1){
-			timeFlag = 0;
-			segundos = RTC_Get_Seconds();
-			minutos = RTC_Get_Minutes();
-			horas = RTC_Get_Hours();
-			sprintf(Buffer, "Hora: %d:%d:%d\n", horas, minutos, segundos);
+			timeFlag  = 0;
+			segundos  = RTC_Get_Seconds();
+			minutos   = RTC_Get_Minutes();
+			horas     = RTC_Get_Hours();
+			diaSemana = RTC_Get_WeekDay();
+			fecha	  = RTC_Get_Date();
+			year 	  = RTC_Get_Year();
+			mes		  = RTC_Get_Month();
+			printHour(horas, minutos, segundos);
 			writeMsg(&handlerUsart2, Buffer);
-			Buffer = RTC_Get_WeekDay();
+			sprintf(Buffer, "%s", diaSemana);
 			writeMsg(&handlerUsart2, Buffer);
-
-
+			sprintf(Buffer, " Fecha:%d/%d/%d\n\r", fecha, mes, year);
+			writeMsg(&handlerUsart2, Buffer);
 		}
 
 		//El sistema siempre está verificando si el valor de rxData ha cambiado
@@ -323,8 +331,8 @@ void initSystem(void) {
 	startPwmSignal(&handlerPWMTimerB);
 
 	handlerHourDateConfig.PM_AM_Format = PM_FORMAT;
-	handlerHourDateConfig.Hours        = 7; //Por defecto se pone la hora 00:00:00
-	handlerHourDateConfig.Minutes      = 13;
+	handlerHourDateConfig.Hours        = 11; //Por defecto se pone la hora 00:00:00
+	handlerHourDateConfig.Minutes      = 51;
 	handlerHourDateConfig.Seconds      = 0;
 	handlerHourDateConfig.Month        = 11;
 	handlerHourDateConfig.DayOfWeek    = 4;
@@ -378,50 +386,23 @@ uint32_t absValue(int32_t negValue){
 	return posValue;
 }
 
-char PrintWeekDay(uint8_t Day){
-
-char WeekDay[32] = {0};
-
-	switch (Day){
-
-	case 1: {
-		sprintf(WeekDay, "Día: Lunes\n");
-		break;
+void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds){
+	if((minutes/10 == 0) & (seconds/10 == 0)){
+		sprintf(Buffer, "\n\rHora: %d:0%d:0%d\n\r", horas, minutos, segundos);
 	}
 
-	case 2: {
-		sprintf(WeekDay, "Día: Martes\n");
-		break;
+	else if((minutes/10 == 0)){
+		sprintf(Buffer, "\n\rHora: %d:0%d:%d\n\r", horas, minutos, segundos);
 	}
 
-	case 3: {
-		sprintf(WeekDay, "Día: Miercoles\n");
-		break;
+	else if((seconds/10 == 0)){
+		sprintf(Buffer, "\n\rHora: %d:%d:0%d\n\r", horas, minutos, segundos);
 	}
-
-	case 4:  {
-		sprintf(WeekDay, "Día: Jueves\n");
-		break;
+	else {
+		sprintf(Buffer, "\n\rHora: %d:%d:%d\n\r", horas, minutos, segundos);
 	}
-
-	case 5:  {
-		sprintf(WeekDay, "Día: Viernes\n");
-		break;
-	}
-
-	case 6:  {
-		sprintf(WeekDay, "Día: Sabado\n");
-		break;
-	}
-
-	case 7:  {
-		sprintf(WeekDay, "Día: Domingo\n");
-		break;
-	}
-	}
-
-	return *WeekDay;
 }
+
 
 
 

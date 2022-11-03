@@ -8,6 +8,8 @@
 #include "DriverRTC.h"
 #include <stdio.h>
 
+char WeekDay[32] = {0};
+
 void enableRTC(Hour_and_Date_Config_t *Hour_and_Date_Config){
 
 	//1. Se habilita la señal del reloj para el periférico RTC (Señal del reloj para el APB1)
@@ -78,20 +80,17 @@ void enableRTC(Hour_and_Date_Config_t *Hour_and_Date_Config){
 	RTC->TR = 0;
 
 	//7. a. Se escribe el año: YT[3:0]: Year tens in BCD format (registro DR)
-	RTC->DR |= RTC_DR_YT_1; //0010 = 2 en BCD
-	RTC->DR |= RTC_DR_YU_1;
+	RTC->DR |= (Decimal_To_BCD(Hour_and_Date_Config->Year)) << RTC_DR_YU_Pos;
+
 
 	//7. b. Se escribe el día de la semana
-	RTC->DR |= RTC_DR_WDU_0;
-	RTC->DR |= RTC_DR_WDU_1;
+	RTC->DR |= Hour_and_Date_Config->DayOfWeek << RTC_DR_WDU_Pos;
 
 	//7. c. Se escribe el número del mes
-	RTC->DR |= RTC_DR_MT;
-	RTC->DR |= RTC_DR_MU_0;
+	RTC->DR |= (Decimal_To_BCD(Hour_and_Date_Config->Month)) << RTC_DR_MU_Pos;
 
 	//7. d. Se escribe el número del día
-	RTC->DR |= ~(0b1111 << RTC_DR_DT_Pos);
-	RTC->DR |= RTC_DR_MU_1;
+	RTC->DR |= (Decimal_To_BCD(Hour_and_Date_Config->NumberOfDay));
 
 	//8. Se configura la hora: por defecto: 00:00:00
 
@@ -149,13 +148,47 @@ uint8_t RTC_Get_Month(void){
 }
 
 uint8_t RTC_Get_Year(void){
-	uint8_t Year = BCD_To_Decimal((RTC->DR & 0xFF00) >> RTC_DR_YU_Pos);
+	uint8_t Year = BCD_To_Decimal((RTC->DR & 0xFF0000) >> RTC_DR_YU_Pos);
 	return Year;
 }
 
-uint8_t RTC_Get_WeekDay(void){
-	uint8_t Day = BCD_To_Decimal((RTC->DR & 0xE000) >> RTC_DR_WDU_Pos);
+char* RTC_Get_WeekDay(void){
+	uint8_t Day = (RTC->DR & 0xE000) >> RTC_DR_WDU_Pos;
+
+		switch (Day){
+
+		case 1: {
+			sprintf(WeekDay, "Dia: Lunes");
+			break;}
+
+		case 2: {
+			sprintf(WeekDay, "Dia: Martes");
+			break;}
+
+		case 3: {
+			sprintf(WeekDay, "Dia: Miercoles");
+			break;}
+
+		case 4:  {
+			sprintf(WeekDay, "Dia: Jueves");
+			break;}
+
+		case 5:  {
+			sprintf(WeekDay, "Dia: Viernes");
+			break;}
+
+		case 6:  {
+			sprintf(WeekDay, "Dia: Sabado");
+			break;}
+
+		case 7:  {
+			sprintf(WeekDay, "Dia: Domingo");
+			break;}
+		}
+
+		return WeekDay;
 }
+
 
 uint16_t Decimal_To_BCD(uint16_t decimalValue){
 	uint8_t BCDValue = ((decimalValue/10*16) + (decimalValue%10));
