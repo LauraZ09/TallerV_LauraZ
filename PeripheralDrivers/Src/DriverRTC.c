@@ -6,12 +6,12 @@
  */
 
 #include "DriverRTC.h"
+#include <stdio.h>
 
-void enableRTC(void){
+void enableRTC(Hour_and_Date_Config_t *Hour_and_Date_Config){
 
 	//1. Se habilita la señal del reloj para el periférico RTC (Señal del reloj para el APB1)
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;
-
 
 	//3. Ahora, se debe habilitar la escritura para los registros del RTC:
 	/*After system reset, the RTC registers are protected against parasitic write access with the
@@ -27,13 +27,11 @@ void enableRTC(void){
 
 	PWR->CR |= PWR_CR_DBP;
 
-	//2. Habilitamos el LSE: se pone el bit LSEON del registro RCC_BDCR en 1 y esperamos a que esté listo:
+	//4. Habilitamos el LSE: se pone el bit LSEON del registro RCC_BDCR en 1 y esperamos a que esté listo:
 	RCC->BDCR |= RCC_BDCR_LSEON;
+	while(!(RCC->BDCR & RCC_BDCR_LSERDY));
 
-
-
-
-	//4. Se selecciona el LSE como fuente del RTC: Esto es en el registro RCC_BDCR
+	//5. Se selecciona el LSE como fuente del RTC: Esto es en el registro RCC_BDCR
 
 	/* RTCSEL[1:0]: RTC clock source selection:
 	 * Set by software to select the clock source for the RTC. Once the RTC clock source has been
@@ -47,10 +45,11 @@ void enableRTC(void){
 	 clock*/
 
 	RCC->BDCR |= RCC_BDCR_RTCSEL_0;
-	//11. Se habilita el RTC:
+
+	//2. Se habilita el RTC:
 	RCC->BDCR |= RCC_BDCR_RTCEN;
 
-	//5. Se ingresan los valores de la llave para habilitar la escritura en los registros:
+	//6. Se ingresan los valores de la llave para habilitar la escritura en los registros:
 
 	/*The following steps are required to unlock the write protection on all the RTC registers
 	 except for RTC_ISR[13:8], RTC_TAFCR, and RTC_BKPxR.
@@ -66,13 +65,17 @@ void enableRTC(void){
 	RTC->ISR |= RTC_ISR_INIT;
 
 	//Se espera a que la inicialización esté lista:
-	while(!(RTC->ISR & RTC_ISR_INITF))
+	while(!(RTC->ISR & RTC_ISR_INITF));
 
 	//6.c. Se ingresan los valores de los prescaler: 128 el asíncrono y 256 el síncrono, para 1 Hz
 	RTC->PRER |= RTC_PRER_PREDIV_A; //Acá se está poniendo el asíncrono en 128. Se usa la máscara de CMSIS
 	RTC->PRER |= 0xFF << RTC_PRER_PREDIV_S_Pos; //Se está poniendo el síncrono en 256
 
-	//7. Se escriben valores de tiempo y fecha:
+	//7. Se escriben valores de tiempo y fecha por defecto:
+	//Primero se apaga el RTC y se limpian los registros:
+	RCC->BDCR &= ~RCC_BDCR_RTCEN;
+	RTC->DR = 0;
+	RTC->TR = 0;
 
 	//7. a. Se escribe el año: YT[3:0]: Year tens in BCD format (registro DR)
 	RTC->DR |= RTC_DR_YT_1; //0010 = 2 en BCD
@@ -90,27 +93,80 @@ void enableRTC(void){
 	RTC->DR |= ~(0b1111 << RTC_DR_DT_Pos);
 	RTC->DR |= RTC_DR_MU_1;
 
-	//Se configura la hora:
-	RTC->TR |= 0x130000;
-	RTC->TR |= 0x5700;
+	//8. Se configura la hora: por defecto: 00:00:00
 
-	//8. Se pone el bit BYPSHAD en 1 para que se lean los datos del contador y no de los registros sombra:
+	//8.a. Se le pone el formato AM o PM_
+	RTC->TR |= (Hour_and_Date_Config->PM_AM_Format) << RTC_TR_PM_Pos;  //Formato AM o PM
+
+	//8.b. Se configuran las horas, primero se deben convertir las horas ingresadas a BCD.
+	RTC->TR |= (Decimal_To_BCD(Hour_and_Date_Config->Hours)) << RTC_TR_HU_Pos;
+
+	//8.c.Se escriben los minutos:
+	RTC->TR |= (Decimal_To_BCD(Hour_and_Date_Config->Minutes)) << RTC_TR_MNU_Pos;
+
+	//8.d.Se escriben los segundos:
+	RTC->TR |= (Decimal_To_BCD(Hour_and_Date_Config->Seconds));
+
+	//9. Se habilita el RTC para poder hacer actualizaciones
+	RCC->BDCR |= RCC_BDCR_RTCEN;
+
+
+	//10. Se pone el bit BYPSHAD en 1 para no tener que bajar la bandera después de cada lectura:
 	RTC->CR |= RTC_CR_BYPSHAD;
 
-
-    //9. Se sale del modo inicialización:
+    //11. Se sale del modo inicialización:
 	/*Exit the initialization mode by clearing the INIT bit. The actual calendar counter value is
 	 then automatically loaded and the counting restarts after 4 RTCCLK clock cycles.*/
 	RTC->ISR &= ~RTC_ISR_INIT;
 
-	//10. Se desactiva la edición de los registros:
+	//12. Se desactiva la edición de los registros:
 	PWR->CR &= ~PWR_CR_DBP;
 }
 
-uint8_t RTC_get_time(void){
-	uint8_t Seconds = (((RTC->TR & 0x7f) >> 4)*10) + (RTC->TR & 0xf);
+uint8_t RTC_Get_Seconds(void){
+	uint8_t Seconds = BCD_To_Decimal(RTC->TR & 0x7F);
 	return Seconds;
 }
+
+uint8_t RTC_Get_Minutes(void){
+	uint8_t Minutes = BCD_To_Decimal((RTC->TR & 0x7F00) >> RTC_TR_MNU_Pos);
+	return Minutes;
+}
+
+uint8_t RTC_Get_Hours(void){
+	uint8_t Hours = BCD_To_Decimal((RTC->TR & 0x3F0000) >> RTC_TR_HU_Pos);
+	return Hours;
+}
+
+uint8_t RTC_Get_Date(void){
+	uint8_t Date = BCD_To_Decimal(RTC->DR & 0x3F);
+	return Date;
+}
+
+uint8_t RTC_Get_Month(void){
+	uint8_t Month = BCD_To_Decimal((RTC->DR & 0x1F00) >> RTC_DR_MU_Pos);
+	return Month;
+}
+
+uint8_t RTC_Get_Year(void){
+	uint8_t Year = BCD_To_Decimal((RTC->DR & 0xFF00) >> RTC_DR_YU_Pos);
+	return Year;
+}
+
+uint8_t RTC_Get_WeekDay(void){
+	uint8_t Day = BCD_To_Decimal((RTC->DR & 0xE000) >> RTC_DR_WDU_Pos);
+}
+
+uint16_t Decimal_To_BCD(uint16_t decimalValue){
+	uint8_t BCDValue = ((decimalValue/10*16) + (decimalValue%10));
+	return BCDValue;
+}
+
+uint8_t BCD_To_Decimal(uint8_t BCDValue){
+	uint8_t DecimalValue = (BCDValue/16*10) + (BCDValue%16);
+	return DecimalValue;
+}
+
 
 
 

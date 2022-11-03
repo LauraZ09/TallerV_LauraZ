@@ -9,6 +9,7 @@ C_SRCS += \
 ../Src/AdcDriver.c \
 ../Src/AdcMCDriver.c \
 ../Src/BasicTimer.c \
+../Src/DriverRTC.c \
 ../Src/ExtiDriver.c \
 ../Src/GPIOxDriver.c \
 ../Src/I2CDriver.c \
@@ -23,6 +24,7 @@ OBJS += \
 ./Src/AdcDriver.o \
 ./Src/AdcMCDriver.o \
 ./Src/BasicTimer.o \
+./Src/DriverRTC.o \
 ./Src/ExtiDriver.o \
 ./Src/GPIOxDriver.o \
 ./Src/I2CDriver.o \
@@ -37,6 +39,7 @@ C_DEPS += \
 ./Src/AdcDriver.d \
 ./Src/AdcMCDriver.d \
 ./Src/BasicTimer.d \
+./Src/DriverRTC.d \
 ./Src/ExtiDriver.d \
 ./Src/GPIOxDriver.d \
 ./Src/I2CDriver.d \

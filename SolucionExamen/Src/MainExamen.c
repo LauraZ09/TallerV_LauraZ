@@ -22,40 +22,42 @@
 #include "DriverRTC.h"
 
 //Definición de los handlers necesarios
-GPIO_Handler_t handlerBlinkyPin          = {0}; //Handler para el USER_LED
-GPIO_Handler_t handlerTxPin              = {0}; //Handler para el PIN por el cual se hará la transmisión
-GPIO_Handler_t handlerRxPin              = {0}; //Handler para el PIN por el cual se hará la transmisión
-GPIO_Handler_t handlerSDAPin			 = {0}; //Handler para el PIN DATA del I2C del acelerómetro
-GPIO_Handler_t handlerSCLPin			 = {0}; //Handler para el PIN CLOCK del I2C del acelerómetro
-GPIO_Handler_t handlerBlueRGB            = {0}; //Handler para el azul del RGB
-GPIO_Handler_t handlerRedRGB             = {0}; //Handler para el rojo del RGB
-GPIO_Handler_t handlerGreenRGB           = {0}; //Handler para el verde del RGB
-USART_Handler_t handlerUsart2            = {0}; //Handler para el USART2
-PWM_Handler_t handlerPWMTimerB 	         = {0}; //Handler para el PWM (Timer)
-PWM_Handler_t handlerPWMTimerR 	         = {0}; //Handler para el PWM (Timer)
-PWM_Handler_t handlerPWMTimerG 	         = {0}; //Handler para el PWM (Timer)
-ADXL345_Handler_t handlerAccel   		 = {0}; //Handler para el acelerómetro
-I2C_Handler_t handlerI2CAccel			 = {0}; //Handler para el I2C del acelerómetro
-BasicTimer_Handler_t handlerBlinkyTimer  = {0}; //Handler para el TIMER2, con este se hará el Blinky
+GPIO_Handler_t handlerBlinkyPin          		= {0}; //Handler para el USER_LED
+GPIO_Handler_t handlerTxPin              		= {0}; //Handler para el PIN por el cual se hará la transmisión
+GPIO_Handler_t handlerRxPin              		= {0}; //Handler para el PIN por el cual se hará la transmisión
+GPIO_Handler_t handlerSDAPin			 		= {0}; //Handler para el PIN DATA del I2C del acelerómetro
+GPIO_Handler_t handlerSCLPin			 		= {0}; //Handler para el PIN CLOCK del I2C del acelerómetro
+GPIO_Handler_t handlerBlueRGB            		= {0}; //Handler para el azul del RGB
+GPIO_Handler_t handlerRedRGB            		= {0}; //Handler para el rojo del RGB
+GPIO_Handler_t handlerGreenRGB           		= {0}; //Handler para el verde del RGB
+USART_Handler_t handlerUsart2            		= {0}; //Handler para el USART2
+PWM_Handler_t handlerPWMTimerB 	         		= {0}; //Handler para el PWM (Timer)
+PWM_Handler_t handlerPWMTimerR 	         		= {0}; //Handler para el PWM (Timer)
+PWM_Handler_t handlerPWMTimerG 	         		= {0}; //Handler para el PWM (Timer)
+ADXL345_Handler_t handlerAccel   		 		= {0}; //Handler para el acelerómetro
+I2C_Handler_t handlerI2CAccel			 		= {0}; //Handler para el I2C del acelerómetro
+BasicTimer_Handler_t handlerBlinkyTimer  		= {0}; //Handler para el TIMER2, con este se hará el Blinky
+Hour_and_Date_Config_t handlerHourDateConfig	= {0}; //Handler para la configuración de la hora
 
 
 //Definición de otras variables necesarias para el desarrollo de los ejercicios:
-uint8_t timeFlag 	  = 0;
-uint8_t segundos = 0;
-uint8_t minutos = 0;
-uint8_t updateRGBFlag = 0;
-uint8_t rxData        = 0;      //Datos de recepción
-int16_t accX	      = 0;
-int16_t accY	      = 0;
-int16_t accZ	      = 0;
-uint8_t accFlag	      = 0;
-char Buffer[64]       = {0};    //En esta variable se almacenarán mensajes
+uint8_t timeFlag 	  = 0;  //Bandera para la actualización de la hora
+uint8_t segundos      = 0;	//Variable para almacenar los segundos
+uint8_t minutos       = 0;  //Variable para almacenar los minutos
+uint8_t horas		  = 0;  //Variable para almacenar las horas
+uint8_t updateRGBFlag = 0;	//Bandera para actualizar el PWM del LED RGB
+uint8_t rxData        = 0;  //Datos de recepción
+int16_t accX	      = 0;  //Variable para almacenar la aceleración en X
+int16_t accY	      = 0;	//Variable para almacenar la aceleración en Y
+uint8_t accFlag	      = 0;	//Bandera para actualizar los datos de la aceleración
+char Buffer[64]       = {0};//En esta variable se almacenarán mensajes
 char greetingMsg[]    = "SIUU \n\r"; //Mensaje que se imprime
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
-void initSystem(void);       //Función para inicializar el sistema
+void initSystem(void);       				    //Función para inicializar el sistema
 void updateRGB(uint8_t xAccel, uint8_t yAccel); //Función para actualizar el RGB
-uint32_t absValue(int32_t);
+uint32_t absValue(int32_t);						//Función para obtener valor absoluto
+char PrintWeekDay(uint8_t Day);
 
 int main(void) {
 
@@ -64,7 +66,7 @@ int main(void) {
 
 	while (1) {
 
-		if(accFlag == 1){
+		/*if(accFlag == 1){
 			accFlag = 0;
 			accX = getXData(&handlerAccel);
 			sprintf(Buffer, "\n\rACCx: %d\n", accX);
@@ -78,9 +80,20 @@ int main(void) {
 		if(updateRGBFlag == 1){
 			updateRGBFlag = 0;
 			updateRGB(accX, accY);
+		}*/
+
+		if(timeFlag == 1){
+			timeFlag = 0;
+			segundos = RTC_Get_Seconds();
+			minutos = RTC_Get_Minutes();
+			horas = RTC_Get_Hours();
+			sprintf(Buffer, "Hora: %d:%d:%d\n", horas, minutos, segundos);
+			writeMsg(&handlerUsart2, Buffer);
+			Buffer = RTC_Get_WeekDay();
+			writeMsg(&handlerUsart2, Buffer);
+
+
 		}
-
-
 
 		//El sistema siempre está verificando si el valor de rxData ha cambiado
 		//(lo cual sucede en la ISR de la recepción)
@@ -239,7 +252,7 @@ void initSystem(void) {
 	handlerAccel.ADXL345_Config.rangeOp				= TWOG_RANGE;
 
 	//Se carga la configuración
-	init_ADXL345(&handlerAccel);
+	//init_ADXL345(&handlerAccel);
 
 	//Se configura el Timer del PWM Azul
 	handlerPWMTimerB.ptrTIMx 		   = TIM3;
@@ -309,7 +322,16 @@ void initSystem(void) {
 	startPwmSignal(&handlerPWMTimerR);
 	startPwmSignal(&handlerPWMTimerB);
 
-	enableRTC();
+	handlerHourDateConfig.PM_AM_Format = PM_FORMAT;
+	handlerHourDateConfig.Hours        = 7; //Por defecto se pone la hora 00:00:00
+	handlerHourDateConfig.Minutes      = 13;
+	handlerHourDateConfig.Seconds      = 0;
+	handlerHourDateConfig.Month        = 11;
+	handlerHourDateConfig.DayOfWeek    = 4;
+	handlerHourDateConfig.NumberOfDay  = 3;
+	handlerHourDateConfig.Year		   = 22;
+
+	enableRTC(&handlerHourDateConfig);
 }
 
 //Función Callback del BlinkyTimer
@@ -318,7 +340,7 @@ void BasicTimer2_Callback(void) {
 	GPIOxTooglePin(&handlerBlinkyPin);
 	accFlag = 1;
 	updateRGBFlag = 1;
-	segundos = RTC_get_time();
+	timeFlag = 1;
 }
 
 /*Función Callback de la recepción del USART2
@@ -356,6 +378,50 @@ uint32_t absValue(int32_t negValue){
 	return posValue;
 }
 
+char PrintWeekDay(uint8_t Day){
+
+char WeekDay[32] = {0};
+
+	switch (Day){
+
+	case 1: {
+		sprintf(WeekDay, "Día: Lunes\n");
+		break;
+	}
+
+	case 2: {
+		sprintf(WeekDay, "Día: Martes\n");
+		break;
+	}
+
+	case 3: {
+		sprintf(WeekDay, "Día: Miercoles\n");
+		break;
+	}
+
+	case 4:  {
+		sprintf(WeekDay, "Día: Jueves\n");
+		break;
+	}
+
+	case 5:  {
+		sprintf(WeekDay, "Día: Viernes\n");
+		break;
+	}
+
+	case 6:  {
+		sprintf(WeekDay, "Día: Sabado\n");
+		break;
+	}
+
+	case 7:  {
+		sprintf(WeekDay, "Día: Domingo\n");
+		break;
+	}
+	}
+
+	return *WeekDay;
+}
 
 
 
