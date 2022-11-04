@@ -71,10 +71,11 @@ int main(void) {
 
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
 	writeChar(&handlerUsart2,' ');
-	clearDisplayLCD(&handlerI2CLCD);
-	returnHomeLCD(&handlerI2CLCD);
-	displayDataLCD(&handlerI2CLCD, 'a');
+	displayDataLCD(&handlerI2CLCD, 'M');
 	printStringLCD(&handlerI2CLCD, "hola mundo");
+	printStringLCD(&handlerI2CLCD, "  Me llamo Laura");
+	returnHomeLCD(&handlerI2CLCD);
+
 
 	while (1) {
 

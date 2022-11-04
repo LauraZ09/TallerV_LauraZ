@@ -34,27 +34,28 @@ void initLCD(I2C_Handler_t *ptrHandlerI2C){
 	sendCommandLCD(ptrHandlerI2C, 0x03);
 
 	//7. Se esperan más de 100 us, esperamos 150us:
-	delayms(10);
+	delayms(1);
 
 	//8. Ahora sí, se elige el modo de 4 bits:
-	sendCommandLCD(ptrHandlerI2C, 0x28);
+	sendCommandLCD(ptrHandlerI2C, 0x2);
+	sendCommandLCD(ptrHandlerI2C, 0x14);
 
 	//9. Se configuran el número de filas que se quieren usar y el tamaño de la fuente: para todas las líneas N: 1 (bit 7)
 	// fuente 5x8: F: 0 (bit 6)
-	sendCommandLCD(ptrHandlerI2C, 0x08);
-	sendCommandLCD(ptrHandlerI2C, 0x01);
+	//sendCommandLCD(ptrHandlerI2C, 0x20); //00101000
+	sendCommandLCD(ptrHandlerI2C, 0x6); //00001000
 
 	//10. Se apaga el display
-	//sendCommandLCD(ptrHandlerI2C, 0x03);
-	sendCommandLCD(ptrHandlerI2C, 0x06);
+	//sendCommandLCD(ptrHandlerI2C, 0x01);
 
-	//11. Se limpia el display:
-	sendCommandLCD(ptrHandlerI2C, 0x0C);
-/*	sendCommandLCD(ptrHandlerI2C, 0x01);
+	//sendCommandLCD(ptrHandlerI2C, 0x06); //00001000
 
-	//12. Se activa el entry mode: se pone que el cursor se mueva de izq a derecha y que la info de la pantalla no se mueva
-	sendCommandLCD(ptrHandlerI2C, 0x00);
-	sendCommandLCD(ptrHandlerI2C, 0x60);*/
+	//10. Se apaga el display
+	//sendCommandLCD(ptrHandlerI2C, 0x01);
+
+
+	//10. Se apaga el display
+	//sendCommandLCD(ptrHandlerI2C, 0x00);
 
 }//Inicialización terminada
 
@@ -85,8 +86,8 @@ void sendCommandLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t command){
 	sendByteLCD(ptrHandlerI2C,(commandH | LED_ON ));			//Luego, se escribe en el registro
 
 	//Enviamos la parte baja del comando (L):
-	sendByteLCD(ptrHandlerI2C, (commandL | LED_ON | ENABLE_ON)); //Primero se carga el comando
-	sendByteLCD(ptrHandlerI2C, (commandL | LED_ON));//Luego, se escribe en el registro
+	sendByteLCD(ptrHandlerI2C, (commandL | LED_ON | ENABLE_ON )); //Primero se carga el comando
+	sendByteLCD(ptrHandlerI2C, (commandL | LED_ON ));//Luego, se escribe en el registro
 }
 
 void displayDataLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t data){
@@ -96,11 +97,11 @@ void displayDataLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t data){
 
 	//Primero se debe enviar la parte alta (H) del dato, no se debe olvidar la primera parte del registro,
 	//correspondiente a los bits RS, RW, LED, E:
-	sendByteLCD(ptrHandlerI2C, (dataH | LED_ON | ENABLE_ON | DISPLAY_DATA)); //Primero se carga el DATO
+	sendByteLCD(ptrHandlerI2C, (dataH | LED_ON | DISPLAY_DATA | ENABLE_ON )); //Primero se carga el DATO
 	sendByteLCD(ptrHandlerI2C, (dataH | LED_ON | DISPLAY_DATA)); //Luego, se escribe en el registro
 
 	//Enviamos la parte baja del comando (L):
-	sendByteLCD(ptrHandlerI2C, (dataL | LED_ON | ENABLE_ON | DISPLAY_DATA)); //Primero se carga el DATO
+	sendByteLCD(ptrHandlerI2C, (dataL | LED_ON | ENABLE_ON |DISPLAY_DATA )); //Primero se carga el DATO
 	sendByteLCD(ptrHandlerI2C, (dataL | LED_ON )); //Luego, se escribe en el registro
 }
 
@@ -109,17 +110,21 @@ void clearDisplayLCD(I2C_Handler_t *ptrHandlerI2C){
 	sendCommandLCD(ptrHandlerI2C, 0b1);
 }
 
+void printStringLCD(I2C_Handler_t *ptrHandlerI2C,char* string){
+
+	uint8_t i = 0; //Variable para recorrer el arreglo
+
+	while(*(string + i) != '\0'){
+		displayDataLCD(ptrHandlerI2C, *(string + i));
+		i++;
+	}
+}
+
 void returnHomeLCD(I2C_Handler_t *ptrHandlerI2C){
 
 	sendCommandLCD(ptrHandlerI2C, 0b10);
 }
 
-void printStringLCD(I2C_Handler_t *ptrHandlerI2C,char* string){
-
-	while(*string){
-		displayDataLCD(ptrHandlerI2C, *string++);
-	}
-}
 
 
 
