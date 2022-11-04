@@ -30,5 +30,6 @@ void sendByteLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t dataToSend);
 void clearDisplayLCD(I2C_Handler_t *ptrHandlerI2C);
 void returnHomeLCD(I2C_Handler_t *ptrHandlerI2C);
 void printStringLCD(I2C_Handler_t *ptrHandlerI2C,char* string);
+void moveCursorToLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t position);
 
 #endif
