@@ -20,6 +20,7 @@
 #include "I2CDriver.h"
 #include "PwmDriver.h"
 #include "DriverRTC.h"
+#include "LCD2004A.h"
 
 //Definición de los handlers necesarios
 GPIO_Handler_t handlerBlinkyPin          		= {0}; //Handler para el USER_LED
@@ -27,6 +28,8 @@ GPIO_Handler_t handlerTxPin              		= {0}; //Handler para el PIN por el c
 GPIO_Handler_t handlerRxPin              		= {0}; //Handler para el PIN por el cual se hará la transmisión
 GPIO_Handler_t handlerSDAPin			 		= {0}; //Handler para el PIN DATA del I2C del acelerómetro
 GPIO_Handler_t handlerSCLPin			 		= {0}; //Handler para el PIN CLOCK del I2C del acelerómetro
+GPIO_Handler_t handlerSDAPinLCD					= {0}; //Handler para el PIN LCD del I2C de la LCD
+GPIO_Handler_t handlerSCLPinLCD			 		= {0}; //Handler para el PIN CLOCK del I2C de la LCD
 GPIO_Handler_t handlerBlueRGB            		= {0}; //Handler para el azul del RGB
 GPIO_Handler_t handlerRedRGB            		= {0}; //Handler para el rojo del RGB
 GPIO_Handler_t handlerGreenRGB           		= {0}; //Handler para el verde del RGB
@@ -36,6 +39,7 @@ PWM_Handler_t handlerPWMTimerR 	         		= {0}; //Handler para el PWM (Timer)
 PWM_Handler_t handlerPWMTimerG 	         		= {0}; //Handler para el PWM (Timer)
 ADXL345_Handler_t handlerAccel   		 		= {0}; //Handler para el acelerómetro
 I2C_Handler_t handlerI2CAccel			 		= {0}; //Handler para el I2C del acelerómetro
+I2C_Handler_t handlerI2CLCD					    = {0}; //Handler para el I2C de la LCD
 BasicTimer_Handler_t handlerBlinkyTimer  		= {0}; //Handler para el TIMER2, con este se hará el Blinky
 Hour_and_Date_Config_t handlerHourDateConfig	= {0}; //Handler para la configuración de la hora
 
@@ -67,6 +71,10 @@ int main(void) {
 
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
 	writeChar(&handlerUsart2,' ');
+	clearDisplayLCD(&handlerI2CLCD);
+	returnHomeLCD(&handlerI2CLCD);
+	displayDataLCD(&handlerI2CLCD, 'a');
+	printStringLCD(&handlerI2CLCD, "hola mundo");
 
 	while (1) {
 
@@ -220,6 +228,31 @@ void initSystem(void) {
 	//Se carga la configuración
 	GPIO_Config(&handlerSCLPin);
 
+
+	//Se configura el SDA del I2C de la LCD
+	handlerSDAPinLCD.pGPIOx 							= GPIOB;
+	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinNumber 	    = PIN_9;
+	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_ALTFN;    //Función alternativa
+	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinOPType 	    = GPIO_OTYPE_OPENDRAIN;
+	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
+	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
+	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinAltFunMode  = AF4;	              //AF04: I2C1 SDA
+
+	//Se carga la configuración
+	GPIO_Config(&handlerSDAPinLCD);
+
+	//Se configura el SCL del I2C de la LCD
+	handlerSCLPinLCD.pGPIOx 							= GPIOB;
+	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinNumber 	    = PIN_6;
+	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_ALTFN;    //Función alternativa
+	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinOPType 	    = GPIO_OTYPE_OPENDRAIN;
+	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
+	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
+	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinAltFunMode  = AF4;	              //AF04: I2C1 SCL
+
+	//Se carga la configuración
+	GPIO_Config(&handlerSCLPinLCD);
+
 	//Se configura el BlinkyTimer
 	handlerBlinkyTimer.ptrTIMx 					= TIM2;
 	handlerBlinkyTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
@@ -246,7 +279,7 @@ void initSystem(void) {
 	handlerI2CAccel.ptrI2Cx		 = I2C1;
 
 	//Se carga la configuración
-	i2c_config(&handlerI2CAccel);
+	//i2c_config(&handlerI2CAccel);
 
 	//Se configura el acelerómetro
 	handlerAccel.ptrI2CHandler  					= &handlerI2CAccel;
@@ -261,6 +294,14 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	//init_ADXL345(&handlerAccel);
+
+	//Se configura el I2C de la LCD
+	handlerI2CLCD.slaveAddress = LCD_ADDR;
+	handlerI2CLCD.modeI2C 	   = I2C_MODE_FM;
+	handlerI2CLCD.ptrI2Cx	   = I2C1;
+
+	//Se carga la configuración
+	i2c_config(&handlerI2CLCD);
 
 	//Se configura el Timer del PWM Azul
 	handlerPWMTimerB.ptrTIMx 		   = TIM3;
@@ -331,8 +372,8 @@ void initSystem(void) {
 	startPwmSignal(&handlerPWMTimerB);
 
 	handlerHourDateConfig.PM_AM_Format = PM_FORMAT;
-	handlerHourDateConfig.Hours        = 11; //Por defecto se pone la hora 00:00:00
-	handlerHourDateConfig.Minutes      = 51;
+	handlerHourDateConfig.Hours        = 12; //Por defecto se pone la hora 00:00:00
+	handlerHourDateConfig.Minutes      = 59;
 	handlerHourDateConfig.Seconds      = 0;
 	handlerHourDateConfig.Month        = 11;
 	handlerHourDateConfig.DayOfWeek    = 4;
@@ -340,6 +381,9 @@ void initSystem(void) {
 	handlerHourDateConfig.Year		   = 22;
 
 	enableRTC(&handlerHourDateConfig);
+
+	initLCD(&handlerI2CLCD);
+
 }
 
 //Función Callback del BlinkyTimer

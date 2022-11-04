@@ -142,6 +142,7 @@ __attribute__((weak)) void BasicTimer3_Callback(void){
 	__NOP();
 }
 __attribute__((weak)) void BasicTimer4_Callback(void){
+	delay_i++;
 	  /* NOTE : This function should not be modified, when the callback is needed,
 	            the BasicTimerX_Callback could be implemented in the main file
 	   */
@@ -196,14 +197,16 @@ void TIM5_IRQHandler(void){
 //Esta función trabaja ÚNICAMENTE con el Timer4
 void delayus(uint32_t delayTime){
 
-	handlerDelayTimer.ptrTIMx 					= TIM3;
-	handlerDelayTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
-	handlerDelayTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_1us;
-	handlerDelayTimer.TIMx_Config.TIMx_period 	= 1; //Update period= 1us
+	delay_i = 0;
+
+	handlerDelayTimer.ptrTIMx 					       = TIM4;
+	handlerDelayTimer.TIMx_Config.TIMx_mode 	       = BTIMER_MODE_UP;
+	handlerDelayTimer.TIMx_Config.TIMx_speed 	       = BTIMER_SPEED_100us;
+	handlerDelayTimer.TIMx_Config.TIMx_period 	       = 2; //Update period= 1us
+	handlerDelayTimer.TIMx_Config.TIMx_interruptEnable = 1;
 
 	//Se carga la configuración del Timer
 	BasicTimer_Config(&handlerDelayTimer);
-
 
 	while(delay_i < delayTime){
 		__NOP();
@@ -214,18 +217,20 @@ void delayus(uint32_t delayTime){
 //Esta función trabaja ÚNICAMENTE con el Timer4
 void delayms(uint32_t delayTime){
 
+	delay_i = 0;
+
 	handlerDelayTimer.ptrTIMx 					= TIM4;
 	handlerDelayTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
 	handlerDelayTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_1ms;
-	handlerDelayTimer.TIMx_Config.TIMx_period 	= 1; //Update period = 1ms
+	handlerDelayTimer.TIMx_Config.TIMx_period 	= 2; //Update period = 1ms
+	handlerDelayTimer.TIMx_Config.TIMx_interruptEnable = 1;
+
 
 	//Se carga la configuración del Timer
 	BasicTimer_Config(&handlerDelayTimer);
 
-
 	while(delay_i < delayTime){
 		__NOP();
 	}
-
 }
 
