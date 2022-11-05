@@ -64,6 +64,7 @@ uint8_t partyModeFlag = 0;
 uint8_t accelModeFlag = 0;
 uint8_t autodestructionModeFlag = 0;
 uint16_t updateLCDFlag = 0;
+uint8_t microReady = 0;
 
 bool stringComplete = false;
 char Buffer[64]       = {0};//En esta variable se almacenarán mensajes
@@ -122,6 +123,17 @@ int main(void) {
 			rxData = '\0';
 		}
 
+		else {
+
+		}
+
+		if((updateLCDFlag == 4) & (microReady == 1)){
+
+			updateLCD();
+			updateLCDFlag = 0;
+		}
+
+		if((accelMode == 1) & (microReady == 1))
 	}
 
 
@@ -282,7 +294,7 @@ void initSystem(void) {
 	handlerPWMTimerB.config.channel    = PWM_CHANNEL_1;
 	handlerPWMTimerB.config.prescaler  = BTIMER_SPEED_1us;
 	handlerPWMTimerB.config.periodo    = 255;
-	handlerPWMTimerB.config.duttyCicle = 50;
+	handlerPWMTimerB.config.duttyCicle = 128;
 
 	pwm_Config(&handlerPWMTimerB);
 
@@ -291,7 +303,7 @@ void initSystem(void) {
 	handlerPWMTimerR.config.channel 	= PWM_CHANNEL_2;
 	handlerPWMTimerR.config.prescaler   = BTIMER_SPEED_1us;
 	handlerPWMTimerR.config.periodo 	= 255;
-	handlerPWMTimerR.config.duttyCicle  = 10;
+	handlerPWMTimerR.config.duttyCicle  = 255;
 
 	pwm_Config(&handlerPWMTimerR);
 
@@ -300,7 +312,7 @@ void initSystem(void) {
 	handlerPWMTimerG.config.channel 	= PWM_CHANNEL_3;
 	handlerPWMTimerG.config.prescaler   = BTIMER_SPEED_1us;
 	handlerPWMTimerG.config.periodo 	= 255;
-	handlerPWMTimerG.config.duttyCicle  = 10;
+	handlerPWMTimerG.config.duttyCicle  = 0;
 
 	pwm_Config(&handlerPWMTimerG);
 
@@ -345,8 +357,8 @@ void initSystem(void) {
 	startPwmSignal(&handlerPWMTimerR);
 	startPwmSignal(&handlerPWMTimerB);
 
-	handlerHourDateConfig.Hours        = 12; //Por defecto se pone la hora 00:00:00
-	handlerHourDateConfig.Minutes      = 59;
+	handlerHourDateConfig.Hours        = 11; //Por defecto se pone la hora 00:00:00
+	handlerHourDateConfig.Minutes      = 15;
 	handlerHourDateConfig.Seconds      = 0;
 	handlerHourDateConfig.Month        = 11;
 	handlerHourDateConfig.DayOfWeek    = 4;
@@ -354,7 +366,6 @@ void initSystem(void) {
 	handlerHourDateConfig.Year		   = 22;
 
 	enableRTC(&handlerHourDateConfig);
-
 
 	initLCD(&handlerI2CLCD);
 
@@ -366,6 +377,7 @@ void BasicTimer2_Callback(void) {
 	GPIOxTooglePin(&handlerBlinkyPin);
 	accFlag = 1;
 	updateRGBFlag++;
+	updateLCDFlag++;
 	timeFlag = 1;
 }
 
@@ -460,18 +472,19 @@ uint32_t absValue(int32_t negValue){
 
 void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds){
 	if((minutes/10 == 0) & (seconds/10 == 0)){
-		sprintf(Buffer, "\n\rHora: %d:0%d:0%d\n\r", horas, minutos, segundos);
+		sprintf(Buffer, " \n\rHora:%d:0%d:0%d\n\r", horas, minutos, segundos);
 	}
 
 	else if((minutes/10 == 0)){
-		sprintf(Buffer, "\n\rHora: %d:0%d:%d\n\r", horas, minutos, segundos);
+		sprintf(Buffer, " \n\rHora:%d:0%d:%d\n\r", horas, minutos, segundos);
 	}
 
 	else if((seconds/10 == 0)){
-		sprintf(Buffer, "\n\rHora: %d:%d:0%d\n\r", horas, minutos, segundos);
+		sprintf(Buffer, " \n\rHora:%d:%d:0%d\n\r", horas, minutos, segundos);
 	}
 	else {
-		sprintf(Buffer, "\n\rHora: %d:%d:%d\n\r", horas, minutos, segundos);
+		sprintf(Buffer, " "
+				" \n\rHora:%d:%d:%d\n\r", horas, minutos, segundos);
 	}
 }
 
@@ -480,12 +493,14 @@ void parseCommands(char* ptrBufferReception){
 	sscanf(ptrBufferReception, "%s %u %u %s", cmd, &firstParameter, &secondParameter, userMsg);
 
 	if (strcmp(cmd, "help") == 0){
-
+		microReady = 0;
+		clearDisplayLCD(&handlerI2CLCD);
+		returnHomeLCD(&handlerI2CLCD);
 		writeMsg(&handlerUsart2, "Menu de Comandos e instrucciones:\n\r");
 		writeMsg(&handlerUsart2, "El sistema consiste de un LED RGB el cual se enciende de acuerdo al modo configurado por el usuario.\n Hay 3 modos configurables:\n1.Modo "
 				"fiesta, en el cual el LED parpadea de diferentes colores aleatorios.\n2.Modo aceleracion, en el cual el LED cambia de color \n"
 				"con el cambio en la aceleracion percibida por el sensor\n3.Modo autodestruccion en el cual el LED hace una cuenta regresiva y luego se apaga.\n"
-				"IMPORTANTE: por defecto ninguno de estos modos está configurado, por defecto el LED se enciende en un color azul. Para desactivar alguno de los modos\n"
+				"IMPORTANTE: por defecto ninguno de estos modos está configurado, por defecto el LED se enciende en un color rosado. Para desactivar alguno de los modos\n"
 				"basta con activar otro modo.\n\r");
 		writeMsg(&handlerUsart2, "COMANDOS:\n\r1).  help -- Este comando imprime este menu\n");
 		writeMsg(&handlerUsart2, "2).  setHour #Horas #Minutos -- Este comando se utiliza para introducir la hora inicial (horas y minutos) en formato 24 horas\n");
@@ -502,15 +517,28 @@ void parseCommands(char* ptrBufferReception){
 	}
 
 	else if (strcmp(cmd, "getHour") == 0){
+		clearDisplayLCD(&handlerI2CLCD);
+		partyModeFlag = 0;
+		accelModeFlag = 0;
+		autodestructionModeFlag = 0;
+		moveCursorToLCD(&handlerI2CLCD, 0x00);
 		writeMsg(&handlerUsart2, "CMD: getHour\n");
+		returnHomeLCD(&handlerI2CLCD);
 		segundos = RTC_Get_Seconds();
 		minutos = RTC_Get_Minutes();
 		horas = RTC_Get_Hours();
 		printHour(horas, minutos, segundos);
 		writeMsg(&handlerUsart2, Buffer);
+		moveCursorToLCD(&handlerI2CLCD, 0x40);
+		printStringLCD(&handlerI2CLCD, Buffer);
+		updateLCDFlag = 0;
+		microReady = 1;
+
 	}
 
 	else if (strcmp(cmd, "getDate") == 0){
+		clearDisplayLCD(&handlerI2CLCD);
+		microReady = 0;
 		writeMsg(&handlerUsart2, "CMD: getDate\n");
 		diaSemana = RTC_Get_WeekDay();
 		fecha = RTC_Get_Date();
@@ -520,9 +548,14 @@ void parseCommands(char* ptrBufferReception){
 		writeMsg(&handlerUsart2, Buffer);
 		sprintf(Buffer, " Fecha:%d/%d/%d\n\r", fecha, mes, year);
 		writeMsg(&handlerUsart2, Buffer);
+		moveCursorToLCD(&handlerI2CLCD, 0x40);
+		printStringLCD(&handlerI2CLCD, diaSemana);
+		moveCursorToLCD(&handlerI2CLCD, 0x17);
+		printStringLCD(&handlerI2CLCD, Buffer);
 	}
 
 	else if (strcmp(cmd, "getAcc") == 0){
+		microReady = 0;
 		writeMsg(&handlerUsart2, "CMD: getAcc\n");
 		accX = getXData(&handlerAccel);
 		sprintf(Buffer, "\n\rACCx: %d\n", accX);
@@ -533,14 +566,17 @@ void parseCommands(char* ptrBufferReception){
 	}
 
 	else if (strcmp(cmd, "initLCD") == 0){
+		microReady = 0;
 		writeMsg(&handlerUsart2, "CMD: initLCD\n\r");
 	}
 
 	else if (strcmp(cmd, "initOLED") == 0){
+		microReady = 0;
 		writeMsg(&handlerUsart2, "CMD: initOLED\n\r");
 	}
 
 	else if (strcmp(cmd, "setPartyMode") == 0){
+		microReady = 0;
 		partyModeFlag = 1;
 		accelModeFlag = 0;
 		autodestructionModeFlag = 0;
@@ -548,49 +584,62 @@ void parseCommands(char* ptrBufferReception){
 		autodestructionModeFlag = 0;
 		writeMsg(&handlerUsart2, "CMD: setPartyMode\n");
 		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		moveCursorToLCD(&handlerI2CLCD, 0x43);
 		printStringLCD(&handlerI2CLCD,"Modo Fiesta ON");
 	}
 
 	else if (strcmp(cmd, "setAccelMode") == 0){
+		microReady = 0;
 		clearDisplayLCD(&handlerI2CLCD);
 		writeMsg(&handlerUsart2, "CMD: setAccelMode\n\r");
 		accelModeFlag = 1;
 		autodestructionModeFlag = 0;
 		partyModeFlag = 0;
+
 	}
 
 	else if (strcmp(cmd, "initAutodestruction") == 0){
+		microReady = 0;
 		clearDisplayLCD(&handlerI2CLCD);
 		autodestructionModeFlag = 1;
 		partyModeFlag = 0;
 		accelModeFlag = 0;
 		writeMsg(&handlerUsart2, "CMD: initAutodestruction\n\r");
 		writeMsg(&handlerUsart2, "5\n\r");
-		printStringLCD(&handlerI2CLCD, "5");
+		printStringLCD(&handlerI2CLCD, "5.....");
 		updateRGB(30, 0);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "4\n\r");
-		printStringLCD(&handlerI2CLCD, "5");
+		printStringLCD(&handlerI2CLCD, "4.....");
 		updateRGB(30, 30);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "3\n\r");
-		printStringLCD(&handlerI2CLCD, "4");
+		printStringLCD(&handlerI2CLCD, "3.....");
 		updateRGB(0, 0);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "2\n\r");
-		printStringLCD(&handlerI2CLCD, "3");
+		printStringLCD(&handlerI2CLCD, "2.....");
 		updateRGB(15, 15);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "1\n\r");
-		printStringLCD(&handlerI2CLCD, "2");
+		printStringLCD(&handlerI2CLCD, "1.....");
 		updateRGB(15, -15);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "0\n\r");
-		printStringLCD(&handlerI2CLCD, "1");
+		printStringLCD(&handlerI2CLCD, "0.....");
 		updateRGB(23, 17);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "------------------------\n\r");
-		printStringLCD(&handlerI2CLCD, "BYE BYE BYE BYE BYE BYE BYE BYE BYE BYE BYE BYE BYE BYE");
+		clearDisplayLCD(&handlerI2CLCD);
+		returnHomeLCD(&handlerI2CLCD);
+		printStringLCD(&handlerI2CLCD, "BYE BYE BYE BYE BYE ");
+		moveCursorToLCD(&handlerI2CLCD, 0x40);
+		printStringLCD(&handlerI2CLCD, "BYE BYE BYE BYE BYE ");
+		moveCursorToLCD(&handlerI2CLCD, 0x14);
+		printStringLCD(&handlerI2CLCD, "BYE BYE BYE BYE BYE ");
+		moveCursorToLCD(&handlerI2CLCD, 0x54);
+		printStringLCD(&handlerI2CLCD, "BYE BYE BYE BYE BYE ");
+
 		updateDuttyCycle(&handlerPWMTimerG, 0);
 		updateDuttyCycle(&handlerPWMTimerR, 0);
 		updateDuttyCycle(&handlerPWMTimerB, 0);
@@ -598,6 +647,10 @@ void parseCommands(char* ptrBufferReception){
 	}
 
 	else if (strcmp(cmd, "setHour") == 0){
+		microReady = 0;
+		clearDisplayLCD(&handlerI2CLCD);
+		returnHomeLCD(&handlerI2CLCD);
+		printStringLCD(&handlerI2CLCD, "Ingrese la hora por favor");
 		writeMsg(&handlerUsart2, "CMD: setHour\n\r");
 		handlerHourDateConfig.Hours   = firstParameter; //Por defecto se pone la hora 00:00:00
 		handlerHourDateConfig.Minutes = secondParameter;
@@ -612,6 +665,10 @@ void parseCommands(char* ptrBufferReception){
 	}
 
 	else if (strcmp(cmd, "setDate") == 0){
+		microReady = 0;
+		clearDisplayLCD(&handlerI2CLCD);
+		returnHomeLCD(&handlerI2CLCD);
+		printStringLCD(&handlerI2CLCD, "Ingrese la fecha por favor");
 		writeMsg(&handlerUsart2, "CMD: setDate\n\r");
 		handlerHourDateConfig.Month        = secondParameter;
 		handlerHourDateConfig.NumberOfDay  = firstParameter;
@@ -672,35 +729,40 @@ void parseCommands(char* ptrBufferReception){
 	}
 
 	else if (strcmp(cmd, "setYear") == 0){
+		microReady = 0;
 		writeMsg(&handlerUsart2, "CMD: setYear\n\r");
 		sprintf(Buffer, "Year: %d\n\r", firstParameter);
 		writeMsg(&handlerUsart2, Buffer);
 	}
 
 	else {
+		microReady = 0;
+		partyModeFlag = 0;
+		accelModeFlag = 0;
+		autodestructionModeFlag = 0;
+		updateDuttyCycle(&handlerPWMTimerG, 0);
+		updateDuttyCycle(&handlerPWMTimerB, 0);
+		updateDuttyCycle(&handlerPWMTimerR, 190);
 		writeMsg(&handlerUsart2, "ERROR\n\r");
+		clearDisplayLCD(&handlerI2CLCD);
+		moveCursorToLCD(&handlerI2CLCD, 0x47);
+		printStringLCD(&handlerI2CLCD, "ERROR!");
+		delayms(1500);
+		updateDuttyCycle(&handlerPWMTimerG, 0);
+		updateDuttyCycle(&handlerPWMTimerB, 128);
+		updateDuttyCycle(&handlerPWMTimerR, 255);
+
 	}
 }
 void updateLCD() {
 
-	returnHomeLCD(&handlerI2CLCD);
-
-	if(partyModeFlag == 1){
 		returnHomeLCD(&handlerI2CLCD);
-		printStringLCD(&handlerI2CLCD, "Modo Fiesta ON");
 		horas = RTC_Get_Hours();
 		minutos = RTC_Get_Minutes();
 		segundos = RTC_Get_Seconds();
 		printHour(horas, minutos, segundos);
 		moveCursorToLCD(&handlerI2CLCD, 0x40);
 		printStringLCD(&handlerI2CLCD, Buffer);
-	}
-
-	else{
-		__NOP();
-	}
-
-
 }
 
 
