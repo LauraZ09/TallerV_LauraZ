@@ -63,7 +63,6 @@ void initLCD(I2C_Handler_t *ptrHandlerI2C){
 	//10. Se apaga el display
 	sendCommandLCD(ptrHandlerI2C, 0x0C);
 
-	delayms(500);
 }//Inicialización terminada
 
 void sendByteLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t dataToSend){
@@ -80,6 +79,8 @@ void sendByteLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t dataToSend){
 
 	/*5. Generamos la condición de Stop, para que el slave se detenga después de 1 byte*/
 	i2c_stopTransaction(ptrHandlerI2C);
+
+	delayms(2);
 }
 
 void sendCommandLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t command){
@@ -95,7 +96,6 @@ void sendCommandLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t command){
 	//Enviamos la parte baja del comando (L):
 	sendByteLCD(ptrHandlerI2C, (commandL | LED_ON | ENABLE_ON )); //Primero se carga el comando
 	sendByteLCD(ptrHandlerI2C, (commandL | LED_ON ));//Luego, se escribe en el registro
-	delayms(100);
 }
 
 void displayDataLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t data){
@@ -111,13 +111,11 @@ void displayDataLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t data){
 	//Enviamos la parte baja del comando (L):
 	sendByteLCD(ptrHandlerI2C, (dataL | LED_ON | ENABLE_ON |DISPLAY_DATA )); //Primero se carga el DATO
 	sendByteLCD(ptrHandlerI2C, (dataL | LED_ON )); //Luego, se escribe en el registro
-	delayms(100);
 }
 
 void clearDisplayLCD(I2C_Handler_t *ptrHandlerI2C){
 
 	sendCommandLCD(ptrHandlerI2C, 0b1);
-	delayms(100);
 }
 
 void printStringLCD(I2C_Handler_t *ptrHandlerI2C,char* string){
@@ -132,18 +130,15 @@ void printStringLCD(I2C_Handler_t *ptrHandlerI2C,char* string){
 			moveCursorToLCD(ptrHandlerI2C, 0x40);
 		}
 	}
-	delayms(100);
 }
 
 void returnHomeLCD(I2C_Handler_t *ptrHandlerI2C){
 
 	sendCommandLCD(ptrHandlerI2C, 0b10);
-	delayms(100);
 }
 
 void moveCursorToLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t position){
 	sendCommandLCD(ptrHandlerI2C, 0x80 + position);
-	delayms(100);
 }
 
 

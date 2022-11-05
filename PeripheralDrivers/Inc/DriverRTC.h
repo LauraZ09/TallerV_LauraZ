@@ -11,9 +11,6 @@
 
 #include "stm32f4xx.h"
 
-#define PM_FORMAT 0b1;
-#define AM_FORMAT 0b0;
-
 typedef struct
 {
 	uint16_t Hours;
@@ -23,7 +20,6 @@ typedef struct
 	uint16_t NumberOfDay;
 	uint16_t Month;
 	uint16_t Year;
-	uint16_t PM_AM_Format;
 
 }Hour_and_Date_Config_t;
 

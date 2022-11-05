@@ -94,8 +94,8 @@ void enableRTC(Hour_and_Date_Config_t *Hour_and_Date_Config){
 
 	//8. Se configura la hora: por defecto: 00:00:00
 
-	//8.a. Se le pone el formato AM o PM_
-	RTC->TR |= (Hour_and_Date_Config->PM_AM_Format) << RTC_TR_PM_Pos;  //Formato AM o PM
+	//8.a. Se le pone el formato 24 HORAS
+	RTC->CR &= ~RTC_CR_FMT;
 
 	//8.b. Se configuran las horas, primero se deben convertir las horas ingresadas a BCD.
 	RTC->TR |= (Decimal_To_BCD(Hour_and_Date_Config->Hours)) << RTC_TR_HU_Pos;
@@ -191,7 +191,7 @@ char* RTC_Get_WeekDay(void){
 
 
 uint16_t Decimal_To_BCD(uint16_t decimalValue){
-	uint8_t BCDValue = ((decimalValue/10*16) + (decimalValue%10));
+	uint8_t BCDValue = ((decimalValue/10) << 4) | (decimalValue%10);
 	return BCDValue;
 }
 

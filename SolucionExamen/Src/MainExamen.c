@@ -21,6 +21,7 @@
 #include "PwmDriver.h"
 #include "DriverRTC.h"
 #include "LCD2004A.h"
+#include "string.h"
 
 //Definición de los handlers necesarios
 GPIO_Handler_t handlerBlinkyPin          		= {0}; //Handler para el USER_LED
@@ -41,8 +42,8 @@ ADXL345_Handler_t handlerAccel   		 		= {0}; //Handler para el acelerómetro
 I2C_Handler_t handlerI2CAccel			 		= {0}; //Handler para el I2C del acelerómetro
 I2C_Handler_t handlerI2CLCD					    = {0}; //Handler para el I2C de la LCD
 BasicTimer_Handler_t handlerBlinkyTimer  		= {0}; //Handler para el TIMER2, con este se hará el Blinky
+BasicTimer_Handler_t handlerRGBTimer 			= {0}; //Handler para el TIMER5, este actualiza el PWM del RGB
 Hour_and_Date_Config_t handlerHourDateConfig	= {0}; //Handler para la configuración de la hora
-
 
 //Definición de otras variables necesarias para el desarrollo de los ejercicios:
 uint8_t timeFlag 	  = 0;  //Bandera para la actualización de la hora
@@ -57,47 +58,70 @@ uint8_t rxData        = 0;  //Datos de recepción
 int16_t accX	      = 0;  //Variable para almacenar la aceleración en X
 int16_t accY	      = 0;	//Variable para almacenar la aceleración en Y
 uint8_t accFlag	      = 0;	//Bandera para actualizar los datos de la aceleración
+uint8_t counterReception = 0;
+bool stringComplete = false;
 char Buffer[64]       = {0};//En esta variable se almacenarán mensajes
+char bufferReception[64] = {0};
 char* diaSemana       = {0};//En esta variable se almacena el día de la semana (arreglo, se almacena un string)
 char greetingMsg[]    = "SIUU \n\r"; //Mensaje que se imprime
+char userMsg[64] = {0};
+char cmd[16];
+unsigned int firstParameter;
+unsigned int secondParameter;
+uint8_t rxDataFlag = 0;
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
 void initSystem(void);       				    //Función para inicializar el sistema
 void updateRGB(uint8_t xAccel, uint8_t yAccel); //Función para actualizar el RGB
 uint32_t absValue(int32_t);						//Función para obtener valor absoluto
 void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds);
+void parseCommands(char* ptrBufferReception);
 
 int main(void) {
 
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
 	writeChar(&handlerUsart2,' ');
-	clearDisplayLCD(&handlerI2CLCD);
+	/*clearDisplayLCD(&handlerI2CLCD);
+	delayms(100);
 	printStringLCD(&handlerI2CLCD, "Hoy termino esto, si senor");
+	delayms(1000);
 	returnHomeLCD(&handlerI2CLCD);
+	delayms(1000);
 	clearDisplayLCD(&handlerI2CLCD);
+	delayms(1000);
 	printStringLCD(&handlerI2CLCD, " gonorrea");
+	delayms(1000);
 	printStringLCD(&handlerI2CLCD, " 123456");
+	delayms(1000);
+	printStringLCD(&handlerI2CLCD, " suerte people");
+	delayms(1000);
+	clearDisplayLCD(&handlerI2CLCD);
+	delayms(1000);
+	moveCursorToLCD(&handlerI2CLCD, 0x40);
+	delayms(1000);
+	printStringLCD(&handlerI2CLCD, "NEAAAAAAAaaa");
+	delayms(1000);*/
 
 
 	while (1) {
 
-		/*if(accFlag == 1){
+		if(accFlag == 1){
 			accFlag = 0;
 			accX = getXData(&handlerAccel);
-			sprintf(Buffer, "\n\rACCx: %d\n", accX);
-			writeMsg(&handlerUsart2, Buffer);
+			//sprintf(Buffer, "\n\rACCx: %d\n", accX);
+			//writeMsg(&handlerUsart2, Buffer);
 
 			accY = getYData(&handlerAccel);
-			sprintf(Buffer, "ACCy: %d\n", accY);
-			writeMsg(&handlerUsart2, Buffer);
+			//sprintf(Buffer, "ACCy: %d\n", accY);
+			//writeMsg(&handlerUsart2, Buffer);
 		}
 
 		if(updateRGBFlag == 1){
 			updateRGBFlag = 0;
 			updateRGB(accX, accY);
-		}*/
+		}
 
-		if(timeFlag == 1){
+		/*if(timeFlag == 1){
 			timeFlag  = 0;
 			segundos  = RTC_Get_Seconds();
 			minutos   = RTC_Get_Minutes();
@@ -112,60 +136,44 @@ int main(void) {
 			writeMsg(&handlerUsart2, Buffer);
 			sprintf(Buffer, " Fecha:%d/%d/%d\n\r", fecha, mes, year);
 			writeMsg(&handlerUsart2, Buffer);
-		}
+		}*/
 
 		//El sistema siempre está verificando si el valor de rxData ha cambiado
 		//(lo cual sucede en la ISR de la recepción)
 		//Si este valor dejó de ser '\0' significa que se recibió un carácter
 		//por lo tanto entra en el bloque if para analizar que se recibió
 
-		if(rxData != '\0'){
-			//Se imprime el carácter recibido
-			writeChar(&handlerUsart2, rxData);
+		if (rxDataFlag == 1) {
+			rxDataFlag = 0;
+			rxData = getRxData();
+			if (rxData != '\0') {
+				for (uint8_t j; j <= 64; j++) {
+					bufferReception[j] = 0;
+				}
+				bufferReception[counterReception] = rxData;
+				counterReception++;
 
-			if(rxData == 'm'){
-				//Se envía un mensaje
-				writeMsg(&handlerUsart2,greetingMsg);
+				if (rxData == '@') {
+					stringComplete = true;
+					bufferReception[counterReception] = '\0';
+					counterReception = 0;
+				}
+
+				rxData = '\0';
 			}
 
-			/*else if(rxData == 'x'){
-
-				//Se leen los datos x del acelerómetro
-				int8_t xDataL = i2c_readSingleRegister(&handlerI2CAccel, DATAX0_R);
-				int8_t xDataH = i2c_readSingleRegister(&handlerI2CAccel, DATAX1_R);
-
-				xData = (xDataH << 8  | xDataL);
-				sprintf(Buffer, "\n\rACCx: %d\n", xData);
-				writeMsg(&handlerUsart2, Buffer);
+			if (stringComplete) {
+				parseCommands(bufferReception);
+				stringComplete = false;
 			}
-
-			else if(rxData == 'y'){
-
-				//Se leen los datos x del acelerómetro
-				int8_t yDataL = i2c_readSingleRegister(&handlerI2CAccel, DATAY0_R);
-				int8_t yDataH = i2c_readSingleRegister(&handlerI2CAccel, DATAY1_R);
-
-				yData = (yDataH << 8 | yDataL);
-				sprintf(Buffer, "\n\rACCy: %d\n", yData);
-				writeMsg(&handlerUsart2, Buffer);
-			}
-
-			else if(rxData == 'z'){
-
-				//Se leen los datos x del acelerómetro
-				int8_t zDataL = i2c_readSingleRegister(&handlerI2CAccel, DATAZ0_R);
-				int8_t zDataH = i2c_readSingleRegister(&handlerI2CAccel, DATAZ1_R);
-
-				zData = (zDataH << 8 | zDataL);
-				sprintf(Buffer, "\n\rACCz: %d\n", zData);
-				writeMsg(&handlerUsart2, Buffer);
-			}*/
-
 			rxData = '\0';
 		}
+
 	}
+
 	return 0;
 }
+
 
 //Función que inicializa el sistema con la configuración de los periféricos a usar
 void initSystem(void) {
@@ -242,7 +250,7 @@ void initSystem(void) {
 	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinAltFunMode  = AF4;	              //AF04: I2C1 SDA
 
 	//Se carga la configuración
-	GPIO_Config(&handlerSDAPinLCD);
+	//GPIO_Config(&handlerSDAPinLCD);
 
 	//Se configura el SCL del I2C de la LCD
 	handlerSCLPinLCD.pGPIOx 							= GPIOB;
@@ -254,7 +262,7 @@ void initSystem(void) {
 	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinAltFunMode  = AF4;	              //AF04: I2C1 SCL
 
 	//Se carga la configuración
-	GPIO_Config(&handlerSCLPinLCD);
+	//GPIO_Config(&handlerSCLPinLCD);
 
 	//Se configura el BlinkyTimer
 	handlerBlinkyTimer.ptrTIMx 					= TIM2;
@@ -265,11 +273,20 @@ void initSystem(void) {
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerBlinkyTimer);
 
+	//Se configura el RGBTimer
+	handlerRGBTimer.ptrTIMx 				= TIM5;
+	handlerRGBTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
+	handlerRGBTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100us;
+	handlerRGBTimer.TIMx_Config.TIMx_period = 10; //Update period= 100us*10 = 1 ms
+
+	//Se carga la configuración del BlinkyTimer
+	BasicTimer_Config(&handlerRGBTimer);
+
 	//Se configura el USART 2
 	handlerUsart2.ptrUSARTx					     = USART2;                	  //USART 2
 	handlerUsart2.USART_Config.USART_mode 	     = USART_MODE_RXTX;       	  //Modo de Recepción y transmisión
 	handlerUsart2.USART_Config.USART_baudrate    = USART_BAUDRATE_115200; 	  //115200 bps
-	handlerUsart2.USART_Config.USART_parity      = USART_PARITY_NONE;         //Parity:NONE, acá viene configurado el tamaño de dato
+	handlerUsart2.USART_Config.USART_parity      = USART_PARITY_EVEN;         //Parity:NONE, acá viene configurado el tamaño de dato
 	handlerUsart2.USART_Config.USART_stopbits    = USART_STOPBIT_1;	          //Un stopbit
 	handlerUsart2.USART_Config.USART_enableIntRX = USART_RX_INTERRUPT_ENABLE; //Interrupción de recepción del usart habilitada
 
@@ -282,7 +299,7 @@ void initSystem(void) {
 	handlerI2CAccel.ptrI2Cx		 = I2C1;
 
 	//Se carga la configuración
-	//i2c_config(&handlerI2CAccel);
+	i2c_config(&handlerI2CAccel);
 
 	//Se configura el acelerómetro
 	handlerAccel.ptrI2CHandler  					= &handlerI2CAccel;
@@ -296,7 +313,7 @@ void initSystem(void) {
 	handlerAccel.ADXL345_Config.rangeOp				= TWOG_RANGE;
 
 	//Se carga la configuración
-	//init_ADXL345(&handlerAccel);
+	init_ADXL345(&handlerAccel);
 
 	//Se configura el I2C de la LCD
 	handlerI2CLCD.slaveAddress = LCD_ADDR;
@@ -304,7 +321,7 @@ void initSystem(void) {
 	handlerI2CLCD.ptrI2Cx	   = I2C1;
 
 	//Se carga la configuración
-	i2c_config(&handlerI2CLCD);
+	//i2c_config(&handlerI2CLCD);
 
 	//Se configura el Timer del PWM Azul
 	handlerPWMTimerB.ptrTIMx 		   = TIM3;
@@ -374,7 +391,6 @@ void initSystem(void) {
 	startPwmSignal(&handlerPWMTimerR);
 	startPwmSignal(&handlerPWMTimerB);
 
-	handlerHourDateConfig.PM_AM_Format = PM_FORMAT;
 	handlerHourDateConfig.Hours        = 12; //Por defecto se pone la hora 00:00:00
 	handlerHourDateConfig.Minutes      = 59;
 	handlerHourDateConfig.Seconds      = 0;
@@ -385,7 +401,7 @@ void initSystem(void) {
 
 	enableRTC(&handlerHourDateConfig);
 
-	initLCD(&handlerI2CLCD);
+   //initLCD(&handlerI2CLCD);
 
 }
 
@@ -398,13 +414,29 @@ void BasicTimer2_Callback(void) {
 	timeFlag = 1;
 }
 
+void BasicTimer5_Callback(void){
+	setRGBMode();
+}
+
+void setRGBMode(){
+
+	if(partyModeFlag == 1){
+
+	}
+
+}
+
+
+
+void
+
 /*Función Callback de la recepción del USART2
 El puerto es leído en la ISR para bajar la bandera de la interrupción
 El carácter que se lee es devuelto por la función getRxData*/
 void usart2Rx_Callback(void){
 	//Leemos el valor del registro DR, donde se almacena el dato que llega.
 	//Esto además debe bajar la bandera de la interrupción
-	rxData = getRxData();
+	rxDataFlag = 1;
 }
 
 void updateRGB(uint8_t xAccel, uint8_t yAccel){
@@ -416,6 +448,16 @@ void updateRGB(uint8_t xAccel, uint8_t yAccel){
 	updateDuttyCycle(&handlerPWMTimerR, newDuttyR);
 	updateDuttyCycle(&handlerPWMTimerG, newDuttyG);
 	updateDuttyCycle(&handlerPWMTimerB, newDuttyB);
+}
+
+void randomRGB(){
+	uint8_t greenDutty = getDuttyCycleValue(&handlerPWMTimerG);
+	uint8_t blueDutty = getDuttyCycleValue(&handlerPWMTimerB);
+	uint8_t redDutty = getDuttyCycleValue(&handlerPWMTimerR);
+
+	updateDuttyCycle(&handlerPWMTimerR, absValue(greenDutty - 100) );
+	updateDuttyCycle(&handlerPWMTimerG, blueDutty);
+	updateDuttyCycle(&handlerPWMTimerB, absValue(redDutty - 200));
 }
 
 uint32_t absValue(int32_t negValue){
@@ -447,6 +489,214 @@ void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds){
 	}
 	else {
 		sprintf(Buffer, "\n\rHora: %d:%d:%d\n\r", horas, minutos, segundos);
+	}
+}
+
+void parseCommands(char* ptrBufferReception){
+
+	sscanf(ptrBufferReception, "%s %u %u %s", cmd, &firstParameter, &secondParameter, userMsg);
+
+	if (strcmp(cmd, "help") == 0){
+
+		writeMsg(&handlerUsart2, "Menu de Comandos:\n\r");
+		writeMsg(&handlerUsart2, "1).  help -- Este comando imprime este menu\n");
+		writeMsg(&handlerUsart2, "2).  setHour #Horas #Minutos -- Este comando se utiliza para introducir la hora inicial (horas y minutos) en formato 24 horas\n");
+		writeMsg(&handlerUsart2, "3).  setDate #day #month msg -- Este comando se utiliza para introducir la fecha inicial, en msg se debe escribir el dia de la semana que es (con minuscula todo)\n");
+		writeMsg(&handlerUsart2, "4).  setYear #year -- Este comando se utiliza para introducir el year presente\n");
+	    writeMsg(&handlerUsart2, "5).  setPartyMode -- Este comando enciende el LED en modo fiesta, para apagar el modo Fiesta, se debe activar alguno de los otros modos\n");
+	    writeMsg(&handlerUsart2, "6).  setAccelMode -- Este comando enciende el LED en modo acelerómetro, es decir, el color del RGB cambia con el movimiento del acelerometro\n");
+		writeMsg(&handlerUsart2, "7).  getHour -- Este comando devuelve la hora\n");
+		writeMsg(&handlerUsart2, "8).  getDate -- Este comando devuelve la fecha\n");
+		writeMsg(&handlerUsart2, "9).  getAcc -- Este comando devuelve la aceleracion en X y en Y\n");
+		writeMsg(&handlerUsart2, "10). initLCD -- Este comando envia a la LCD un mensaje de prueba\n");
+		writeMsg(&handlerUsart2, "11). initOLED -- Este comando envia a la OLED un mensaje de prueba\n");
+		writeMsg(&handlerUsart2, "12). initAutodestruction -- Este comando pone el sistema en modo autodestruccion\n");
+	}
+
+	else if (strcmp(cmd, "getHour") == 0){
+		writeMsg(&handlerUsart2, "CMD: getHour\n");
+		segundos = RTC_Get_Seconds();
+		minutos = RTC_Get_Minutes();
+		horas = RTC_Get_Hours();
+		printHour(horas, minutos, segundos);
+		writeMsg(&handlerUsart2, Buffer);
+	}
+
+	else if (strcmp(cmd, "getDate") == 0){
+		writeMsg(&handlerUsart2, "CMD: getDate\n");
+		diaSemana = RTC_Get_WeekDay();
+		fecha = RTC_Get_Date();
+		year = RTC_Get_Year();
+		mes = RTC_Get_Month();
+		sprintf(Buffer, "%s", diaSemana);
+		writeMsg(&handlerUsart2, Buffer);
+		sprintf(Buffer, " Fecha:%d/%d/%d\n\r", fecha, mes, year);
+		writeMsg(&handlerUsart2, Buffer);
+	}
+
+	else if (strcmp(cmd, "getAcc") == 0){
+		writeMsg(&handlerUsart2, "CMD: getAcc\n");
+		accX = getXData(&handlerAccel);
+		sprintf(Buffer, "\n\rACCx: %d\n", accX);
+		writeMsg(&handlerUsart2, Buffer);
+		accY = getYData(&handlerAccel);
+		sprintf(Buffer, "ACCy: %d\n\r", accY);
+		writeMsg(&handlerUsart2, Buffer);
+	}
+
+	else if (strcmp(cmd, "initLCD") == 0){
+		writeMsg(&handlerUsart2, "CMD: initLCD\n\r");
+	}
+
+	else if (strcmp(cmd, "initOLED") == 0){
+		writeMsg(&handlerUsart2, "CMD: initOLED\n\r");
+	}
+
+	else if (strcmp(cmd, "setPartyMode") == 0){
+		partyModeFlag = 1;
+		writeMsg(&handlerUsart2, "CMD: setPartyMode\n");
+		randomRGB();
+		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		delayms(250);
+		randomRGB();
+		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		delayms(250);
+		randomRGB();
+		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		delayms(250);
+		randomRGB();
+		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		delayms(250);
+		randomRGB();
+		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		delayms(250);
+		writeMsg(&handlerUsart2, "Modo Fiesta Off\n\r");
+		randomRGB();
+		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		delayms(250);
+		randomRGB();
+		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		delayms(250);
+		randomRGB();
+		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		delayms(250);
+		randomRGB();
+		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		delayms(250);
+		randomRGB();
+		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		delayms(250);
+		writeMsg(&handlerUsart2, "Modo Fiesta Off\n\r");
+	}
+
+	else if (strcmp(cmd, "setAccelMode") == 0){
+		writeMsg(&handlerUsart2, "CMD: setAccelMode\n\r");
+		accelModeFlag = 1;
+	}
+
+	else if (strcmp(cmd, "initAutodestruction") == 0){
+		autodestructionModeFlag = 1;
+		writeMsg(&handlerUsart2, "CMD: initAutodestruction\n\r");
+		writeMsg(&handlerUsart2, "5\n\r");
+		delayms(2000);
+		writeMsg(&handlerUsart2, "4\n\r");
+		delayms(2000);
+		writeMsg(&handlerUsart2, "3\n\r");
+		delayms(1500);
+		writeMsg(&handlerUsart2, "2\n\r");
+		delayms(1500);
+		writeMsg(&handlerUsart2, "1\n\r");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "0\n\r");
+		delayms(500);
+		writeMsg(&handlerUsart2, "------------------------\n\r");
+		updateDuttyCycle(&handlerPWMTimerG, 0);
+		updateDuttyCycle(&handlerPWMTimerR, 0);
+		updateDuttyCycle(&handlerPWMTimerB, 0);
+	}
+
+	else if (strcmp(cmd, "setHour") == 0){
+		writeMsg(&handlerUsart2, "CMD: setHour\n\r");
+		handlerHourDateConfig.Hours   = firstParameter; //Por defecto se pone la hora 00:00:00
+		handlerHourDateConfig.Minutes = secondParameter;
+		handlerHourDateConfig.Seconds = 0;
+		enableRTC(&handlerHourDateConfig);
+		segundos = RTC_Get_Seconds();
+		minutos = RTC_Get_Minutes();
+		horas = RTC_Get_Hours();
+		printHour(horas, minutos, segundos);
+		writeMsg(&handlerUsart2, Buffer);
+
+	}
+
+	else if (strcmp(cmd, "setDate") == 0){
+		writeMsg(&handlerUsart2, "CMD: setDate\n\r");
+		handlerHourDateConfig.Month        = secondParameter;
+		handlerHourDateConfig.NumberOfDay  = firstParameter;
+
+		if(strcmp(userMsg, "lunes") == 0){
+			handlerHourDateConfig.DayOfWeek = 1;
+			enableRTC(&handlerHourDateConfig);
+			diaSemana = RTC_Get_WeekDay();
+		}
+
+		else if(strcmp(userMsg, "martes") == 0){
+			handlerHourDateConfig.DayOfWeek = 2;
+			enableRTC(&handlerHourDateConfig);
+			diaSemana = RTC_Get_WeekDay();
+		}
+
+		else if(strcmp(userMsg, "miercoles") == 0){
+			handlerHourDateConfig.DayOfWeek = 3;
+			enableRTC(&handlerHourDateConfig);
+			diaSemana = RTC_Get_WeekDay();
+		}
+
+		else if(strcmp(userMsg, "jueves") == 0){
+			handlerHourDateConfig.DayOfWeek = 4;
+			enableRTC(&handlerHourDateConfig);
+			diaSemana = RTC_Get_WeekDay();
+		}
+
+		else if(strcmp(userMsg, "viernes") == 0){
+			handlerHourDateConfig.DayOfWeek = 5;
+			enableRTC(&handlerHourDateConfig);
+			diaSemana = RTC_Get_WeekDay();
+		}
+
+		else if(strcmp(userMsg, "sabado") == 0){
+			handlerHourDateConfig.DayOfWeek = 6;
+			enableRTC(&handlerHourDateConfig);
+			diaSemana = RTC_Get_WeekDay();
+		}
+
+		else if(strcmp(userMsg, "domingo") == 0){
+			handlerHourDateConfig.DayOfWeek = 7;
+			enableRTC(&handlerHourDateConfig);
+			diaSemana = RTC_Get_WeekDay();
+		}
+
+		else {
+			writeMsg(&handlerUsart2, "ERROR\n\r");
+		}
+
+		fecha = RTC_Get_Date();
+		mes = RTC_Get_Month();
+		sprintf(Buffer, "%s", diaSemana);
+		writeMsg(&handlerUsart2, Buffer);
+		sprintf(Buffer, " Fecha:%d/%d\n\r", fecha, mes);
+		writeMsg(&handlerUsart2, Buffer);
+
+	}
+
+	else if (strcmp(cmd, "setYear") == 0){
+		writeMsg(&handlerUsart2, "CMD: setYear\n\r");
+		sprintf(Buffer, "Year: %d\n\r", firstParameter);
+		writeMsg(&handlerUsart2, Buffer);
+	}
+
+	else {
+		writeMsg(&handlerUsart2, "ERROR\n\r");
 	}
 }
 
