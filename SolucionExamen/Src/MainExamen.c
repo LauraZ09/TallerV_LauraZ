@@ -371,8 +371,7 @@ void BasicTimer2_Callback(void) {
 
 void BasicTimer5_Callback(void){
 	setRGBMode();
-    //updateLCD();
-	updateLCDFlag++;
+
 }
 
 
@@ -395,6 +394,7 @@ void setRGBMode(void){
 
 
 		accX = getXData(&handlerAccel);
+
 		accY = getYData(&handlerAccel);
 
 		updateRGB(accX, accY);
@@ -543,10 +543,12 @@ void parseCommands(char* ptrBufferReception){
 	else if (strcmp(cmd, "setPartyMode") == 0){
 		partyModeFlag = 1;
 		accelModeFlag = 0;
+		autodestructionModeFlag = 0;
 		clearDisplayLCD(&handlerI2CLCD);
 		autodestructionModeFlag = 0;
 		writeMsg(&handlerUsart2, "CMD: setPartyMode\n");
 		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
+		printStringLCD(&handlerI2CLCD,"Modo Fiesta ON");
 	}
 
 	else if (strcmp(cmd, "setAccelMode") == 0){
@@ -692,6 +694,10 @@ void updateLCD() {
 		printHour(horas, minutos, segundos);
 		moveCursorToLCD(&handlerI2CLCD, 0x40);
 		printStringLCD(&handlerI2CLCD, Buffer);
+	}
+
+	else{
+		__NOP();
 	}
 
 
