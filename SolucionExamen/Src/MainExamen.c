@@ -528,8 +528,13 @@ void parseCommands(char* ptrBufferReception){
 
 	if (strcmp(cmd, "help") == 0){
 
-		writeMsg(&handlerUsart2, "Menu de Comandos:\n\r");
-		writeMsg(&handlerUsart2, "1).  help -- Este comando imprime este menu\n");
+		writeMsg(&handlerUsart2, "Menu de Comandos e instrucciones:\n\r");
+		writeMsg(&handlerUsart2, "El sistema consiste de un LED RGB el cual se enciende de acuerdo al modo configurado por el usuario.\n Hay 3 modos configurables:\n1.Modo "
+				"fiesta, en el cual el LED parpadea de diferentes colores aleatorios.\n2.Modo aceleracion, en el cual el LED cambia de color \n"
+				"con el cambio en la aceleracion percibida por el sensor\n3.Modo autodestruccion en el cual el LED hace una cuenta regresiva y luego se apaga.\n"
+				"IMPORTANTE: por defecto ninguno de estos modos está configurado, por defecto el LED se enciende en un color azul. Para desactivar alguno de los modos\n"
+				"basta con activar otro modo.\n\r");
+		writeMsg(&handlerUsart2, "COMANDOS:\n\r1).  help -- Este comando imprime este menu\n");
 		writeMsg(&handlerUsart2, "2).  setHour #Horas #Minutos -- Este comando se utiliza para introducir la hora inicial (horas y minutos) en formato 24 horas\n");
 		writeMsg(&handlerUsart2, "3).  setDate #day #month msg -- Este comando se utiliza para introducir la fecha inicial, en msg se debe escribir el dia de la semana que es (con minuscula todo)\n");
 		writeMsg(&handlerUsart2, "4).  setYear #year -- Este comando se utiliza para introducir el year presente\n");
