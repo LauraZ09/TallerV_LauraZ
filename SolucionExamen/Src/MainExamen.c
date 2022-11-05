@@ -10,6 +10,7 @@
 
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include "stm32f4xx.h"
@@ -59,6 +60,10 @@ int16_t accX	      = 0;  //Variable para almacenar la aceleración en X
 int16_t accY	      = 0;	//Variable para almacenar la aceleración en Y
 uint8_t accFlag	      = 0;	//Bandera para actualizar los datos de la aceleración
 uint8_t counterReception = 0;
+uint8_t partyModeFlag = 0;
+uint8_t accelModeFlag = 0;
+uint8_t autodestructionModeFlag = 0;
+
 bool stringComplete = false;
 char Buffer[64]       = {0};//En esta variable se almacenarán mensajes
 char bufferReception[64] = {0};
@@ -76,6 +81,7 @@ void updateRGB(uint8_t xAccel, uint8_t yAccel); //Función para actualizar el RG
 uint32_t absValue(int32_t);						//Función para obtener valor absoluto
 void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds);
 void parseCommands(char* ptrBufferReception);
+void setRGBMode(void);
 
 int main(void) {
 
@@ -105,7 +111,7 @@ int main(void) {
 
 	while (1) {
 
-		if(accFlag == 1){
+		/*if(accFlag == 1){
 			accFlag = 0;
 			accX = getXData(&handlerAccel);
 			//sprintf(Buffer, "\n\rACCx: %d\n", accX);
@@ -119,7 +125,7 @@ int main(void) {
 		if(updateRGBFlag == 1){
 			updateRGBFlag = 0;
 			updateRGB(accX, accY);
-		}
+		}*/
 
 		/*if(timeFlag == 1){
 			timeFlag  = 0;
@@ -276,8 +282,8 @@ void initSystem(void) {
 	//Se configura el RGBTimer
 	handlerRGBTimer.ptrTIMx 				= TIM5;
 	handlerRGBTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
-	handlerRGBTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100us;
-	handlerRGBTimer.TIMx_Config.TIMx_period = 10; //Update period= 100us*10 = 1 ms
+	handlerRGBTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_1ms;
+	handlerRGBTimer.TIMx_Config.TIMx_period = 100; //Update period= 1ms*100 = 100 ms
 
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerRGBTimer);
@@ -410,7 +416,7 @@ void BasicTimer2_Callback(void) {
 	//Blinky del LED de estado
 	GPIOxTooglePin(&handlerBlinkyPin);
 	accFlag = 1;
-	updateRGBFlag = 1;
+	updateRGBFlag++;
 	timeFlag = 1;
 }
 
@@ -418,17 +424,40 @@ void BasicTimer5_Callback(void){
 	setRGBMode();
 }
 
-void setRGBMode(){
+void setRGBMode(void){
 
-	if(partyModeFlag == 1){
+	if (partyModeFlag == 1){
 
+		uint8_t numeroG = rand () % 256;
+		uint8_t numeroB = rand () % 256;
+		uint8_t numeroR = rand () % 256;
+
+
+		updateDuttyCycle(&handlerPWMTimerR, numeroR);
+		updateDuttyCycle(&handlerPWMTimerG, numeroG);
+		updateDuttyCycle(&handlerPWMTimerB, numeroB);
+	}
+
+	else if (accelModeFlag == 1){
+
+
+		accX = getXData(&handlerAccel);
+		accY = getYData(&handlerAccel);
+
+		updateRGB(accX, accY);
+	}
+
+	else if (autodestructionModeFlag == 1){
+
+			__NOP();
+		}
+
+	else {
+		__NOP();
 	}
 
 }
 
-
-
-void
 
 /*Función Callback de la recepción del USART2
 El puerto es leído en la ISR para bajar la bandera de la interrupción
@@ -451,6 +480,7 @@ void updateRGB(uint8_t xAccel, uint8_t yAccel){
 }
 
 void randomRGB(){
+
 	uint8_t greenDutty = getDuttyCycleValue(&handlerPWMTimerG);
 	uint8_t blueDutty = getDuttyCycleValue(&handlerPWMTimerB);
 	uint8_t redDutty = getDuttyCycleValue(&handlerPWMTimerR);
@@ -554,61 +584,42 @@ void parseCommands(char* ptrBufferReception){
 
 	else if (strcmp(cmd, "setPartyMode") == 0){
 		partyModeFlag = 1;
+		accelModeFlag = 0;
+		autodestructionModeFlag = 0;
 		writeMsg(&handlerUsart2, "CMD: setPartyMode\n");
-		randomRGB();
 		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
-		delayms(250);
-		randomRGB();
-		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
-		delayms(250);
-		randomRGB();
-		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
-		delayms(250);
-		randomRGB();
-		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
-		delayms(250);
-		randomRGB();
-		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
-		delayms(250);
-		writeMsg(&handlerUsart2, "Modo Fiesta Off\n\r");
-		randomRGB();
-		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
-		delayms(250);
-		randomRGB();
-		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
-		delayms(250);
-		randomRGB();
-		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
-		delayms(250);
-		randomRGB();
-		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
-		delayms(250);
-		randomRGB();
-		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
-		delayms(250);
-		writeMsg(&handlerUsart2, "Modo Fiesta Off\n\r");
 	}
 
 	else if (strcmp(cmd, "setAccelMode") == 0){
 		writeMsg(&handlerUsart2, "CMD: setAccelMode\n\r");
 		accelModeFlag = 1;
+		autodestructionModeFlag = 0;
+		partyModeFlag = 0;
 	}
 
 	else if (strcmp(cmd, "initAutodestruction") == 0){
 		autodestructionModeFlag = 1;
+		partyModeFlag = 0;
+		accelModeFlag = 0;
 		writeMsg(&handlerUsart2, "CMD: initAutodestruction\n\r");
 		writeMsg(&handlerUsart2, "5\n\r");
-		delayms(2000);
+		updateRGB(30, 0);
+		delayms(1000);
 		writeMsg(&handlerUsart2, "4\n\r");
-		delayms(2000);
+		updateRGB(30, 30);
+		delayms(1000);
 		writeMsg(&handlerUsart2, "3\n\r");
-		delayms(1500);
+		updateRGB(0, 0);
+		delayms(1000);
 		writeMsg(&handlerUsart2, "2\n\r");
-		delayms(1500);
+		updateRGB(15, 15);
+		delayms(1000);
 		writeMsg(&handlerUsart2, "1\n\r");
+		updateRGB(15, -15);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "0\n\r");
-		delayms(500);
+		updateRGB(23, 17);
+		delayms(1000);
 		writeMsg(&handlerUsart2, "------------------------\n\r");
 		updateDuttyCycle(&handlerPWMTimerG, 0);
 		updateDuttyCycle(&handlerPWMTimerR, 0);
