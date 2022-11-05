@@ -72,6 +72,8 @@ void i2c_config (I2C_Handler_t *ptrHandlerI2C){
 		ptrHandlerI2C->ptrI2Cx->TRISE |= I2C_MAX_RISE_TIME_FM;
 	}
 
+	ptrHandlerI2C->ptrI2Cx->SR2 = 0;
+
 	/* 5. Activamos el módulo I2C */
 	ptrHandlerI2C->ptrI2Cx->CR1 |= I2C_CR1_PE;
 
@@ -89,6 +91,7 @@ void i2c_stopTransaction(I2C_Handler_t *ptrHandlerI2C){
  * 2.a. Esperamos a que la bandera del evento start se levante.
  * Mientras esperamos, el valor SB es 0, entonces la negación (!) es 1*/
 void i2c_startTransaction(I2C_Handler_t *ptrHandlerI2C){
+
 	/* 1. Verificamos que la línea no está ocupada - bit "busy" en I2C_CR2*/
 	while(ptrHandlerI2C->ptrI2Cx->SR2 & I2C_SR2_BUSY){
 		__NOP();

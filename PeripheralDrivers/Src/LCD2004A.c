@@ -66,48 +66,37 @@ void initLCD(I2C_Handler_t *ptrHandlerI2C){
 }//Inicialización terminada
 
 void sendByteLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t dataToSend){
-
 	/* 1. Generamos la condición de satrt*/
 	i2c_startTransaction(ptrHandlerI2C);
-
 	/*2. Enviamos la dirección del esclavo y la indicación ESCRIBIR*/
 	i2c_sendSlaveAddressRW(ptrHandlerI2C, ptrHandlerI2C->slaveAddress,
 			I2C_WRITE_DATA);
-
 	/*3. Enviamos el valor que deseamos escribir en el registro deseado*/
 	i2c_sendDataByte(ptrHandlerI2C, dataToSend);
-
 	/*5. Generamos la condición de Stop, para que el slave se detenga después de 1 byte*/
 	i2c_stopTransaction(ptrHandlerI2C);
-
-	delayms(2);
 }
-
 void sendCommandLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t command){
-
 	uint8_t commandH = (command & 0xf0);
 	uint8_t commandL = (command << 4);
-
 	//Primero se debe enviar la parte alta (H) del dato, no se debe olvidar la primera parte del registro,
 	//correspondiente a los bits RS, RW, LED, E:
 	sendByteLCD(ptrHandlerI2C,(commandH | LED_ON | ENABLE_ON)); //Primero se carga el comando
 	sendByteLCD(ptrHandlerI2C,(commandH | LED_ON ));			//Luego, se escribe en el registro
-
 	//Enviamos la parte baja del comando (L):
 	sendByteLCD(ptrHandlerI2C, (commandL | LED_ON | ENABLE_ON )); //Primero se carga el comando
 	sendByteLCD(ptrHandlerI2C, (commandL | LED_ON ));//Luego, se escribe en el registro
+
+	delayms(1);
 }
 
 void displayDataLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t data){
-
 	uint8_t dataH = (data & 0xf0);
 	uint8_t dataL = (data << 4);
-
 	//Primero se debe enviar la parte alta (H) del dato, no se debe olvidar la primera parte del registro,
 	//correspondiente a los bits RS, RW, LED, E:
 	sendByteLCD(ptrHandlerI2C, (dataH | LED_ON | DISPLAY_DATA | ENABLE_ON )); //Primero se carga el DATO
 	sendByteLCD(ptrHandlerI2C, (dataH | LED_ON | DISPLAY_DATA)); //Luego, se escribe en el registro
-
 	//Enviamos la parte baja del comando (L):
 	sendByteLCD(ptrHandlerI2C, (dataL | LED_ON | ENABLE_ON |DISPLAY_DATA )); //Primero se carga el DATO
 	sendByteLCD(ptrHandlerI2C, (dataL | LED_ON )); //Luego, se escribe en el registro
@@ -116,12 +105,11 @@ void displayDataLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t data){
 void clearDisplayLCD(I2C_Handler_t *ptrHandlerI2C){
 
 	sendCommandLCD(ptrHandlerI2C, 0b1);
+	//delayms(100);
 }
 
 void printStringLCD(I2C_Handler_t *ptrHandlerI2C,char* string){
-
 	uint8_t i = 0; //Variable para recorrer el arreglo
-
 	while(*(string + i) != '\0'){
 		displayDataLCD(ptrHandlerI2C, *(string + i));
 		i++;
@@ -130,21 +118,16 @@ void printStringLCD(I2C_Handler_t *ptrHandlerI2C,char* string){
 			moveCursorToLCD(ptrHandlerI2C, 0x40);
 		}
 	}
+	//delayms(100);
 }
 
 void returnHomeLCD(I2C_Handler_t *ptrHandlerI2C){
 
 	sendCommandLCD(ptrHandlerI2C, 0b10);
+	//delayms(100);
 }
 
 void moveCursorToLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t position){
 	sendCommandLCD(ptrHandlerI2C, 0x80 + position);
+	//delayms(100);
 }
-
-
-
-
-
-
-
-

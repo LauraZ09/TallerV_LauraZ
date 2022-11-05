@@ -63,6 +63,7 @@ uint8_t counterReception = 0;
 uint8_t partyModeFlag = 0;
 uint8_t accelModeFlag = 0;
 uint8_t autodestructionModeFlag = 0;
+uint16_t updateLCDFlag = 0;
 
 bool stringComplete = false;
 char Buffer[64]       = {0};//En esta variable se almacenarán mensajes
@@ -73,7 +74,7 @@ char userMsg[64] = {0};
 char cmd[16];
 unsigned int firstParameter;
 unsigned int secondParameter;
-uint8_t rxDataFlag = 0;
+uint8_t rxDataFlag = 1;
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
 void initSystem(void);       				    //Función para inicializar el sistema
@@ -82,67 +83,13 @@ uint32_t absValue(int32_t);						//Función para obtener valor absoluto
 void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds);
 void parseCommands(char* ptrBufferReception);
 void setRGBMode(void);
+void updateLCD ();
 
 int main(void) {
 
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
-	writeChar(&handlerUsart2,' ');
-	/*clearDisplayLCD(&handlerI2CLCD);
-	delayms(100);
-	printStringLCD(&handlerI2CLCD, "Hoy termino esto, si senor");
-	delayms(1000);
-	returnHomeLCD(&handlerI2CLCD);
-	delayms(1000);
-	clearDisplayLCD(&handlerI2CLCD);
-	delayms(1000);
-	printStringLCD(&handlerI2CLCD, " gonorrea");
-	delayms(1000);
-	printStringLCD(&handlerI2CLCD, " 123456");
-	delayms(1000);
-	printStringLCD(&handlerI2CLCD, " suerte people");
-	delayms(1000);
-	clearDisplayLCD(&handlerI2CLCD);
-	delayms(1000);
-	moveCursorToLCD(&handlerI2CLCD, 0x40);
-	delayms(1000);
-	printStringLCD(&handlerI2CLCD, "NEAAAAAAAaaa");
-	delayms(1000);*/
-
 
 	while (1) {
-
-		/*if(accFlag == 1){
-			accFlag = 0;
-			accX = getXData(&handlerAccel);
-			//sprintf(Buffer, "\n\rACCx: %d\n", accX);
-			//writeMsg(&handlerUsart2, Buffer);
-
-			accY = getYData(&handlerAccel);
-			//sprintf(Buffer, "ACCy: %d\n", accY);
-			//writeMsg(&handlerUsart2, Buffer);
-		}
-
-		if(updateRGBFlag == 1){
-			updateRGBFlag = 0;
-			updateRGB(accX, accY);
-		}*/
-
-		/*if(timeFlag == 1){
-			timeFlag  = 0;
-			segundos  = RTC_Get_Seconds();
-			minutos   = RTC_Get_Minutes();
-			horas     = RTC_Get_Hours();
-			diaSemana = RTC_Get_WeekDay();
-			fecha	  = RTC_Get_Date();
-			year 	  = RTC_Get_Year();
-			mes		  = RTC_Get_Month();
-			printHour(horas, minutos, segundos);
-			writeMsg(&handlerUsart2, Buffer);
-			sprintf(Buffer, "%s", diaSemana);
-			writeMsg(&handlerUsart2, Buffer);
-			sprintf(Buffer, " Fecha:%d/%d/%d\n\r", fecha, mes, year);
-			writeMsg(&handlerUsart2, Buffer);
-		}*/
 
 		//El sistema siempre está verificando si el valor de rxData ha cambiado
 		//(lo cual sucede en la ISR de la recepción)
@@ -176,6 +123,7 @@ int main(void) {
 		}
 
 	}
+
 
 	return 0;
 }
@@ -235,7 +183,7 @@ void initSystem(void) {
 
 	//Se configura el SCL del I2C del acelerómetro
 	handlerSCLPin.pGPIOx 							 = GPIOB;
-	handlerSCLPin.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_6;
+	handlerSCLPin.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_8;
 	handlerSCLPin.GPIO_PinConfig.GPIO_PinMode 		 = GPIO_MODE_ALTFN;    //Función alternativa
 	handlerSCLPin.GPIO_PinConfig.GPIO_PinOPType 	 = GPIO_OTYPE_OPENDRAIN;
 	handlerSCLPin.GPIO_PinConfig.GPIO_PinSpeed 		 = GPIO_OSPEED_FAST;
@@ -247,8 +195,8 @@ void initSystem(void) {
 
 
 	//Se configura el SDA del I2C de la LCD
-	handlerSDAPinLCD.pGPIOx 							= GPIOB;
-	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinNumber 	    = PIN_9;
+	handlerSDAPinLCD.pGPIOx 							= GPIOA;
+	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinNumber 	    = PIN_8;
 	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_ALTFN;    //Función alternativa
 	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinOPType 	    = GPIO_OTYPE_OPENDRAIN;
 	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
@@ -256,11 +204,11 @@ void initSystem(void) {
 	handlerSDAPinLCD.GPIO_PinConfig.GPIO_PinAltFunMode  = AF4;	              //AF04: I2C1 SDA
 
 	//Se carga la configuración
-	//GPIO_Config(&handlerSDAPinLCD);
+	GPIO_Config(&handlerSDAPinLCD);
 
 	//Se configura el SCL del I2C de la LCD
-	handlerSCLPinLCD.pGPIOx 							= GPIOB;
-	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinNumber 	    = PIN_6;
+	handlerSCLPinLCD.pGPIOx 							= GPIOC;
+	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinNumber 	    = PIN_9;
 	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_ALTFN;    //Función alternativa
 	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinOPType 	    = GPIO_OTYPE_OPENDRAIN;
 	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
@@ -268,7 +216,7 @@ void initSystem(void) {
 	handlerSCLPinLCD.GPIO_PinConfig.GPIO_PinAltFunMode  = AF4;	              //AF04: I2C1 SCL
 
 	//Se carga la configuración
-	//GPIO_Config(&handlerSCLPinLCD);
+	GPIO_Config(&handlerSCLPinLCD);
 
 	//Se configura el BlinkyTimer
 	handlerBlinkyTimer.ptrTIMx 					= TIM2;
@@ -283,7 +231,7 @@ void initSystem(void) {
 	handlerRGBTimer.ptrTIMx 				= TIM5;
 	handlerRGBTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
 	handlerRGBTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_1ms;
-	handlerRGBTimer.TIMx_Config.TIMx_period = 100; //Update period= 1ms*100 = 100 ms
+	handlerRGBTimer.TIMx_Config.TIMx_period = 100; //Update period= 1ms*10 = 10 ms
 
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerRGBTimer);
@@ -323,11 +271,11 @@ void initSystem(void) {
 
 	//Se configura el I2C de la LCD
 	handlerI2CLCD.slaveAddress = LCD_ADDR;
-	handlerI2CLCD.modeI2C 	   = I2C_MODE_FM;
-	handlerI2CLCD.ptrI2Cx	   = I2C1;
+	handlerI2CLCD.modeI2C 	   = I2C_MODE_SM;
+	handlerI2CLCD.ptrI2Cx	   = I2C3;
 
 	//Se carga la configuración
-	//i2c_config(&handlerI2CLCD);
+    i2c_config(&handlerI2CLCD);
 
 	//Se configura el Timer del PWM Azul
 	handlerPWMTimerB.ptrTIMx 		   = TIM3;
@@ -407,7 +355,8 @@ void initSystem(void) {
 
 	enableRTC(&handlerHourDateConfig);
 
-   //initLCD(&handlerI2CLCD);
+
+	initLCD(&handlerI2CLCD);
 
 }
 
@@ -422,7 +371,10 @@ void BasicTimer2_Callback(void) {
 
 void BasicTimer5_Callback(void){
 	setRGBMode();
+    //updateLCD();
+	updateLCDFlag++;
 }
+
 
 void setRGBMode(void){
 
@@ -436,6 +388,7 @@ void setRGBMode(void){
 		updateDuttyCycle(&handlerPWMTimerR, numeroR);
 		updateDuttyCycle(&handlerPWMTimerG, numeroG);
 		updateDuttyCycle(&handlerPWMTimerB, numeroB);
+
 	}
 
 	else if (accelModeFlag == 1){
@@ -590,12 +543,14 @@ void parseCommands(char* ptrBufferReception){
 	else if (strcmp(cmd, "setPartyMode") == 0){
 		partyModeFlag = 1;
 		accelModeFlag = 0;
+		clearDisplayLCD(&handlerI2CLCD);
 		autodestructionModeFlag = 0;
 		writeMsg(&handlerUsart2, "CMD: setPartyMode\n");
 		writeMsg(&handlerUsart2, "Modo Fiesta On\n\r");
 	}
 
 	else if (strcmp(cmd, "setAccelMode") == 0){
+		clearDisplayLCD(&handlerI2CLCD);
 		writeMsg(&handlerUsart2, "CMD: setAccelMode\n\r");
 		accelModeFlag = 1;
 		autodestructionModeFlag = 0;
@@ -603,32 +558,41 @@ void parseCommands(char* ptrBufferReception){
 	}
 
 	else if (strcmp(cmd, "initAutodestruction") == 0){
+		clearDisplayLCD(&handlerI2CLCD);
 		autodestructionModeFlag = 1;
 		partyModeFlag = 0;
 		accelModeFlag = 0;
 		writeMsg(&handlerUsart2, "CMD: initAutodestruction\n\r");
 		writeMsg(&handlerUsart2, "5\n\r");
+		printStringLCD(&handlerI2CLCD, "5");
 		updateRGB(30, 0);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "4\n\r");
+		printStringLCD(&handlerI2CLCD, "5");
 		updateRGB(30, 30);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "3\n\r");
+		printStringLCD(&handlerI2CLCD, "4");
 		updateRGB(0, 0);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "2\n\r");
+		printStringLCD(&handlerI2CLCD, "3");
 		updateRGB(15, 15);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "1\n\r");
+		printStringLCD(&handlerI2CLCD, "2");
 		updateRGB(15, -15);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "0\n\r");
+		printStringLCD(&handlerI2CLCD, "1");
 		updateRGB(23, 17);
 		delayms(1000);
 		writeMsg(&handlerUsart2, "------------------------\n\r");
+		printStringLCD(&handlerI2CLCD, "BYE BYE BYE BYE BYE BYE BYE BYE BYE BYE BYE BYE BYE BYE");
 		updateDuttyCycle(&handlerPWMTimerG, 0);
 		updateDuttyCycle(&handlerPWMTimerR, 0);
 		updateDuttyCycle(&handlerPWMTimerB, 0);
+		sendCommandLCD(&handlerI2CLCD, 0x00);
 	}
 
 	else if (strcmp(cmd, "setHour") == 0){
@@ -715,8 +679,23 @@ void parseCommands(char* ptrBufferReception){
 		writeMsg(&handlerUsart2, "ERROR\n\r");
 	}
 }
+void updateLCD() {
+
+	returnHomeLCD(&handlerI2CLCD);
+
+	if(partyModeFlag == 1){
+		returnHomeLCD(&handlerI2CLCD);
+		printStringLCD(&handlerI2CLCD, "Modo Fiesta ON");
+		horas = RTC_Get_Hours();
+		minutos = RTC_Get_Minutes();
+		segundos = RTC_Get_Seconds();
+		printHour(horas, minutos, segundos);
+		moveCursorToLCD(&handlerI2CLCD, 0x40);
+		printStringLCD(&handlerI2CLCD, Buffer);
+	}
 
 
+}
 
 
 
