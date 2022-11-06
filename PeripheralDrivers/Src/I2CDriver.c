@@ -72,8 +72,6 @@ void i2c_config (I2C_Handler_t *ptrHandlerI2C){
 		ptrHandlerI2C->ptrI2Cx->TRISE |= I2C_MAX_RISE_TIME_FM;
 	}
 
-	ptrHandlerI2C->ptrI2Cx->SR2 = 0;
-
 	/* 5. Activamos el módulo I2C */
 	ptrHandlerI2C->ptrI2Cx->CR1 |= I2C_CR1_PE;
 
@@ -146,6 +144,8 @@ void i2c_sendSlaveAddressRW(I2C_Handler_t *ptrHandlerI2C, uint8_t slaveAddress, 
 	while(!(ptrHandlerI2C->ptrI2Cx->SR1 & I2C_SR1_ADDR)){
 		__NOP();
 	}
+
+
 
 	/* 3.2. Debemos limpiar la bandera de la recepción de ACK de la addr, para lo cual
 	 * debemos leer en secuencia primero el  I2C_SR1 y luego el I2C_SR2*/

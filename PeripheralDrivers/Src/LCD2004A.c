@@ -69,7 +69,7 @@ void sendByteLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t dataToSend){
 	/* 1. Generamos la condición de satrt*/
 	i2c_startTransaction(ptrHandlerI2C);
 	/*2. Enviamos la dirección del esclavo y la indicación ESCRIBIR*/
-	i2c_sendSlaveAddressRW(ptrHandlerI2C, ptrHandlerI2C->slaveAddress,
+	i2c_sendSlaveAddressRW(ptrHandlerI2C,ptrHandlerI2C->slaveAddress,
 			I2C_WRITE_DATA);
 	/*3. Enviamos el valor que deseamos escribir en el registro deseado*/
 	i2c_sendDataByte(ptrHandlerI2C, dataToSend);
@@ -77,8 +77,12 @@ void sendByteLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t dataToSend){
 	i2c_stopTransaction(ptrHandlerI2C);
 }
 void sendCommandLCD(I2C_Handler_t *ptrHandlerI2C, uint8_t command){
-	uint8_t commandH = (command & 0xf0);
-	uint8_t commandL = (command << 4);
+	uint8_t commandH = 0;
+	uint8_t commandL = 0;
+
+	commandH = (command & 0xf0);
+	commandL = (command << 4);
+
 	//Primero se debe enviar la parte alta (H) del dato, no se debe olvidar la primera parte del registro,
 	//correspondiente a los bits RS, RW, LED, E:
 	sendByteLCD(ptrHandlerI2C,(commandH | LED_ON | ENABLE_ON)); //Primero se carga el comando
