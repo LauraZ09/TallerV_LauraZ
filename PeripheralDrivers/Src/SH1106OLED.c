@@ -246,34 +246,38 @@ void clearOLED(I2C_Handler_t *ptrHandlerI2C){
 	}
 }
 
-char* OLED_VarToChar(char character){
+//Esta función toma el mensaje a enviar en código ascii y lo convierte a los carácteres definidos en este driver,
+//es decir, lo convierte a su respectivo dibujo. La función lee el ascii y según el valor que obtiene
+//retorna un patrón(retorna un char*, es decir, retorna el puntero a un arreglo, recordar que el carácter
+//es un arreglo de bytes).
+char* stringToChar(char character){
 	switch(character){
 	case(' '):
-	{return OLEDNull();
+	{return spaceChar();
 	break;}
 	case('A'):
-	{return AChar;
+	{return AChar();
 	break;}
 	default:
-	{return OLEDNull();
+	{return spaceChar();
 	break;}
 	}
 }
 
 void printSingleByte(I2C_Handler_t *ptrHandlerI2C, char singleByte){
-	sendByteOLED(ptrHandlerI2C, OLED_VarToChar(singleByte));
+	sendByteOLED(ptrHandlerI2C, stringToChar(singleByte));
 }
 
 void printBytesArray(I2C_Handler_t *ptrHandlerI2C, char* bytesArray){
 
 	for(uint8_t j = 0; j < sizeof(bytesArray); j++){
-			sendByteOLED(ptrHandlerI2C, OLED_VarToChar(*bytesArray)); //Recordar que esta función manda de a carácter
+			sendByteOLED(ptrHandlerI2C, stringToChar(*bytesArray)); //Recordar que esta función manda de a carácter
 			bytesArray++;
 		}
 }
 
 //Carácteres, para
-char characterA[8]   		 = {0x00, 0b11111100, 0b00010010, 0b00010010, 0b00010010, 0b11111100, 0x00, 0x00}; //Está escrita en líneas verticales y horizontales
+char characterA[8]   		 = {0x00, 0b11111100, 0b00010010, 0b00010010, 0b00010010,0b00010010, 0b11111100, 0x00}; //Está escrita en líneas verticales y horizontales
 char characterSpace[8] 	 = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 char characterWhiteLine[8]  = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 

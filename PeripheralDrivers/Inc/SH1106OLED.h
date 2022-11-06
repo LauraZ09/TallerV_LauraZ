@@ -27,17 +27,19 @@
 void sendCommandOLED(I2C_Handler_t *ptrHandlerI2C, uint8_t command);
 void sendByteOLED (I2C_Handler_t *ptrHandlerI2C, char *dataToSend);
 void sendBytesArray(I2C_Handler_t *ptrHandlerI2C, char **dataToSend);
+
 void setPageOLED(I2C_Handler_t *ptrHandlerI2C, uint8_t pageNumber);
 void initOLED(I2C_Handler_t *ptrHandlerI2C);
 void clearOLED(I2C_Handler_t *ptrHandlerI2C);
+void setColumn(I2C_Handler_t *ptrHandlerI2C, uint8_t columnnNumber);
 
+void printBytesArray(I2C_Handler_t *ptrHandlerI2C, char* bytesArray);
+void printSingleByte(I2C_Handler_t *ptrHandlerI2C, char singleByte);
+
+char* stringToChar(char character);
 
 char* AChar(void);
 char* spaceChar(void);
 char* whiteLineChar(void);
 
-void setColumn(I2C_Handler_t *ptrHandlerI2C, uint8_t columnnNumber);
-char* OLED_VarToChar(char character);
-void printBytesArray(I2C_Handler_t *ptrHandlerI2C, char* bytesArray);
-void printSingleByte(I2C_Handler_t *ptrHandlerI2C, char singleByte);
 #endif /* SH1104OLED_H_ */
