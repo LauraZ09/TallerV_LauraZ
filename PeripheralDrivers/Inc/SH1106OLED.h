@@ -31,6 +31,7 @@ void sendBytesArray(I2C_Handler_t *ptrHandlerI2C, char **dataToSend);
 void setPageOLED(I2C_Handler_t *ptrHandlerI2C, uint8_t pageNumber);
 void initOLED(I2C_Handler_t *ptrHandlerI2C);
 void clearOLED(I2C_Handler_t *ptrHandlerI2C);
+void clearAllScreen(I2C_Handler_t *ptrHandlerI2C);
 void setColumn(I2C_Handler_t *ptrHandlerI2C, uint8_t columnnNumber);
 
 void printBytesArray(I2C_Handler_t *ptrHandlerI2C, char* bytesArray);

@@ -185,19 +185,15 @@ void initOLED(I2C_Handler_t *ptrHandlerI2C){
 	sendCommandOLED(ptrHandlerI2C, 0x00);
 	sendCommandOLED(ptrHandlerI2C, 0x10);
 	sendCommandOLED(ptrHandlerI2C, 0x40);
-	delayms(100);
-	setPageOLED(ptrHandlerI2C, OLED_PAGE_NUMBER_0);
-	clearOLED(ptrHandlerI2C);
-	clearOLED(ptrHandlerI2C);
-	setPageOLED(ptrHandlerI2C, OLED_PAGE_NUMBER_0);
-	setColumn(ptrHandlerI2C, 00);
+	clearAllScreen(ptrHandlerI2C);
+	clearAllScreen(ptrHandlerI2C);
 }
 
 //Esta función envía un arreglo de arreglos jajajaja, es decir, un arreglo es un carácter,
 //un arreglo de arreglos son varios carácteres.
 void sendBytesArray(I2C_Handler_t *ptrHandlerI2C, char **dataToSend){
 
-	for(uint8_t counterOLED = 0; counterOLED < sizeof(dataToSend); counterOLED++){
+	for(uint8_t counterOLED = 0; counterOLED < 16; counterOLED++){
 		sendByteOLED(ptrHandlerI2C, *dataToSend);
 		dataToSend++;
 		//Se pasa al siguiente carácter (arreglo), recordar que el nombre es un putero a la primera
@@ -221,8 +217,8 @@ void setColumn(I2C_Handler_t *ptrHandlerI2C, uint8_t columnNumber){
 	uint8_t columnCommandH = 0;
 	uint8_t columnCommandL = 0;
 
-	columnCommandH = (0x1 << 4) | columnNumber;
-	columnCommandL = (0x0 << 4) | columnNumber;
+	columnCommandH = (0x1 << 4) | (columnNumber >> 4);
+	columnCommandL = (0x0 << 4) | (columnNumber & 0x0F);
 
 	sendCommandOLED(ptrHandlerI2C, columnCommandH);
 	sendCommandOLED(ptrHandlerI2C, columnCommandL);
@@ -240,10 +236,21 @@ void whiteScreenOLED(I2C_Handler_t *ptrHandlerI2C){
 void clearOLED(I2C_Handler_t *ptrHandlerI2C){
 	char* blackSpace[16] = {spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),
 			spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar()};
-	for(uint8_t j = 0; j < 8; j++){
-		setPageOLED(ptrHandlerI2C,j);
-		sendBytesArray(ptrHandlerI2C,blackSpace);
+
+	sendBytesArray(ptrHandlerI2C, blackSpace);
+}
+
+void clearAllScreen(I2C_Handler_t *ptrHandlerI2C){
+
+	char* blackScreen[16] = {spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),
+			spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar()};
+
+	for(uint8_t clearCounter = 0; clearCounter < 8; clearCounter++){
+		setPageOLED(ptrHandlerI2C,clearCounter);
+		sendBytesArray(ptrHandlerI2C,blackScreen);
 	}
+
+
 }
 
 //Esta función toma el mensaje a enviar en código ascii y lo convierte a los carácteres definidos en este driver,
@@ -270,16 +277,16 @@ void printSingleByte(I2C_Handler_t *ptrHandlerI2C, char singleByte){
 
 void printBytesArray(I2C_Handler_t *ptrHandlerI2C, char* bytesArray){
 
-	for(uint8_t j = 0; j < sizeof(bytesArray); j++){
+	for(uint8_t j = 0; j < 16; j++){
 			sendByteOLED(ptrHandlerI2C, stringToChar(*bytesArray)); //Recordar que esta función manda de a carácter
 			bytesArray++;
 		}
 }
 
 //Carácteres, para
-char characterA[8]   		 = {0x00, 0b11111100, 0b00010010, 0b00010010, 0b00010010,0b00010010, 0b11111100, 0x00}; //Está escrita en líneas verticales y horizontales
-char characterSpace[8] 	 = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-char characterWhiteLine[8]  = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+char characterA[8]   		 = {0x00, 0b11111100, 0b00010010, 0b00010010, 0b00010010, 0b11111100, 0x00, 0x00}; //Está escrita en líneas verticales y horizontales
+char characterSpace[8] 	     = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+char characterWhiteLine[8]   = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 char* AChar(void){ return characterA; }
 char* spaceChar(void){return characterSpace;}
