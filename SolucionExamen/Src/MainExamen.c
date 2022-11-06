@@ -109,6 +109,7 @@ int main(void) {
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
 	clearAllScreen(&handlerI2COLED);
 	printSingleByte(&handlerI2COLED, 'A');
+	clearAllScreen(&handlerI2COLED);
 
 	while (1) {
 
