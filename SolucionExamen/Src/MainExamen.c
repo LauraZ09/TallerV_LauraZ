@@ -106,10 +106,11 @@ void updateLCD(void);
 
 int main(void) {
 
-	//char* A = OLED_A;
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_0);
-	//sendBytesArray(&handlerI2COLED, A);
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+	setColumn(&handlerI2COLED, 0x01);
+	printSingleByte(&handlerI2COLED, 'A');
+
 
 	while (1) {
 

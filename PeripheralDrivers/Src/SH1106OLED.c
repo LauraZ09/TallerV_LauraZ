@@ -88,6 +88,7 @@
  *  19. 100 ms delay
  */
 
+//La siguiente función envía un comando
 void sendCommandOLED(I2C_Handler_t *ptrHandlerI2C, uint8_t command){
 
 	/* 1. Generamos la condición de satrt*/
@@ -97,7 +98,7 @@ void sendCommandOLED(I2C_Handler_t *ptrHandlerI2C, uint8_t command){
 	i2c_sendSlaveAddressRW(ptrHandlerI2C, ptrHandlerI2C->slaveAddress,
 			I2C_WRITE_DATA);
 
-	//3. Se envía el control Byte
+	//3. Se envía el control Byte, este es como si fuera la dirección del registro
 	i2c_sendDataByte(ptrHandlerI2C, OLED_CONTROLBYTE_COMMAND);
 
 	/*3. Enviamos el comando que deseamos enviar*/
@@ -107,10 +108,14 @@ void sendCommandOLED(I2C_Handler_t *ptrHandlerI2C, uint8_t command){
 	i2c_stopTransaction(ptrHandlerI2C);
 }
 
+//Con esta función se envía un arreglo de bytes de información para desplegar en pantalla, se
+//debe tener en cuenta que un byte es una sola columna (una sola línea), así, para formar
+//un carácter completo se debe tener un arreglo de bytes, con la cantidad de columnas que se quiera de tamaño
+//(fontsize), en cada byte se escribe los bits de la pantalla que se quieren iluminar de la columna y así se
+//forman líneas
 void sendByteOLED (I2C_Handler_t *ptrHandlerI2C, char *dataToSend){
-	//Esta función toma los bytes de un arreglo de 8 y los envía, nótese que un arreglo representa un
-	//solo carácter, en donde cada byte del arreglo es una columna del display. Son 8 Bytes ya que
-	//se utiliza una fuente de 8x8 bits.
+	//En este caso tomamos 8 Bytes ya que se desea utilizar una fuente de 5x6 con espaciamiento entre carácteres
+	//de 3 bits.
 
 	/* 1. Generamos la condición de satrt*/
 	i2c_startTransaction(ptrHandlerI2C);
@@ -122,7 +127,7 @@ void sendByteOLED (I2C_Handler_t *ptrHandlerI2C, char *dataToSend){
 	//3. Se envía el control Byte
 	i2c_sendDataByte(ptrHandlerI2C, OLED_CONTROLBYTE_DATA);
 
-	/*3. Enviamos la posición 0 del arreglo a enviar, nótese que el arreglo es un arreglo de arreglos*/
+	/*3. Enviamos la posición 0 del arreglo a enviar, nótese que el arreglo, byte 0(primera columna del carácter)*/
 	i2c_sendDataByte(ptrHandlerI2C, *dataToSend);
 
 	/*3. Posición 1*/
@@ -151,26 +156,7 @@ void sendByteOLED (I2C_Handler_t *ptrHandlerI2C, char *dataToSend){
 	
 }
 
-void sendBytesArray(I2C_Handler_t *ptrHandlerI2C, char **dataToSend){
-	//Esta función envía un arreglo de arreglos jajajaja, es decir, un arreglo es un carácter,
-	//un arreglo de arreglos son varios carácteres. En cada fila caben únicamente 16 carácteres, por
-	//ello el arreglo ** se recorre solo hasta 15.
-
-	for(uint8_t counterOLED = 0; counterOLED < 16; counterOLED++){
-		sendByteOLED(ptrHandlerI2C, *dataToSend);
-		dataToSend++; //Se pasa al siguiente carácter (arreglo)
-	}
-}
-
-void setPageOLED(I2C_Handler_t *ptrHandlerI2C, uint8_t pageNumber){
-
-	uint8_t pageCommand = 0;
-
-	pageCommand = (0xB << 4) | pageNumber;       //De la lista de comandos de arriba se tiene que los bits del 4 al 7 deben ser 0xB
-	sendCommandOLED(ptrHandlerI2C, pageCommand);
-
-}
-
+//Función de inicialización, se siguen los pasos del datasheet y se inicia en la columna 0, página 0.
 void initOLED(I2C_Handler_t *ptrHandlerI2C){
 	delayms(1);
 	sendCommandOLED(ptrHandlerI2C, 0xAE);
@@ -200,37 +186,100 @@ void initOLED(I2C_Handler_t *ptrHandlerI2C){
 	sendCommandOLED(ptrHandlerI2C, 0x10);
 	sendCommandOLED(ptrHandlerI2C, 0x40);
 	delayms(100);
-	OLED_Clean(ptrHandlerI2C);
-	OLED_Clean2(ptrHandlerI2C);
-	//OLED_Clean(ptrHandlerI2C);
+	setPageOLED(ptrHandlerI2C, OLED_PAGE_NUMBER_0);
+	clearOLED(ptrHandlerI2C);
+	clearOLED(ptrHandlerI2C);
+	setPageOLED(ptrHandlerI2C, OLED_PAGE_NUMBER_0);
+	setColumn(ptrHandlerI2C, 00);
 }
 
-char characterA[8] = {0x00, 0b11111100, 0b00010010, 0b00010010, 0b00010010, 0b11111100, 0x00, 0x00}; //Está escrita en líneas verticales y horizontales
-char blankSpace[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-char blackSpace[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-char* OLED_A(void){ return characterA; }
-char* OLEDNull(void){return blankSpace;}
-char* OLEDBlack(void){return blackSpace;}
+//Esta función envía un arreglo de arreglos jajajaja, es decir, un arreglo es un carácter,
+//un arreglo de arreglos son varios carácteres.
+void sendBytesArray(I2C_Handler_t *ptrHandlerI2C, char **dataToSend){
 
-void OLED_Clean(I2C_Handler_t *ptrHandlerI2C){
-	char* pageClean[16] = {OLEDNull(),OLEDNull(),OLEDNull(),OLEDNull(),OLEDNull(),OLEDNull(),OLEDNull(),OLEDNull(),
-			OLEDNull(),OLEDNull(),OLEDNull(),OLEDNull(),OLEDNull(),OLEDNull(),OLEDNull(),OLEDNull()};
-	for(uint8_t j = 0; j < 8; j++){
-		setPageOLED(ptrHandlerI2C,j);
-		sendBytesArray(ptrHandlerI2C,pageClean);
-
-	}
-}
-void OLED_Clean2(I2C_Handler_t *ptrHandlerI2C){
-	char* pageClean2[16] = {OLEDBlack(),OLEDBlack(),OLEDBlack(),OLEDBlack(),OLEDBlack(),OLEDBlack(),OLEDBlack(),OLEDBlack(),OLEDBlack(),OLEDBlack(),
-			OLEDBlack(),OLEDBlack(),OLEDBlack(),OLEDBlack(),OLEDBlack(),OLEDBlack()};
-	for(uint8_t j = 0; j < 8; j++){
-		setPageOLED(ptrHandlerI2C,j);
-		sendBytesArray(ptrHandlerI2C,pageClean2);
-
+	for(uint8_t counterOLED = 0; counterOLED < sizeof(dataToSend); counterOLED++){
+		sendByteOLED(ptrHandlerI2C, *dataToSend);
+		dataToSend++;
+		//Se pasa al siguiente carácter (arreglo), recordar que el nombre es un putero a la primera
+		//posición del array, al hacer dataToSend++ se le suma uno y se tiene un puntero a la segunda
+		//posición
 	}
 }
 
+//Esta función nos envía a la página en la que queremos escribir
+void setPageOLED(I2C_Handler_t *ptrHandlerI2C, uint8_t pageNumber){
+
+	uint8_t pageCommand = 0;
+
+	pageCommand = (0xB << 4) | pageNumber;       //De la lista de comandos de arriba se tiene que los bits del 4 al 7 deben ser 0xB
+	sendCommandOLED(ptrHandlerI2C, pageCommand);
+
+}
+
+//Esta función nos envía a la columna en la que queremos escribir
+void setColumn(I2C_Handler_t *ptrHandlerI2C, uint8_t columnNumber){
+	uint8_t columnCommandH = 0;
+	uint8_t columnCommandL = 0;
+
+	columnCommandH = (0x1 << 4) | columnNumber;
+	columnCommandL = (0x0 << 4) | columnNumber;
+
+	sendCommandOLED(ptrHandlerI2C, columnCommandH);
+	sendCommandOLED(ptrHandlerI2C, columnCommandL);
+}
+
+void whiteScreenOLED(I2C_Handler_t *ptrHandlerI2C){
+	char* whiteSpace[16] = {spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),
+			spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar()};
+	for(uint8_t j = 0; j < 8; j++){
+		setPageOLED(ptrHandlerI2C,j);
+		sendBytesArray(ptrHandlerI2C,whiteSpace);
+	}
+}
+
+void clearOLED(I2C_Handler_t *ptrHandlerI2C){
+	char* blackSpace[16] = {spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),
+			spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar()};
+	for(uint8_t j = 0; j < 8; j++){
+		setPageOLED(ptrHandlerI2C,j);
+		sendBytesArray(ptrHandlerI2C,blackSpace);
+	}
+}
+
+char* OLED_VarToChar(char character){
+	switch(character){
+	case(' '):
+	{return OLEDNull();
+	break;}
+	case('A'):
+	{return AChar;
+	break;}
+	default:
+	{return OLEDNull();
+	break;}
+	}
+}
+
+void printSingleByte(I2C_Handler_t *ptrHandlerI2C, char singleByte){
+	sendByteOLED(ptrHandlerI2C, OLED_VarToChar(singleByte));
+}
+
+void printBytesArray(I2C_Handler_t *ptrHandlerI2C, char* bytesArray){
+
+	for(uint8_t j = 0; j < sizeof(bytesArray); j++){
+			sendByteOLED(ptrHandlerI2C, OLED_VarToChar(*bytesArray)); //Recordar que esta función manda de a carácter
+			bytesArray++;
+		}
+}
+
+//Carácteres, para
+char characterA[8]   		 = {0x00, 0b11111100, 0b00010010, 0b00010010, 0b00010010, 0b11111100, 0x00, 0x00}; //Está escrita en líneas verticales y horizontales
+char characterSpace[8] 	 = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+char characterWhiteLine[8]  = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+char* AChar(void){ return characterA; }
+char* spaceChar(void){return characterSpace;}
+char* whiteLineChar(void){return characterWhiteLine;}
 
 
 
