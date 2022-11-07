@@ -64,34 +64,31 @@ uint8_t fecha		  = 0;  //Variable en la que se almacena la fecha
 
 uint8_t timeFlag 	  			= 0;    //Bandera para la actualización de la hora
 uint8_t updateRGBFlag 			= 0;	//Bandera para actualizar el PWM del LED RGB
-uint8_t partyModeFlag 			= 0;
-uint8_t accelModeFlag 			= 0;
-uint16_t updateLCDFlag 			= 0;
-uint8_t getHourFlag 		    = 0;
-uint8_t autodestructionModeFlag = 0;
-uint8_t rxDataFlag 				= 0;
-uint8_t updatePartyOLED 		= 0;
-bool stringComplete 			= false;
+uint8_t partyModeFlag 			= 0;	//Bandera para la activación del modo fiesta
+uint8_t accelModeFlag 			= 0;	//Bandera para la activación del modo aceleración
+uint16_t updateLCDFlag 			= 0;	//Bandera para la actualización de la LCD
+uint8_t getHourFlag 		    = 0;	//Bandera para la activación del modo hora
+uint8_t autodestructionModeFlag = 0;	//Bandera para la activación del modo autodestrucción
+uint8_t rxDataFlag 				= 0;	//Bandera para la recepción de datos del usart6
+uint8_t updatePartyOLED 		= 0;	//Bandera para la actualización del modo Fiesta en la OLED
+bool stringComplete 			= false;//Bandera para la recepción de datos del usart6
 
 uint8_t rxData        = 0;  //Datos de recepción
 
 int16_t accX	      = 0;  //Variable para almacenar la aceleración en X
 int16_t accY	      = 0;	//Variable para almacenar la aceleración en Y
 
-uint8_t counterReception = 0;
+uint8_t counterReception = 0; //Contador para la recepción de datos por el usart6
 
 
-char Buffer[64]          = {0};//En esta variable se almacenarán mensajes
-char bufferReception[64] = {0};
-char* diaSemana          = {0};//En esta variable se almacena el día de la semana (arreglo, se almacena un string)
-char greetingMsg[]       = "SIUU \n\r"; //Mensaje que se imprime
-char userMsg[64]         = {0};
-char cmd[16];
+char Buffer[64]          = {0}; //En esta variable se almacenarán mensajes a enviar
+char bufferReception[64] = {0}; //En esta variable se almacenan variables de recepción
+char* diaSemana          = {0}; //En esta variable se almacena el día de la semana (arreglo, se almacena un string)
+char userMsg[64]         = {0}; //En esta variable se almacenan mensajes ingresados por la terminal serial
+char cmd[64]             = {0};	//En esta variable se almacenan los comandos ingresados por el usuario
 
-unsigned int firstParameter;
-unsigned int secondParameter;
-
-
+unsigned int firstParameter  = 0; //En esta variable se almacena el número ingresado por la terminal serial
+unsigned int secondParameter = 0; //En esta variable se almacena el segundo número ingresado por la terminal serial
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
 void initSystem(void);       				    //Función para inicializar el sistema
@@ -100,14 +97,13 @@ uint32_t absValue(int32_t);						//Función para obtener valor absoluto
 void parseCommands(char* ptrBufferReception);	//Función para evaluar los comandos que la consola recibe
 void setRGBMode(void);							//función que elige el modo de encendido del LED RGB
 void updateLCD(void);							//Función que actualiza la información de la pantalla LCD
-void updateLCDAcc(void);
+void updateLCDAcc(void);						//Función que actualiza la información de la pantalla LCD en el modo Aceleración
+void updatePartyOLEDFunction(void);				//Función que actualiza la pantalla OLED en el modo Party
 void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds); //Función que imprime la hora en un formato adecuado
-void updatePartyOLEDFunction(void);
 
 int main(void) {
 
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
-	clearAllScreen(&handlerI2COLED);
 
 	while (1) {
 
@@ -149,20 +145,22 @@ int main(void) {
 			//Si el contador updateLCDFlag == 4, ha pasado un segundo y la bandera de gethour está levantada, se
 			//actualiza la información de la pantalla LCD
 
-			if (getHourFlag == 1){
+			if (getHourFlag == 1) {
 
-			updateLCD();
-			updateLCDFlag = 0;
+				updateLCD();
+				updateLCDFlag = 0;
 			}
 
-			else if(accelModeFlag == 1){
-			//Se obtiene la aceleración y se imprime
-			updateLCDAcc();
-			updateLCDFlag = 0;
+			else if (accelModeFlag == 1) {
+				//Si esta la bandera levantada del modo aceleración
+				//Se obtiene la aceleración y se imprime
+				updateLCDAcc();
+				updateLCDFlag = 0;
 			}
 		}
 
 		if(updatePartyOLED == 1){
+			//Si está levantada la bandera del modo party en la OLED, se actualiza
 			updatePartyOLEDFunction();
 		}
 	}
@@ -450,19 +448,7 @@ void setRGBMode(void){
 		accY = getYData(&handlerAccel);
 
 		updateRGB(accX, accY);
-
-		/*if(updateLCDFlag == 4){
-			//Se obtiene la aceleración y se imprime
-			updateLCDAcc();
-			updateLCDFlag = 0;
-		}*/
 	}
-
-	else if (autodestructionModeFlag == 1){
-		//En modo autodestrucción no hace nada la función
-
-			__NOP();
-		}
 
 	else {
 
@@ -471,14 +457,11 @@ void setRGBMode(void){
 
 }
 
-
-
 /*Función Callback de la recepción del USART2
 El puerto es leído en la ISR para bajar la bandera de la interrupción
 El carácter que se lee es devuelto por la función getRxData*/
 void usart6Rx_Callback(void){
-	//Leemos el valor del registro DR, donde se almacena el dato que llega.
-	//Esto además debe bajar la bandera de la interrupción
+	//Activamos una bandera, dentro de la función main se lee el registro DR lo que baja la bandera de la interrupción
 	rxDataFlag = 1;
 }
 
@@ -754,37 +737,46 @@ void parseCommands(char* ptrBufferReception){
 		autodestructionModeFlag = 1;
 		updatePartyOLED = 0;
 
-		//Se limpia la LCD
+		//Se limpia la LCD y la OLED
 		clearDisplayLCD(&handlerI2CLCD);
+		clearAllScreen(&handlerI2COLED);
 
 		//Se envía mensaje por el serial y en la LCD
 		writeMsg(&handlerUsart6, "CMD: initAutodestruction\n\r");
 
 		//Cuenta regresiva
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		setColumn(&handlerI2COLED, 0x02);
+		printBytesArray(&handlerI2COLED, "AUTODESTRUCTION");
 		writeMsg(&handlerUsart6, "5\n\r");
 		printStringLCD(&handlerI2CLCD, "5.....");
 		updateRGB(30, 0); //El RGB cambia de color con la cuenta regresiva
 		delayms(1000);
+
 
 		writeMsg(&handlerUsart6, "4\n\r");
 		printStringLCD(&handlerI2CLCD, "4.....");
 		updateRGB(30, 30);
 		delayms(1000);
 
+
 		writeMsg(&handlerUsart6, "3\n\r");
 		printStringLCD(&handlerI2CLCD, "3.....");
 		updateRGB(0, 0);
 		delayms(1000);
+
 
 		writeMsg(&handlerUsart6, "2\n\r");
 		printStringLCD(&handlerI2CLCD, "2.....");
 		updateRGB(15, 15);
 		delayms(1000);
 
+
 		writeMsg(&handlerUsart6, "1\n\r");
 		printStringLCD(&handlerI2CLCD, "1.....");
 		updateRGB(15, -15);
 		delayms(1000);
+
 
 		writeMsg(&handlerUsart6, "0\n\r");
 		printStringLCD(&handlerI2CLCD, "0.....");
@@ -803,6 +795,44 @@ void parseCommands(char* ptrBufferReception){
 		printStringLCD(&handlerI2CLCD, "BYE BYE BYE BYE BYE ");
 		moveCursorToLCD(&handlerI2CLCD, 0x54);
 		printStringLCD(&handlerI2CLCD, "BYE BYE BYE BYE BYE ");
+
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "          BYEEE ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "BYEEE           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "     BYEEE      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED,"           BYEEE ");
+
+		delayms(300);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "BYEEE           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "     BYEEE      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "          BYEEE ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "BYEEE           ");
+
+		delayms(300);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "     BYEEE      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "          BYEEE ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "BYEEE           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "     BYEEE      ");
+
+		delayms(300);
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "                ");
+
 
 		//Se apaga el RGB
 		updateDuttyCycle(&handlerPWMTimerG, 0);
@@ -1028,40 +1058,38 @@ void updateLCDAcc(void){
 
 void updatePartyOLEDFunction(void){
 
-	//Se imprime en la OLED
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_0);
+	printBytesArray(&handlerI2COLED, "          PARTY ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+	printBytesArray(&handlerI2COLED, "PARTY           ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+	printBytesArray(&handlerI2COLED, "     PARTY      ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_6);
+	printBytesArray(&handlerI2COLED,"          PARTY ");
+
+	delayms(300);
 
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_0);
-	printBytesArray(&handlerI2COLED, " PARTY   PARTY ");
+	printBytesArray(&handlerI2COLED, "PARTY           ");
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
-	printBytesArray(&handlerI2COLED, "ARTYPARTYPARTYPA");
+	printBytesArray(&handlerI2COLED, "     PARTY      ");
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
-	printBytesArray(&handlerI2COLED, "RTYPARTYPARTYPAR");
+	printBytesArray(&handlerI2COLED, "          PARTY ");
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_6);
-	printBytesArray(&handlerI2COLED, "TYPARTYPARTYPART");
+	printBytesArray(&handlerI2COLED, "PARTY           ");
 
-	delayms(700);
+	delayms(300);
 
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_0);
-	printBytesArray(&handlerI2COLED, "ARTYPARTYPARTYPA");
+	printBytesArray(&handlerI2COLED, "     PARTY      ");
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
-	printBytesArray(&handlerI2COLED, "RTYPARTYPARTYPAR");
+	printBytesArray(&handlerI2COLED, "          PARTY ");
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
-	printBytesArray(&handlerI2COLED, "TYPARTYPARTYPART");
+	printBytesArray(&handlerI2COLED, "PARTY           ");
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_6);
-	printBytesArray(&handlerI2COLED, "YPARTYPARTYPARTY");
+	printBytesArray(&handlerI2COLED, "     PARTY      ");
 
-	delayms(700);
-
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_0);
-	printBytesArray(&handlerI2COLED, "RTYPARTYPARTYPAR");
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
-	printBytesArray(&handlerI2COLED, "TYPARTYPARTYPART");
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
-	printBytesArray(&handlerI2COLED, "YPARTYPARTYPARTY");
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_6);
-	printBytesArray(&handlerI2COLED, "PARTYPARTYPARTYP");
-
-	delayms(700);
+	delayms(300);
 }
 
 

@@ -39,6 +39,8 @@ void printSingleByte(I2C_Handler_t *ptrHandlerI2C, char singleByte);
 
 char* stringToChar(char character);
 
+char* dotChar(void);
+char* TwoPointsChar(void);
 char* AChar(void);
 char* BChar(void);
 char* CChar(void);

@@ -373,13 +373,15 @@ char* stringToChar(char character){
 	case('9'):
 	{return NINEChar();
 	break;}
-
-
-
+	case(':'):
+	{return TwoPointsChar();
+	case('.'):
+	{return dotChar();}
 	default:
 	{return spaceChar();
 	break;}
 	}
+}
 }
 
 void printSingleByte(I2C_Handler_t *ptrHandlerI2C, char singleByte){
@@ -434,9 +436,16 @@ char character8[8] = {0x00, 0b01101100, 0b10010010, 0b10010010, 0b10010010, 0b01
 char character9[8] = {0x00, 0b01001100, 0b10010010, 0b10010010, 0b10010010, 0b01111100, 0x00, 0x00};
 char characterSpace[8] 	     = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 char characterWhiteLine[8]   = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-char characterTwoPoints[8]   = {0x00, 0x00, 0x00, 0b00010000, 0b00010000, 0x00, 0x00, 0x00};
+char characterTwoPoints[8]   = {0x00, 0x00, 0x00, 0b00011000, 0x00, 0x00, 0x00, 0x00};
+char characterDot[8]         = {0x00, 0x00, 0x00, 0b10000000, 0x00, 0x00, 0x00, 0x00};
 
 //Para poder obtener el puntero a los arreglos, creamos una función que retorne el puntero
+char* dotChar(void){
+	return characterDot;
+}
+char* TwoPointsChar(void){
+	return characterTwoPoints;
+}
 char* AChar(void){
 	return characterA;
 }
