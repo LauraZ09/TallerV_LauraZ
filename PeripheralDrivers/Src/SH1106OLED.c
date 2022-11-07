@@ -224,15 +224,18 @@ void setColumn(I2C_Handler_t *ptrHandlerI2C, uint8_t columnNumber){
 	sendCommandOLED(ptrHandlerI2C, columnCommandL);
 }
 
+//Con esta función se borra todo el display, los arreglos se hacen de 16 carácteres, porque es lo máximo que una fila almacena
 void whiteScreenOLED(I2C_Handler_t *ptrHandlerI2C){
-	char* whiteSpace[16] = {spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),
-			spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar()};
-	for(uint8_t j = 0; j < 8; j++){
-		setPageOLED(ptrHandlerI2C,j);
+	char* whiteSpace[16] = {whiteLineChar(),whiteLineChar(),whiteLineChar(),whiteLineChar(),whiteLineChar(),whiteLineChar(),whiteLineChar(),whiteLineChar(),
+			whiteLineChar(),whiteLineChar(),whiteLineChar(),whiteLineChar(),whiteLineChar(),whiteLineChar(),whiteLineChar(),whiteLineChar()};
+
+	for(uint8_t counterPage = 0; counterPage < 8; counterPage++){
+		setPageOLED(ptrHandlerI2C,counterPage);
 		sendBytesArray(ptrHandlerI2C,whiteSpace);
 	}
 }
 
+//Con esta función se limpia una fila
 void clearOLED(I2C_Handler_t *ptrHandlerI2C){
 	char* blackSpace[16] = {spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),
 			spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar()};
@@ -265,6 +268,114 @@ char* stringToChar(char character){
 	case('A'):
 	{return AChar();
 	break;}
+	case('B'):
+	{return BChar();
+	break;}
+	case('C'):
+	{return CChar();
+	break;}
+	case('D'):
+	{return DChar();
+	break;}
+	case('E'):
+	{return EChar();
+	break;}
+	case('F'):
+	{return FChar();
+	break;}
+	case('G'):
+	{return GChar();
+	break;}
+	case('H'):
+	{return HChar();
+	break;}
+	case('I'):
+	{return IChar();
+	break;}
+	case('J'):
+	{return JChar();
+	break;}
+	case('K'):
+	{return KChar();
+	break;}
+	case('L'):
+	{return LChar();
+	break;}
+	case('M'):
+	{return MChar();
+	break;}
+	case('N'):
+	{return NChar();
+	break;}
+	case('O'):
+	{return OChar();
+	break;}
+	case('P'):
+	{return PChar();
+	break;}
+	case('Q'):
+	{return QChar();
+	break;}
+	case('R'):
+	{return RChar();
+	break;}
+	case('S'):
+	{return SChar();
+	break;}
+	case('T'):
+	{return TChar();
+	break;}
+	case('U'):
+	{return UChar();
+	break;}
+	case('V'):
+	{return VChar();
+	break;}
+	case('W'):
+	{return WChar();
+	break;}
+	case('X'):
+	{return XChar();
+	break;}
+	case('Y'):
+	{return YChar();
+	break;}
+	case('Z'):
+	{return ZChar();
+	break;}
+	case('0'):
+	{return ZEROChar();
+	break;}
+	case('1'):
+	{return ONEChar();
+	break;}
+	case('2'):
+	{return TWOChar();
+	break;}
+	case('3'):
+	{return THREEChar();
+	break;}
+	case('4'):
+	{return FOURChar();
+	break;}
+	case('5'):
+	{return FIVEChar();
+	break;}
+	case('6'):
+	{return SIXChar();
+	break;}
+	case('7'):
+	{return SEVENChar();
+	break;}
+	case('8'):
+	{return EIGHTChar();
+	break;}
+	case('9'):
+	{return NINEChar();
+	break;}
+
+
+
 	default:
 	{return spaceChar();
 	break;}
@@ -283,14 +394,163 @@ void printBytesArray(I2C_Handler_t *ptrHandlerI2C, char* bytesArray){
 		}
 }
 
-//Carácteres, para
-char characterA[8]   		 = {0x00, 0b11111100, 0b00010010, 0b00010010, 0b00010010, 0b11111100, 0x00, 0x00}; //Está escrita en líneas verticales y horizontales
+//Carácteres, para el alfabeto y los números, como se ve el espaciado entre carácteres es de 3 columnas y
+// la letra es de tamaño 5x7
+char characterA[8] = {0x00, 0b11111100, 0b00010010, 0b00010010, 0b00010010, 0b11111100, 0x00, 0x00};
+char characterB[8] = {0x00, 0b11111110, 0b10010010, 0b10010010, 0b10010010, 0b01101100, 0x00, 0x00};
+char characterC[8] = {0x00, 0b01111100, 0b10000010, 0b10000010, 0b10000010, 0b01000100, 0x00, 0x00};
+char characterD[8] = {0x00, 0b11111110, 0b10000010, 0b10000010, 0b10000010, 0b01111100, 0x00, 0x00};
+char characterE[8] = {0x00, 0b11111110, 0b10010010, 0b10010010, 0b10010010, 0b10000010, 0x00, 0x00};
+char characterF[8] = {0x00, 0b11111110, 0b00010010, 0b00010010, 0b00010010, 0b00000010, 0x00, 0x00};
+char characterG[8] = {0x00, 0b01111100, 0b10000010, 0b10000010, 0b10100010, 0b01100100, 0x00, 0x00};
+char characterH[8] = {0x00, 0b11111110, 0b00010000, 0b00010000, 0b00010000, 0b11111110, 0x00, 0x00};
+char characterI[8] = {0x00, 0b10000010, 0b10000010, 0b11111110, 0b10000010, 0b10000010, 0x00, 0x00};
+char characterJ[8] = {0x00, 0b01100000, 0b10000000, 0b10000000, 0b10000000, 0b01111110, 0x00, 0x00};
+char characterK[8] = {0x00, 0b11111110, 0b00010000, 0b00101000, 0b01000100, 0b10000010, 0x00, 0x00};
+char characterL[8] = {0x00, 0b11111110, 0b10000000, 0b10000000, 0b10000000, 0b00000000, 0x00, 0x00};
+char characterM[8] = {0x00, 0b11111110, 0b00000100, 0b00001000, 0b00000100, 0b11111110, 0x00, 0x00};
+char characterN[8] = {0x00, 0b11111110, 0b00001000, 0b00010000, 0b00100000, 0b11111110, 0x00, 0x00};
+char characterO[8] = {0x00, 0b01111100, 0b10000010, 0b10000010, 0b10000010, 0b01111100, 0x00, 0x00};
+char characterP[8] = {0x00, 0b11111110, 0b00010010, 0b00010010, 0b00010010, 0b00001100, 0x00, 0x00};
+char characterQ[8] = {0x00, 0b01111100, 0b10000010, 0b10100010, 0b01000010, 0b10111100, 0x00, 0x00};
+char characterR[8] = {0x00, 0b11111110, 0b00010010, 0b00010010, 0b00010010, 0b11101100, 0x00, 0x00};
+char characterS[8] = {0x00, 0b01001100, 0b10010010, 0b10010010, 0b10010010, 0b01100100, 0x00, 0x00};
+char characterT[8] = {0x00, 0b00000010, 0b00000010, 0b11111110, 0b00000010, 0b00000010, 0x00, 0x00};
+char characterU[8] = {0x00, 0b01111110, 0b10000000, 0b10000000, 0b10000000, 0b01111110, 0x00, 0x00};
+char characterV[8] = {0x00, 0b00111110, 0b01000000, 0b10000000, 0b01000000, 0b00111110, 0x00, 0x00};
+char characterW[8] = {0x00, 0b01111110, 0b10000000, 0b01100000, 0b10000000, 0b01111110, 0x00, 0x00};
+char characterX[8] = {0x00, 0b11000110, 0b00101000, 0b00010000, 0b00101000, 0b11000110, 0x00, 0x00};
+char characterY[8] = {0x00, 0b00000110, 0b00001000, 0b11110000, 0b00001000, 0b00000110, 0x00, 0x00};
+char characterZ[8] = {0x00, 0b11000010, 0b10100010, 0b10010010, 0b10001010, 0b10000110, 0x00, 0x00};
+char character0[8] = {0x00, 0b01111100, 0b10100010, 0b10010010, 0b10001010, 0b01111100, 0x00, 0x00};
+char character1[8] = {0x00, 0b00000000, 0b10000100, 0b11111110, 0b10000000, 0b00000000, 0x00, 0x00};
+char character2[8] = {0x00, 0b11000100, 0b10100010, 0b10010010, 0b10010010, 0b10001100, 0x00, 0x00};
+char character3[8] = {0x00, 0b01000100, 0b10000010, 0b10010010, 0b10010010, 0b01101100, 0x00, 0x00};
+char character4[8] = {0x00, 0b00110000, 0b00101000, 0b00100100, 0b00100010, 0b11111110, 0x00, 0x00};
+char character5[8] = {0x00, 0b01001110, 0b10001010, 0b10001010, 0b10001010, 0b01110010, 0x00, 0x00};
+char character6[8] = {0x00, 0b01111100, 0b10010010, 0b10010010, 0b10010010, 0b01100100, 0x00, 0x00};
+char character7[8] = {0x00, 0b00000010, 0b11100010, 0b00010010, 0b00001010, 0b00000110, 0x00, 0x00};
+char character8[8] = {0x00, 0b01101100, 0b10010010, 0b10010010, 0b10010010, 0b01101100, 0x00, 0x00};
+char character9[8] = {0x00, 0b01001100, 0b10010010, 0b10010010, 0b10010010, 0b01111100, 0x00, 0x00};
 char characterSpace[8] 	     = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 char characterWhiteLine[8]   = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+char characterTwoPoints[8]   = {0x00, 0x00, 0x00, 0b00010000, 0b00010000, 0x00, 0x00, 0x00};
 
-char* AChar(void){ return characterA; }
-char* spaceChar(void){return characterSpace;}
-char* whiteLineChar(void){return characterWhiteLine;}
+//Para poder obtener el puntero a los arreglos, creamos una función que retorne el puntero
+char* AChar(void){
+	return characterA;
+}
+char* BChar(void){
+	return characterB;
+}
+char* CChar(void){
+	return characterC;
+}
+char* DChar(void){
+	return characterD;
+}
+char* EChar(void){
+	return characterE;
+}
+char* FChar(void){
+	return characterF;
+}
+char* GChar(void){
+	return characterG;
+}
+char* HChar(void){
+	return characterH;
+}
+char* IChar(void){
+	return characterI;
+}
+char* JChar(void){
+	return characterJ;
+}
+char* KChar(void){
+	return characterK;
+}
+char* LChar(void){
+	return characterL;
+}
+char* MChar(void){
+	return characterM;
+}
+char* NChar(void){
+	return characterN;
+}
+char* OChar(void){
+	return characterO;
+}
+char* PChar(void){
+	return characterP;
+}
+char* QChar(void){
+	return characterQ;
+}
+char* RChar(void){
+	return characterR;
+}
+char* SChar(void){
+	return characterS;
+}
+char* TChar(void){
+	return characterT;
+}
+char* UChar(void){
+	return characterU;
+}
+char* VChar(void){
+	return characterV;
+}
+char* WChar(void){
+	return characterW;
+}
+char* XChar(void){
+	return characterX;
+}
+char* YChar(void){
+	return characterY;
+}
+char* ZChar(void){
+	return characterZ;
+}
+char* ZEROChar(void){
+	return character0;
+}
+char* ONEChar(void){
+	return character1;
+}
+char* TWOChar(void){
+	return character2;
+}
+char* THREEChar(void){
+	return character3;
+}
+char* FOURChar(void){
+	return character4;
+}
+char* FIVEChar(void){
+	return character5;
+}
+char* SIXChar(void){
+	return character6;
+}
+char* SEVENChar(void){
+	return character7;
+}
+char* EIGHTChar(void){
+	return character8;
+}
+char* NINEChar(void){
+	return character9;
+}
+char* spaceChar(void){
+	return characterSpace;
+}
+char* whiteLineChar(void){
+	return characterWhiteLine;
+}
 
 
 
