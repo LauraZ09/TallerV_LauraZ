@@ -1527,7 +1527,10 @@ void updatePartyOLEDFunction(void){
 }
 
 
-
+//Revisión Examen.
+//- Excelete!!
+//
+//Calificación = 5.0
 
 
 
