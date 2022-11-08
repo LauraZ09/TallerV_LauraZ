@@ -7,8 +7,38 @@
  *
  *********************************************************************************************************
  */
-//TODO: agregar OLED en todos los modos, verificar todo los modos, arreglar HSV
 
+/*El sistema consiste en un LED RGB con dos pantallas, una pantalla OLED y una pantalla LCD, adicionalmente, hay varios modos de
+ *funcionamiento, para esto se tienen diferentes comandos que se pueden ver enviando el comando: help @ a través de la terminal serial.
+ *Cuando no hay ninguno de los modos activados, el LED se enciende en un color rosado default y en las pantallas no se desplega ningún
+ *mensaje.
+ *
+ *Al activar alguno de los modos se desactivan los otros modos.
+ *
+ *MODOS DE FUNCIONAMIENTO:
+ *
+ *1. Modo getHour:Se activa al enviar el comando getHour @ este modo muestra la hora actual en ambas pantallas, para ello, primero se debe
+ *   ingresar la hora inial al sistema, por medio del comando setHour #horas # minutos @.
+ *
+ *2. Modo getDate: Se activa con el comando getDate @, este modo muestra la fecha actual en ambas pantallas, para ello, se debe
+ *   ingresar la fecha inicial por medio de los comandos setDate #día #mes diasemana @ y setYear #year.
+ *
+ *3. Modo Party: Se activa con el comando setPartyMode @, en este modo el LED RGB se enciende alternadamente de colores aleatorios.
+ *
+ *4. Modo Aceleración: Se activa con el comando setAccelMode @, en este modo el LED RGB cambia los colores según las medidas adquiridas
+ *   con el sensor.
+ *
+ *5. Modo Autodestruction: Se activa con el comando initAutodestruction @, en este modo el LED RGB cambia de color con una cuenta
+ *   regresiva que se presenta en las pantallas. Al terminar la cuenta regresiva, el LED se apaga.
+ *
+ *6. Modo initOLED: se activa con el comando initOLED @, en este modo se presenta un mensaje de bienvenida en la pantalla OLED
+ *
+ *7. Modo initLCD: se activa con el comando initLCD @, en este modo se presenta un mensaje de bienvenida en la pantalla LCD
+ *
+ *8. Modo help: con el comando help @ se activa el modo. Al activarlo se desplega el menú de comandos y el LED se enciende en color
+ *   verde por 1 segundo, posteriormente vuelve a su color de defecto rosado.
+ *
+ */
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -71,6 +101,7 @@ uint8_t getHourFlag 		    = 0;	//Bandera para la activación del modo hora
 uint8_t autodestructionModeFlag = 0;	//Bandera para la activación del modo autodestrucción
 uint8_t rxDataFlag 				= 0;	//Bandera para la recepción de datos del usart6
 uint8_t updatePartyOLED 		= 0;	//Bandera para la actualización del modo Fiesta en la OLED
+uint8_t updateLCDFlagAcc        = 0;	//Bandera para actualizar la pantalla en el modo aceleración
 bool stringComplete 			= false;//Bandera para la recepción de datos del usart6
 
 uint8_t rxData        = 0;  //Datos de recepción
@@ -92,8 +123,7 @@ unsigned int secondParameter = 0; //En esta variable se almacena el segundo núm
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
 void initSystem(void);       				    //Función para inicializar el sistema
-void updateRGB(uint8_t xAccel, uint8_t yAccel); //Función para actualizar el RGB
-uint32_t absValue(int32_t);						//Función para obtener valor absoluto
+void updateRGB(int16_t xAccel, int16_t yAccel); //Función para actualizar el RGB
 void parseCommands(char* ptrBufferReception);	//Función para evaluar los comandos que la consola recibe
 void setRGBMode(void);							//función que elige el modo de encendido del LED RGB
 void updateLCD(void);							//Función que actualiza la información de la pantalla LCD
@@ -104,6 +134,7 @@ void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds); //Función que 
 int main(void) {
 
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
+
 
 	while (1) {
 
@@ -141,27 +172,28 @@ int main(void) {
 
 		}
 
-		if(updateLCDFlag == 4){
+		if((updateLCDFlagAcc == 2) & (accelModeFlag == 1)){
+			//updateLCDFlagAcc es un contador que se actualiza en el callback del timer2, o sea cada 250 ms, así, cuando está en 2
+			//el contador, han pasado 500 ms y se actualiza la información del acelerómetro mostrada en las pantallas
+			updateLCDAcc();
+			updateLCDFlagAcc = 0;
+		}
+
+		if((updateLCDFlag == 4) &  (getHourFlag == 1)){
 			//Si el contador updateLCDFlag == 4, ha pasado un segundo y la bandera de gethour está levantada, se
 			//actualiza la información de la pantalla LCD
 
-			if (getHourFlag == 1) {
-
 				updateLCD();
 				updateLCDFlag = 0;
-			}
-
-			else if (accelModeFlag == 1) {
-				//Si esta la bandera levantada del modo aceleración
-				//Se obtiene la aceleración y se imprime
-				updateLCDAcc();
-				updateLCDFlag = 0;
-			}
 		}
 
 		if(updatePartyOLED == 1){
 			//Si está levantada la bandera del modo party en la OLED, se actualiza
 			updatePartyOLEDFunction();
+		}
+
+		else{
+			__NOP();
 		}
 	}
 
@@ -271,7 +303,7 @@ void initSystem(void) {
 	handlerRGBTimer.ptrTIMx 				= TIM5;
 	handlerRGBTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
 	handlerRGBTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_1ms;
-	handlerRGBTimer.TIMx_Config.TIMx_period = 100; //Update period= 1ms*10 = 10 ms
+	handlerRGBTimer.TIMx_Config.TIMx_period = 500; //Update period= 1ms*500 = 500 ms
 
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerRGBTimer);
@@ -302,7 +334,7 @@ void initSystem(void) {
 	handlerAccel.ADXL345_Config.sleepMode			= NORMAL_MODE_OP;
 	handlerAccel.ADXL345_Config.measureMode         = MEASURE_MODE_OP;
 	handlerAccel.ADXL345_Config.selfTest			= SELF_TEST_DISABLED;
-	handlerAccel.ADXL345_Config.resolution			= TEN_BITS_RES_MODE;
+	handlerAccel.ADXL345_Config.resolution			= FULL_RES_MODE;
 	handlerAccel.ADXL345_Config.justifyDataFormat	= RIGHT_WSING_JUSTIFY_MODE;
 	handlerAccel.ADXL345_Config.rangeOp				= TWOG_RANGE;
 
@@ -418,12 +450,23 @@ void BasicTimer2_Callback(void) {
 	//Blinky del LED de estado
 	GPIOxTooglePin(&handlerBlinkyPin);
 	updateLCDFlag++; //Contador para la actualización de la LCD (se actualiza cada segundo)
+	updateLCDFlagAcc++;
 }
 
 void BasicTimer5_Callback(void){
-	setRGBMode();   //Cada 10ms se actualiza el LED RGB
+	setRGBMode();   //Cada 500ms se actualiza el LED RGB
 }
 
+/*Función Callback de la recepción del USART6
+El puerto es leído en la ISR para bajar la bandera de la interrupción
+El carácter que se lee es devuelto por la función getRxData*/
+void usart6Rx_Callback(void){
+	//Activamos una bandera, dentro de la función main se lee el registro DR lo que baja la bandera de la interrupción
+	rxDataFlag = 1;
+}
+
+//Esta función actualiza los modos del RGB, esta función es llamada en el callback del timer 5, así, el RGB se actualiza cada
+//500 ms
 void setRGBMode(void){
 
 //Función de actualización del RGB
@@ -442,6 +485,7 @@ void setRGBMode(void){
 	}
 
 	else if (accelModeFlag == 1){
+
 		//Si se está en modo accel, se toman los datos del acelerómetro y se ingresan en la función updateRGB
 
 		accX = getXData(&handlerAccel);
@@ -457,55 +501,92 @@ void setRGBMode(void){
 
 }
 
-/*Función Callback de la recepción del USART2
-El puerto es leído en la ISR para bajar la bandera de la interrupción
-El carácter que se lee es devuelto por la función getRxData*/
-void usart6Rx_Callback(void){
-	//Activamos una bandera, dentro de la función main se lee el registro DR lo que baja la bandera de la interrupción
-	rxDataFlag = 1;
-}
 
-void updateRGB(uint8_t xAccel, uint8_t yAccel){
+void updateRGB(int16_t xAccel, int16_t yAccel){
 	//Esta función actualiza el modo del LED RGB, según la posición del acelerómetro, para obtener colores
-	//aproximados a los del espacio HSV se hace lo siguiente:
+	//aproximados a los del espacio HSV se hace lo siguiente: se toman los valores de accX y accY
+	// y se toma una decisión respecto a ellos
 
-	uint8_t newDuttyR = 5*(absValue(xAccel)) + 150;
-	uint8_t newDuttyB = 5*(absValue(yAccel)) + 150;
-	uint8_t newDuttyG = absValue(-5*(absValue(yAccel)) + 150);
+	uint8_t newDuttyR = 0;
+	uint8_t newDuttyB = 0;
+	uint8_t newDuttyG = 0;
 
+	if ((-512 < xAccel) & (xAccel < 2100)){
+
+		if((-2000 < yAccel) & (yAccel < 600)){
+
+			newDuttyR = 255;
+		}
+
+		else{
+
+			newDuttyR = 0;
+		}
+	}
+
+	if ((-2000 < xAccel) & (xAccel < 512)){
+
+		if((-2000 < yAccel) & (yAccel < 512)){
+
+			newDuttyB = 255;
+		}
+
+		else{
+			newDuttyB = 0;
+		}
+	}
+
+
+	if ((-600 < xAccel) & (xAccel < 2000)){
+
+		if((-512 < yAccel) & (yAccel < 2000)){
+
+			newDuttyG = 255;
+		}
+
+		else{
+			newDuttyG = 0;
+		}
+	}
+
+	//Se cargan los nuevos valores de Dutty
 	updateDuttyCycle(&handlerPWMTimerR, newDuttyR);
 	updateDuttyCycle(&handlerPWMTimerG, newDuttyG);
 	updateDuttyCycle(&handlerPWMTimerB, newDuttyB);
 }
 
-uint32_t absValue(int32_t negValue){
-	//Esta función obtiene el valor absoluto de un número
-
-	uint32_t posValue;
-
-	if( negValue < 0 ){
-		//Si el número es negativo se multiplica por menos 1
-		posValue = negValue*(-1);
-	}
-
-	else {
-		posValue = negValue;
-	}
-
-	return posValue;
-}
-
 void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds){
 	//En esta función se imprime la hora de forma adecuada
 
-	if((minutes/10 == 0) & (seconds/10 == 0)){
+	if((minutes/10 == 0) & (seconds/10 == 0) & (horas/10 == 0)){
 		//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
-		sprintf(Buffer, " \n\rHora:%d:0%d:0%d\n\r", horas, minutos, segundos);
+		sprintf(Buffer, " \n\rHora:0%d:0%d:0%d\n\r", horas, minutos, segundos);
 	}
+
+	else if((minutes/10 == 0) & (horas/10 == 0)){
+			//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+			sprintf(Buffer, " \n\rHora:0%d:0%d:%d\n\r", horas, minutos, segundos);
+		}
+
+
+	else if((minutes/10 == 0) & (segundos/10 == 0)){
+			//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+			sprintf(Buffer, " \n\rHora:%d:0%d:0%d\n\r", horas, minutos, segundos);
+		}
+
+	else if((horas/10 == 0) & (segundos/10 == 0)){
+			//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+			sprintf(Buffer, " \n\rHora:0%d:%d:0%d\n\r", horas, minutos, segundos);
+		}
 
 	else if((minutes/10 == 0)){
 		//Si el número de minutos es menor que 10 se le pone un 0 adelante
 		sprintf(Buffer, " \n\rHora:%d:0%d:%d\n\r", horas, minutos, segundos);
+	}
+
+	else if((horas/10 == 0)){
+		//Si el número de minutos es menor que 10 se le pone un 0 adelante
+		sprintf(Buffer, " \n\rHora:0%d:%d:%d\n\r", horas, minutos, segundos);
 	}
 
 	else if((seconds/10 == 0)){
@@ -514,10 +595,55 @@ void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds){
 	}
 	else {
 		//En otro caso se imprime los datos normales obtenidos de los registros del RTC
-		sprintf(Buffer, " "
-				" \n\rHora:%d:%d:%d\n\r", horas, minutos, segundos);
+		sprintf(Buffer," \n\rHora:%d:%d:%d\n\r", horas, minutos, segundos);
 	}
 }
+
+
+void printHourOLED(uint8_t hours, uint8_t minutes, uint8_t seconds){
+	//En esta función se imprime la hora de forma adecuada
+
+	if((minutes/10 == 0) & (seconds/10 == 0) & (horas/10 == 0)){
+		//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+		sprintf(Buffer, "  HORA:0%d:0%d:0%d", horas, minutos, segundos);
+	}
+
+	else if((minutes/10 == 0) & (horas/10 == 0)){
+			//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+			sprintf(Buffer, "  HORA:0%d:0%d:%d", horas, minutos, segundos);
+		}
+
+
+	else if((minutes/10 == 0) & (segundos/10 == 0)){
+			//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+			sprintf(Buffer, "  HORA:%d:0%d:0%d", horas, minutos, segundos);
+		}
+
+	else if((horas/10 == 0) & (segundos/10 == 0)){
+			//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+			sprintf(Buffer, "  HORA:0%d:0%d:%d", horas, minutos, segundos);
+		}
+
+	else if((minutes/10 == 0)){
+		//Si el número de minutos es menor que 10 se le pone un 0 adelante
+		sprintf(Buffer, "  HORA:%d:0%d:%d", horas, minutos, segundos);
+	}
+
+	else if((horas/10 == 0)){
+		//Si el número de minutos es menor que 10 se le pone un 0 adelante
+		sprintf(Buffer, "  HORA:0%d:%d:%d", horas, minutos, segundos);
+	}
+
+	else if((seconds/10 == 0)){
+		//Si el número de segundos es menor que 10 se le pone un 0 adelante
+		sprintf(Buffer, "  HORA:%d:%d:0%d", horas, minutos, segundos);
+	}
+	else {
+		//En otro caso se imprime los datos normales obtenidos de los registros del RTC
+		sprintf(Buffer, "  HORA:%d:%d:%d", horas, minutos, segundos);
+	}
+}
+
 
 void parseCommands(char* ptrBufferReception){
 	//esta función lee lo obtenido por el puerto serial y toma decisiones en base a eso
@@ -558,6 +684,25 @@ void parseCommands(char* ptrBufferReception){
 		//Se envía un mensaje a la LCD
 		moveCursorToLCD(&handlerI2CLCD, 0x43);
 		printStringLCD(&handlerI2CLCD, "INSTRUCCIONES");
+
+		//Se envía mensaje a la OLED
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		setColumn(&handlerI2COLED, 0x02);
+		printBytesArray(&handlerI2COLED, "MENU DE COMANDOS");
+
+		//El LED parpadea verde y luego vuelve a su color rosado por defecto
+		updateDuttyCycle(&handlerPWMTimerG, 255);
+		updateDuttyCycle(&handlerPWMTimerB, 0);
+		updateDuttyCycle(&handlerPWMTimerR, 0);
+
+		delayms(1000);
+
+		//El LED vuelve a su color rosado por default
+		updateDuttyCycle(&handlerPWMTimerG, 0);
+		updateDuttyCycle(&handlerPWMTimerB, 128);
+		updateDuttyCycle(&handlerPWMTimerR, 255);
+
 	}
 
 	else if (strcmp(cmd, "getHour") == 0){
@@ -572,6 +717,10 @@ void parseCommands(char* ptrBufferReception){
 		//Se limpia la LCD y se mueve el cursor al origen
 		clearDisplayLCD(&handlerI2CLCD);
 		moveCursorToLCD(&handlerI2CLCD, 0x00);
+
+		//Se limpia la OLED y se mueve el cursor al origen
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
 
 		//Se escribe un mensaje por la terminal serial
 		writeMsg(&handlerUsart6, "CMD: getHour\n");
@@ -588,6 +737,12 @@ void parseCommands(char* ptrBufferReception){
 		//Se imprime la hora en la LCD
 		moveCursorToLCD(&handlerI2CLCD, 0x40);
 		printStringLCD(&handlerI2CLCD, Buffer);
+
+		//Se imprime la hora en la OLED
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+		setColumn(&handlerI2COLED, 0x00);
+		printHourOLED(horas, minutos, segundos);
+		printBytesArray(&handlerI2COLED, Buffer);
 	}
 
 	else if (strcmp(cmd, "getDate") == 0){
@@ -620,6 +775,13 @@ void parseCommands(char* ptrBufferReception){
 		printStringLCD(&handlerI2CLCD, diaSemana);
 		moveCursorToLCD(&handlerI2CLCD, 0x17);
 		printStringLCD(&handlerI2CLCD, Buffer);
+
+		//Se imprime la fecha en la OLED
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+		setColumn(&handlerI2COLED, 0x02);
+		sprintf(Buffer, " FECHA:%d/%d/%d\n\r", fecha, mes, year);
+		printBytesArray(&handlerI2COLED, Buffer);
 	}
 
 	else if (strcmp(cmd, "initLCD") == 0){
@@ -636,13 +798,13 @@ void parseCommands(char* ptrBufferReception){
 
 		//Se imprime el mensaje de bienvenida de la LCD
 		clearDisplayLCD(&handlerI2CLCD);
-		moveCursorToLCD(&handlerI2CLCD, 0x40);
+		moveCursorToLCD(&handlerI2CLCD, 0x41);
 		printStringLCD(&handlerI2CLCD, "\n\r\n\rBIENVENIDO\n\r\n\r");
 
 		//Se imprime mensaje en la OLED
-		clearDisplayLCD(&handlerI2COLED);
+		clearAllScreen(&handlerI2COLED);
 		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
-		setColumn(&handlerI2COLED, 0x10);
+		setColumn(&handlerI2COLED, 0x02);
 		printBytesArray(&handlerI2COLED, "LCD INICIALIZADA");
 	}
 
@@ -673,8 +835,8 @@ void parseCommands(char* ptrBufferReception){
 
 		//Se envía mensaje para la LCD
 		clearDisplayLCD(&handlerI2CLCD);
-		moveCursorToLCD(&handlerI2CLCD, 0x46);
-		printStringLCD(&handlerI2CLCD, "InitOLED");
+		moveCursorToLCD(&handlerI2CLCD, 0x41);
+		printStringLCD(&handlerI2CLCD, "OLED Inicializada");
 	}
 
 	else if (strcmp(cmd, "setPartyMode") == 0){
@@ -694,6 +856,10 @@ void parseCommands(char* ptrBufferReception){
 		clearDisplayLCD(&handlerI2CLCD);
 		moveCursorToLCD(&handlerI2CLCD, 0x43);
 		printStringLCD(&handlerI2CLCD,"Modo Fiesta ON");
+
+		//Se limpia la OLED para imprimir en ella
+		clearAllScreen(&handlerI2COLED);
+
 		}
 
 
@@ -702,30 +868,46 @@ void parseCommands(char* ptrBufferReception){
 		getHourFlag = 0;
 		partyModeFlag = 0;
 		accelModeFlag = 1;
-		updateLCDFlag = 1; //Se pone en 1 esta bandera para estar actualizando constantemente los valores de acc en la LCD
+		updateLCDFlag = 0;
 		autodestructionModeFlag = 0;
 		updatePartyOLED = 0;
+		updateLCDFlagAcc = 0;
 
 		//Se envía el comando por el serial
 		writeMsg(&handlerUsart6, "CMD: setAccelMode\n\r");
 
-		//Se limpia la pantalla y nos movemos hacia donde se quiere imprimir la hora
+		//Se limpia la pantalla y nos movemos hacia donde se quiere imprimir la aceleración
 		clearDisplayLCD(&handlerI2CLCD);
+		returnHomeLCD(&handlerI2CLCD);
+		clearAllScreen(&handlerI2COLED);
+		moveCursorToLCD(&handlerI2CLCD, 0x14);
+		printStringLCD(&handlerI2CLCD, "Medidas en mG");
 		returnHomeLCD(&handlerI2CLCD);
 
 		//Se obtienen los valores de aceleración y se imprimen por el serial y en la LCD
 		accX = getXData(&handlerAccel);
-		sprintf(Buffer, "\n\rACCx: %d\n", accX);
+		sprintf(Buffer, "\n\rACCX: %d\n", accX);
 		writeMsg(&handlerUsart6, Buffer);
-		sprintf(Buffer, "ACCx: %d", accX);
+		sprintf(Buffer, "ACCX: %d        ", accX);
 		printStringLCD(&handlerI2CLCD, Buffer);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+		setColumn(&handlerI2COLED, 0x10);
+		sprintf(Buffer, "ACCX: %d        ", accX);
+		printBytesArray(&handlerI2COLED, Buffer);
 
 		moveCursorToLCD(&handlerI2CLCD, 0x40);
 		accY = getYData(&handlerAccel);
-		sprintf(Buffer, "ACCy: %d\n\r", accY);
+		sprintf(Buffer, "ACCY: %d\n\r", accY);
 		writeMsg(&handlerUsart6, Buffer);
-		sprintf(Buffer, "ACCy: %d", accY);
+		sprintf(Buffer, "ACCY: %d        ", accY);
 		printStringLCD(&handlerI2CLCD, Buffer);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		setColumn(&handlerI2COLED, 0x10);
+		sprintf(Buffer, "ACCY: %d        ", accY);
+		printBytesArray(&handlerI2COLED, Buffer);
+
 	}
 
 	else if (strcmp(cmd, "initAutodestruction") == 0){
@@ -750,13 +932,13 @@ void parseCommands(char* ptrBufferReception){
 		printBytesArray(&handlerI2COLED, "AUTODESTRUCTION");
 		writeMsg(&handlerUsart6, "5\n\r");
 		printStringLCD(&handlerI2CLCD, "5.....");
-		updateRGB(30, 0); //El RGB cambia de color con la cuenta regresiva
+		updateRGB(120, 0); //El RGB cambia de color con la cuenta regresiva
 		delayms(1000);
 
 
 		writeMsg(&handlerUsart6, "4\n\r");
 		printStringLCD(&handlerI2CLCD, "4.....");
-		updateRGB(30, 30);
+		updateRGB(2000, -900);
 		delayms(1000);
 
 
@@ -768,19 +950,19 @@ void parseCommands(char* ptrBufferReception){
 
 		writeMsg(&handlerUsart6, "2\n\r");
 		printStringLCD(&handlerI2CLCD, "2.....");
-		updateRGB(15, 15);
+		updateRGB(60, 1500);
 		delayms(1000);
 
 
 		writeMsg(&handlerUsart6, "1\n\r");
 		printStringLCD(&handlerI2CLCD, "1.....");
-		updateRGB(15, -15);
+		updateRGB(60, -600);
 		delayms(1000);
 
 
 		writeMsg(&handlerUsart6, "0\n\r");
 		printStringLCD(&handlerI2CLCD, "0.....");
-		updateRGB(23, 17);
+		updateRGB(-900, 900);
 		delayms(1000);
 
 		writeMsg(&handlerUsart6, "------------------------\n\r");
@@ -876,6 +1058,18 @@ void parseCommands(char* ptrBufferReception){
 		printStringLCD(&handlerI2CLCD, "Hora ingresada");
 		moveCursorToLCD(&handlerI2CLCD, 0x41);
 		printStringLCD(&handlerI2CLCD, Buffer);
+
+		//Se envía mensaje a la OLED
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		setColumn(&handlerI2COLED, 0x02);
+		printBytesArray(&handlerI2COLED, "DESDE ESTA HORA ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+		setColumn(&handlerI2COLED, 0x02);
+		printBytesArray(&handlerI2COLED, "EMPIEZA A CONTAR");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		setColumn(&handlerI2COLED, 0x02);
+		printBytesArray(&handlerI2COLED, "    EL RELOJ    ");
 	}
 
 	else if (strcmp(cmd, "setDate") == 0){
@@ -898,64 +1092,275 @@ void parseCommands(char* ptrBufferReception){
 			handlerHourDateConfig.DayOfWeek = 1;
 			enableRTC(&handlerHourDateConfig);
 			diaSemana = RTC_Get_WeekDay();
+			//Se obtienen los valores de los registros
+			fecha = RTC_Get_Date();
+			mes = RTC_Get_Month();
+
+			//Se envía la fecha por el serial
+			sprintf(Buffer, "%s", diaSemana);
+			writeMsg(&handlerUsart6, Buffer);
+			sprintf(Buffer, " Fecha:%d/%d\n\r", fecha, mes);
+			writeMsg(&handlerUsart6, Buffer);
+
+			//Se envía la fecha por la LCD
+			clearDisplayLCD(&handlerI2CLCD);
+			returnHomeLCD(&handlerI2CLCD);
+			printStringLCD(&handlerI2CLCD, diaSemana);
+			moveCursorToLCD(&handlerI2CLCD, 0x43);
+			printStringLCD(&handlerI2CLCD, Buffer);
+
+			//Se envía mensaje en la OLED
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "DESDE ESTA FECHA");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "EMPIEZA A CONTAR");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, " EL CALENDARIO  ");
 		}
 
 		else if(strcmp(userMsg, "martes") == 0){
 			handlerHourDateConfig.DayOfWeek = 2;
 			enableRTC(&handlerHourDateConfig);
 			diaSemana = RTC_Get_WeekDay();
+
+			//Se obtienen los valores de los registros
+			fecha = RTC_Get_Date();
+			mes = RTC_Get_Month();
+
+			//Se envía la fecha por el serial
+			sprintf(Buffer, "%s", diaSemana);
+			writeMsg(&handlerUsart6, Buffer);
+			sprintf(Buffer, " Fecha:%d/%d\n\r", fecha, mes);
+			writeMsg(&handlerUsart6, Buffer);
+
+			//Se envía la fecha por la LCD
+			clearDisplayLCD(&handlerI2CLCD);
+			returnHomeLCD(&handlerI2CLCD);
+			printStringLCD(&handlerI2CLCD, diaSemana);
+			moveCursorToLCD(&handlerI2CLCD, 0x43);
+			printStringLCD(&handlerI2CLCD, Buffer);
+
+			//Se envía mensaje en la OLED
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "DESDE ESTA FECHA");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "EMPIEZA A CONTAR");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, " EL CALENDARIO  ");
 		}
 
 		else if(strcmp(userMsg, "miercoles") == 0){
 			handlerHourDateConfig.DayOfWeek = 3;
 			enableRTC(&handlerHourDateConfig);
 			diaSemana = RTC_Get_WeekDay();
+
+			//Se obtienen los valores de los registros
+			fecha = RTC_Get_Date();
+			mes = RTC_Get_Month();
+
+			//Se envía la fecha por el serial
+			sprintf(Buffer, "%s", diaSemana);
+			writeMsg(&handlerUsart6, Buffer);
+			sprintf(Buffer, " Fecha:%d/%d\n\r", fecha, mes);
+			writeMsg(&handlerUsart6, Buffer);
+
+			//Se envía la fecha por la LCD
+			clearDisplayLCD(&handlerI2CLCD);
+			returnHomeLCD(&handlerI2CLCD);
+			printStringLCD(&handlerI2CLCD, diaSemana);
+			moveCursorToLCD(&handlerI2CLCD, 0x43);
+			printStringLCD(&handlerI2CLCD, Buffer);
+
+			//Se envía mensaje en la OLED
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "DESDE ESTA FECHA");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "EMPIEZA A CONTAR");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, " EL CALENDARIO  ");
 		}
 
 		else if(strcmp(userMsg, "jueves") == 0){
 			handlerHourDateConfig.DayOfWeek = 4;
 			enableRTC(&handlerHourDateConfig);
 			diaSemana = RTC_Get_WeekDay();
+
+			//Se obtienen los valores de los registros
+			fecha = RTC_Get_Date();
+			mes = RTC_Get_Month();
+
+			//Se envía la fecha por el serial
+			sprintf(Buffer, "%s", diaSemana);
+			writeMsg(&handlerUsart6, Buffer);
+			sprintf(Buffer, " Fecha:%d/%d\n\r", fecha, mes);
+			writeMsg(&handlerUsart6, Buffer);
+
+			//Se envía la fecha por la LCD
+			clearDisplayLCD(&handlerI2CLCD);
+			returnHomeLCD(&handlerI2CLCD);
+			printStringLCD(&handlerI2CLCD, diaSemana);
+			moveCursorToLCD(&handlerI2CLCD, 0x43);
+			printStringLCD(&handlerI2CLCD, Buffer);
+
+			//Se envía mensaje en la OLED
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "DESDE ESTA FECHA");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "EMPIEZA A CONTAR");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, " EL CALENDARIO  ");
 		}
 
 		else if(strcmp(userMsg, "viernes") == 0){
 			handlerHourDateConfig.DayOfWeek = 5;
 			enableRTC(&handlerHourDateConfig);
 			diaSemana = RTC_Get_WeekDay();
+
+			//Se obtienen los valores de los registros
+			fecha = RTC_Get_Date();
+			mes = RTC_Get_Month();
+
+			//Se envía la fecha por el serial
+			sprintf(Buffer, "%s", diaSemana);
+			writeMsg(&handlerUsart6, Buffer);
+			sprintf(Buffer, " Fecha:%d/%d\n\r", fecha, mes);
+			writeMsg(&handlerUsart6, Buffer);
+
+			//Se envía la fecha por la LCD
+			clearDisplayLCD(&handlerI2CLCD);
+			returnHomeLCD(&handlerI2CLCD);
+			printStringLCD(&handlerI2CLCD, diaSemana);
+			moveCursorToLCD(&handlerI2CLCD, 0x43);
+			printStringLCD(&handlerI2CLCD, Buffer);
+
+			//Se envía mensaje en la OLED
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "DESDE ESTA FECHA");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "EMPIEZA A CONTAR");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, " EL CALENDARIO  ");
 		}
 
 		else if(strcmp(userMsg, "sabado") == 0){
 			handlerHourDateConfig.DayOfWeek = 6;
 			enableRTC(&handlerHourDateConfig);
 			diaSemana = RTC_Get_WeekDay();
+
+			//Se obtienen los valores de los registros
+			fecha = RTC_Get_Date();
+			mes = RTC_Get_Month();
+
+			//Se envía la fecha por el serial
+			sprintf(Buffer, "%s", diaSemana);
+			writeMsg(&handlerUsart6, Buffer);
+			sprintf(Buffer, " Fecha:%d/%d\n\r", fecha, mes);
+			writeMsg(&handlerUsart6, Buffer);
+
+			//Se envía la fecha por la LCD
+			clearDisplayLCD(&handlerI2CLCD);
+			returnHomeLCD(&handlerI2CLCD);
+			printStringLCD(&handlerI2CLCD, diaSemana);
+			moveCursorToLCD(&handlerI2CLCD, 0x43);
+			printStringLCD(&handlerI2CLCD, Buffer);
+
+			//Se envía mensaje en la OLED
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "DESDE ESTA FECHA");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "EMPIEZA A CONTAR");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, " EL CALENDARIO  ");
 		}
 
 		else if(strcmp(userMsg, "domingo") == 0){
 			handlerHourDateConfig.DayOfWeek = 7;
 			enableRTC(&handlerHourDateConfig);
 			diaSemana = RTC_Get_WeekDay();
+
+			//Se obtienen los valores de los registros
+			fecha = RTC_Get_Date();
+			mes = RTC_Get_Month();
+
+			//Se envía la fecha por el serial
+			sprintf(Buffer, "%s", diaSemana);
+			writeMsg(&handlerUsart6, Buffer);
+			sprintf(Buffer, " Fecha:%d/%d\n\r", fecha, mes);
+			writeMsg(&handlerUsart6, Buffer);
+
+			//Se envía la fecha por la LCD
+			clearDisplayLCD(&handlerI2CLCD);
+			returnHomeLCD(&handlerI2CLCD);
+			printStringLCD(&handlerI2CLCD, diaSemana);
+			moveCursorToLCD(&handlerI2CLCD, 0x43);
+			printStringLCD(&handlerI2CLCD, Buffer);
+
+			//Se envía mensaje en la OLED
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "DESDE ESTA FECHA");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, "EMPIEZA A CONTAR");
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+			setColumn(&handlerI2COLED, 0x02);
+			printBytesArray(&handlerI2COLED, " EL CALENDARIO  ");
 		}
 
 		else {
+			//Se apagan todas las banderas
+			getHourFlag = 0;
+			partyModeFlag = 0;
+			accelModeFlag = 0;
+			updateLCDFlag = 0;
+			autodestructionModeFlag = 0;
+			updatePartyOLED = 0;
+
+			//El LED parpadea rojo
+			updateDuttyCycle(&handlerPWMTimerG, 0);
+			updateDuttyCycle(&handlerPWMTimerB, 0);
+			updateDuttyCycle(&handlerPWMTimerR, 190);
+
+			//Se escribe el mensaje de error por el serial y en la LCD
 			writeMsg(&handlerUsart6, "ERROR\n\r");
+
+			clearDisplayLCD(&handlerI2CLCD);
+			moveCursorToLCD(&handlerI2CLCD, 0x47);
+			printStringLCD(&handlerI2CLCD, "ERROR!");
+
+			delayms(1500);
+
+			//El LED vuelve a su color rosado por default
+			updateDuttyCycle(&handlerPWMTimerG, 0);
+			updateDuttyCycle(&handlerPWMTimerB, 128);
+			updateDuttyCycle(&handlerPWMTimerR, 255);
 		}
 
-		//Se obtienen los valores de los registros
-		fecha = RTC_Get_Date();
-		mes = RTC_Get_Month();
-
-		//Se envía la fecha por el serial
-		sprintf(Buffer, "%s", diaSemana);
-		writeMsg(&handlerUsart6, Buffer);
-		sprintf(Buffer, " Fecha:%d/%d\n\r", fecha, mes);
-		writeMsg(&handlerUsart6, Buffer);
-
-		//Se envía la fecha por la LCD
-		clearDisplayLCD(&handlerI2CLCD);
-		returnHomeLCD(&handlerI2CLCD);
-		printStringLCD(&handlerI2CLCD, diaSemana);
-		moveCursorToLCD(&handlerI2CLCD, 0x43);
-		printStringLCD(&handlerI2CLCD, Buffer);
 	}
 
 	else if (strcmp(cmd, "setYear") == 0){
@@ -986,6 +1391,18 @@ void parseCommands(char* ptrBufferReception){
 		moveCursorToLCD(&handlerI2CLCD, 0x41);
 		sprintf(Buffer, "Year ingresado:%d", year);
 		printStringLCD(&handlerI2CLCD, Buffer);
+
+		//Se imprime mensaje en la OLED
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		setColumn(&handlerI2COLED, 0x02);
+		printBytesArray(&handlerI2COLED, "DESDE ESTE YEAR ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+		setColumn(&handlerI2COLED, 0x02);
+		printBytesArray(&handlerI2COLED, "EMPIEZA A CONTAR");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		setColumn(&handlerI2COLED, 0x02);
+		printBytesArray(&handlerI2COLED, " EL CALENDARIO  ");
 	}
 
 	else { //Si no se reconoce ningún comando
@@ -1010,6 +1427,11 @@ void parseCommands(char* ptrBufferReception){
 		moveCursorToLCD(&handlerI2CLCD, 0x47);
 		printStringLCD(&handlerI2CLCD, "ERROR!");
 
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		setColumn(&handlerI2COLED, 0x00);
+		printBytesArray(&handlerI2COLED, "      ERROR     ");
+
 		delayms(1500);
 
 		//El LED vuelve a su color rosado por default
@@ -1031,29 +1453,41 @@ void updateLCD(void){
 		writeMsg(&handlerUsart6, Buffer);
 
 		//Se imprime en la LCD
-		clearDisplayLCD(&handlerI2CLCD);
-		moveCursorToLCD(&handlerI2CLCD, 0x40);
+	    moveCursorToLCD(&handlerI2CLCD, 0x40);
 		printStringLCD(&handlerI2CLCD, Buffer);
+
+		printHourOLED(horas, minutos, segundos);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+		setColumn(&handlerI2COLED, 0x00);
+		printBytesArray(&handlerI2COLED, Buffer);
 
 }
 
 void updateLCDAcc(void){
 
 	//Se obtiene la aceleración y se imprime
-	clearDisplayLCD(&handlerI2CLCD);
+	//clearDisplayLCD(&handlerI2CLCD);
 	returnHomeLCD(&handlerI2CLCD);
 	accX = getXData(&handlerAccel);
-	sprintf(Buffer, "\n\rACCx: %d\n", accX);
+	sprintf(Buffer, "\n\rACCX: %d\n", accX);
 	writeMsg(&handlerUsart6, Buffer);
-	sprintf(Buffer, "ACCx: %d", accX);
+	sprintf(Buffer, "ACCX: %d        ", accX);
 	printStringLCD(&handlerI2CLCD, Buffer);
 
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+	setColumn(&handlerI2COLED, 0x10);
+	printBytesArray(&handlerI2COLED, Buffer);
+
 	accY = getYData(&handlerAccel);
-	sprintf(Buffer, "ACCy: %d\n\r", accY);
+	sprintf(Buffer, "ACCY: %d\n\r", accY);
 	moveCursorToLCD(&handlerI2CLCD, 0x40);
 	writeMsg(&handlerUsart6, Buffer);
-	sprintf(Buffer, "ACCy: %d", accY);
+	sprintf(Buffer, "ACCY: %d        ", accY);
 	printStringLCD(&handlerI2CLCD, Buffer);
+
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+	setColumn(&handlerI2COLED, 0x10);
+	printBytesArray(&handlerI2COLED, Buffer);
 }
 
 void updatePartyOLEDFunction(void){
@@ -1091,6 +1525,8 @@ void updatePartyOLEDFunction(void){
 
 	delayms(300);
 }
+
+
 
 
 

@@ -33,12 +33,15 @@ void initOLED(I2C_Handler_t *ptrHandlerI2C);
 void clearOLED(I2C_Handler_t *ptrHandlerI2C);
 void clearAllScreen(I2C_Handler_t *ptrHandlerI2C);
 void setColumn(I2C_Handler_t *ptrHandlerI2C, uint8_t columnnNumber);
+void whiteScreenOLED(I2C_Handler_t *ptrHandlerI2C);
 
 void printBytesArray(I2C_Handler_t *ptrHandlerI2C, char* bytesArray);
 void printSingleByte(I2C_Handler_t *ptrHandlerI2C, char singleByte);
 
 char* stringToChar(char character);
 
+char* slashChar(void);
+char* minusChar(void);
 char* dotChar(void);
 char* TwoPointsChar(void);
 char* AChar(void);

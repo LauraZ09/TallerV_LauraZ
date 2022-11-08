@@ -237,20 +237,16 @@ void whiteScreenOLED(I2C_Handler_t *ptrHandlerI2C){
 
 //Con esta función se limpia una fila
 void clearOLED(I2C_Handler_t *ptrHandlerI2C){
-	char* blackSpace[16] = {spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),
-			spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar()};
 
-	sendBytesArray(ptrHandlerI2C, blackSpace);
+	printBytesArray(ptrHandlerI2C, "                ");
 }
 
 void clearAllScreen(I2C_Handler_t *ptrHandlerI2C){
 
-	char* blackScreen[16] = {spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),
-			spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar(),spaceChar()};
-
 	for(uint8_t clearCounter = 0; clearCounter < 8; clearCounter++){
 		setPageOLED(ptrHandlerI2C,clearCounter);
-		sendBytesArray(ptrHandlerI2C,blackScreen);
+		setColumn(ptrHandlerI2C, 0x02);
+		printBytesArray(ptrHandlerI2C, "                ");
 	}
 
 
@@ -377,6 +373,12 @@ char* stringToChar(char character){
 	{return TwoPointsChar();
 	case('.'):
 	{return dotChar();}
+	case('-'):
+	{return minusChar();
+	}
+	case('/'):
+	{return slashChar();
+	}
 	default:
 	{return spaceChar();
 	break;}
@@ -436,10 +438,18 @@ char character8[8] = {0x00, 0b01101100, 0b10010010, 0b10010010, 0b10010010, 0b01
 char character9[8] = {0x00, 0b01001100, 0b10010010, 0b10010010, 0b10010010, 0b01111100, 0x00, 0x00};
 char characterSpace[8] 	     = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 char characterWhiteLine[8]   = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-char characterTwoPoints[8]   = {0x00, 0x00, 0x00, 0b00011000, 0x00, 0x00, 0x00, 0x00};
+char characterTwoPoints[8]   = {0x00, 0x00, 0x00, 0b00101000, 0x00, 0x00, 0x00, 0x00};
 char characterDot[8]         = {0x00, 0x00, 0x00, 0b10000000, 0x00, 0x00, 0x00, 0x00};
+char characterMinus[8]       = {0x00, 0x00, 0b00010000, 0b00010000, 0b00010000, 0b00010000, 0x00, 0x00};
+char characterSlash[8]		 = {0x00, 0b10000000, 0b01000000, 0b00100000, 0b00010000, 0b00001000, 0x00, 0x00};
 
 //Para poder obtener el puntero a los arreglos, creamos una función que retorne el puntero
+char* slashChar(void){
+	return characterSlash;
+}
+char* minusChar(void){
+	return characterMinus;
+}
 char* dotChar(void){
 	return characterDot;
 }
@@ -560,7 +570,3 @@ char* spaceChar(void){
 char* whiteLineChar(void){
 	return characterWhiteLine;
 }
-
-
-
-

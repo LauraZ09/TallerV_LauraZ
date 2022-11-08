@@ -67,20 +67,20 @@ uint8_t init_ADXL345(ADXL345_Handler_t *ptrADXL345Handler){
 
 int16_t getXData(ADXL345_Handler_t *ptrADXL345Handler){
 
-	int8_t xDataL = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAX0_R);
-	int8_t xDataH = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAX1_R);
+	int16_t xDataL = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAX0_R);
+	int16_t xDataH = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAX1_R);
 
-	xData = (xDataH << 8  | xDataL);
+	xData = 4*(xDataH << 8  | xDataL); //Acc = 4mg * dato obtenido, esto con la resolución de 10 bits y en el rango +- 2g
 
 	return xData;
 }
 
 int16_t getYData(ADXL345_Handler_t *ptrADXL345Handler){
 
-	int8_t yDataL = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAY0_R);
-	int8_t yDataH = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAY1_R);
+	int16_t yDataL = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAY0_R);
+	int16_t yDataH = i2c_readSingleRegister(ptrADXL345Handler->ptrI2CHandler, DATAY1_R);
 
-	yData = (yDataH << 8  | yDataL);
+	yData = 4* (yDataH << 8  | yDataL);
 
 	return yData;
 }
