@@ -18,7 +18,15 @@
 #define BTIMER_SPEED_100us	1599
 #define BTIMER_SPEED_1ms	15999
 
-
+//El bus que alimenta los relojes máximo va a 50M
+#define BTIMER_SPEED_100M_20ns		0
+#define BTIMER_SPEED_100M_40ns		1
+#define BTIMER_SPEED_100M_80ns		3
+#define BTIMER_SPEED_100M_800ns		39
+#define BTIMER_SPEED_100M_8us		399
+#define BTIMER_SPEED_100M_80us		3999
+#define BTIMER_SPEED_100M_100us		39999
+#define BTIMER_SPEED_100M_1ms		49999
 
 /* Estructura que contiene la configuración mínima necesaria para el manejo del Timer.*/
 typedef struct

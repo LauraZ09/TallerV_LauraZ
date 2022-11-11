@@ -44,6 +44,7 @@
 typedef struct
 {
 	uint8_t USART_mode;
+	uint8_t clock_freq;
 	uint8_t USART_baudrate;
 	uint8_t USART_datasize;
 	uint8_t USART_parity;
@@ -74,6 +75,7 @@ typedef struct
 
 /* Definicion de los prototipos para las funciones del USART */
 void USART_Config(USART_Handler_t *ptrUsartHandler);
+void USART_Config100M(USART_Handler_t *ptrUsartHandler);
 int writeChar(USART_Handler_t *ptrUsartHandler, int dataToSend );
 void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSend);
 void usart2Rx_Callback(void); /* Esta función debe ser sobre-escrita en el main para que el sistema funcione*/

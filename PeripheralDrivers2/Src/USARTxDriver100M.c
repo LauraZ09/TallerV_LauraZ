@@ -15,7 +15,7 @@ uint8_t auxRxData = 0;
  * Recordar que siempre se debe comenzar con activar la señal de reloj
  * del periferico que se está utilizando.
  */
-void USART_Config(USART_Handler_t *ptrUsartHandler){
+void USART_Config100M(USART_Handler_t *ptrUsartHandler){
 
 	/* 0.Desactivamos las interrupciones primero*/
 	__disable_irq();
@@ -135,35 +135,35 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	// 2.5 Configuracion del Baudrate (SFR USART_BRR)
 	// Ver tabla de valores (Tabla 73), Frec = 16MHz, overr = 0;
 	if(ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_9600){
-		// El valor a cargar es 104.1875 -> Mantiza = 104,fraction = 0.1875
-		// Mantiza = 104 = 0x68, fraction = 16 * 0.1875 = 3
-		// Valor a cargar 0x0683
+		// El valor a cargar es 651.0625 -> Mantiza = 651,fraction = 0.0625
+		// Mantiza = 651 = 0x28B, fraction = 16 * 0.041667 = 1
+		// Valor a cargar 0x28B1
 		// Configurando el Baudrate generator para una velocidad de 9600bps
-		ptrUsartHandler->ptrUSARTx->BRR = 0x0683;
+		ptrUsartHandler->ptrUSARTx->BRR = 0x28B1;
 	}
 
 	else if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_19200) {
-		// El valor a cargar es 52.0625 -> Mantiza = 52,fraction = 0.0625
-		// Mantiza = 52 = 0x34, fraction = 16 * 0.0625 = 1
-		// Valor a cargar 0x0341
+		// El valor a cargar es 325.5000 -> Mantiza = 325,fraction = 0.5000
+		// Mantiza = 325 = 0x145, fraction = 16 * 0.520833 = 8
+		// Valor a cargar 0x1458
 		// Configurando el Baudrate generator para una velocidad de 19200bps
-		ptrUsartHandler->ptrUSARTx->BRR = 0x0341;
+		ptrUsartHandler->ptrUSARTx->BRR = 0x1458;
 	}
 
 	else if(ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_115200){
-		// El valor a cargar es 8.6875 -> Mantiza = 8,fraction = 0.6875
-		// Mantiza = 8 = 0x8, fraction = 16 * 0.6875 = 11
-		// Valor a cargar 0x8B
+		// El valor a cargar es 54.2500 -> Mantiza = 54,fraction = 0.2500
+		// Mantiza = 54 = 0x36, fraction = 16 * 0.2500 = 4
+		// Valor a cargar 0x364
 		// Configurando el Baudrate generator para una velocidad de 115200bps
-		ptrUsartHandler->ptrUSARTx->BRR = 0x08B;
+		ptrUsartHandler->ptrUSARTx->BRR = 0x364;
 	}
 
 	else if(ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_57600){
-		// El valor a cargar es 17.375 -> Mantiza = 17,fraction = 0.6875
-		// Mantiza = 17 = 0x11, fraction = 16 * 0.375 = 6
-		// Valor a cargar 0x116
+		// El valor a cargar es 108.5000 -> Mantiza = 108,fraction = 0.5000
+		// Mantiza = 108 = 0x6C, fraction = 16 * 0.5000 = 8
+		// Valor a cargar 0x6C8
 		// Configurando el Baudrate generator para una velocidad de 115200bps
-		ptrUsartHandler->ptrUSARTx->BRR = 0x116;
+		ptrUsartHandler->ptrUSARTx->BRR = 0x6C8;
 	}
 
 	// 2.6 Configuramos el modo: TX only, RX only, RXTX, disable

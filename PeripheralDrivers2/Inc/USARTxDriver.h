@@ -18,6 +18,7 @@
 #define USART_BAUDRATE_9600		0
 #define USART_BAUDRATE_19200	1
 #define USART_BAUDRATE_115200	2
+#define USART_BAUDRATE_57600	3
 
 #define USART_DATASIZE_8BIT		0
 #define USART_DATASIZE_9BIT		1
@@ -73,11 +74,13 @@ typedef struct
 
 /* Definicion de los prototipos para las funciones del USART */
 void USART_Config(USART_Handler_t *ptrUsartHandler);
+void USART_Config100M(USART_Handler_t *ptrUsartHandler);
 int writeChar(USART_Handler_t *ptrUsartHandler, int dataToSend );
-void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSend );
+void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSend);
 void usart2Rx_Callback(void); /* Esta función debe ser sobre-escrita en el main para que el sistema funcione*/
 void usart1Rx_Callback(void);
 void usart6Rx_Callback(void);
-
+uint8_t getRxData(void);
 
 #endif /* INC_USARTXDRIVER_H_ */
+
