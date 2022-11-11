@@ -1,5 +1,5 @@
 /*
- * SetTo40M.c
+ * SetTo100M.c
  *
  * Creado por: Laura Zuluaga
  * Descripción: A continuación se crea una función, la cual cambia la frecuencia a la que
@@ -9,12 +9,12 @@
 #include "RccConfig.h"
 //#include "system_stm32f4xx.h"
 
-void setTo40M(void)
+void setTo100M(void)
 {
 	//Se deben configurar el RCC y el PLL mientras el PLL está deshabilitado:
 
 	//Primero se limpian los registros:
-	//Primero se limpia el registro RCC->PLLCFGR TODO PUEDO LIMPIAR TAMBIÉN EL Q]
+	//Primero se limpia el registro RCC->PLLCFGR
 	//RCC->PLLCFGR = 0; QUÉ PASA CON LOS RESERVADOS SI HAGO ESTO
 	//RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLSRC;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM;
@@ -37,7 +37,7 @@ void setTo40M(void)
 	 * 0: HSI clock selected as PLL and PLLI2S clock entry
 	 * 1: HSE oscillator clock selected as PLL and PLLI2S clock entry
 	 */
-	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLSRC;
+	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLSRC; //Se elige el HSI
 
 	/*3. Se configura los divisores y multiplicadores M, N, P: RCC_PLLCFGR*/
 
@@ -47,14 +47,16 @@ void setTo40M(void)
 	RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_4;
 
 	/*3.b. Se configura el multiplicador N: VCOOUTPUT = VCOINPUT * N, este valor de
-	 * VCOOUTPUT debe estar entre 100 y 432 MHz. En este caso se va a configurar N = 160,
-	 * se debe cargar en el registro el valor 0b10100000, es decir, se ponen en 1 los bit
-	 * RCC_PLLCFGR_PLLN5 y RCC_PLLCFGR_PLLN7 */
-	RCC->PLLCFGR |= RCC_PLLCFGR_PLLN_5;
+	 * VCOOUTPUT debe estar entre 100 y 432 MHz. En este caso se va a configurar N = 400,
+	 * se debe cargar en el registro el valor 0b 0001 1001 0000, es decir, se ponen en 1 los bit
+	 * RCC_PLLCFGR_PLLN4, RCC_PLLCFGR_PLLN8 y RCC_PLLCFGR_PLLN7 */
+	RCC->PLLCFGR |= RCC_PLLCFGR_PLLN_4;
 	RCC->PLLCFGR |= RCC_PLLCFGR_PLLN_7;
+	RCC->PLLCFGR |= RCC_PLLCFGR_PLLN_8;
+
 
 	/*3.c. Se configura el divisor P: PLLOUTPUT = VCOOUTPUT / P, este valor de
-	 * PLLOUTPUT debe ser menor a 100 MHz. En este caso se va a configurar P = 4.
+	 * PLLOUTPUT debe ser menor o igual a 100 MHz. En este caso se va a configurar P = 4.
 	 * 00: PLLP = 2
 	 * 01: PLLP = 4
 	 * 10: PLLP = 6
@@ -75,7 +77,7 @@ void setTo40M(void)
 	 * 110: AHB clock divided by 8
 	 * 111: AHB clock divided by 16
 	 */
-	RCC->CFGR &= ~RCC_CFGR_PPRE2;
+	RCC->CFGR &= ~RCC_CFGR_PPRE2; //No se divide
 
 	/*PPRE1: APB Low speed prescaler (APB1)
 	 *Set and cleared by software to control APB low-speed clock division factor.
@@ -86,8 +88,10 @@ void setTo40M(void)
 	 *100: AHB clock divided by 2
 	 *101: AHB clock divided by 4
 	 *110: AHB clock divided by 8
-	 *111: AHB clock divided by 16*/
-	RCC->CFGR &= ~RCC_CFGR_PPRE1;
+	 *111: AHB clock divided by 16
+	 *Como no debe pasar los 50 se divide entre 2*/
+	//RCC->CFGR &= ~RCC_CFGR_PPRE1;
+	RCC->CFGR |= RCC_CFGR_PPRE1_2;  //Se carga el valor 100, es decir, se divide entre 2
 
 	/*HPRE: AHB prescaler
 	 * Set and cleared by software to control AHB clock division factor.
@@ -103,7 +107,7 @@ void setTo40M(void)
 	 1110: system clock divided by 256
 	 1111: system clock divided by 512
 	 */
-	RCC->CFGR &= ~RCC_CFGR_HPRE;
+	RCC->CFGR &= ~RCC_CFGR_HPRE; //No se divide
 
 	/*5. Se activan los pines para ver el reloj: MCO2[1:0]: Microcontroller clock output 2
 	Set and cleared by software. Clock source selection may generate glitches on MCO2. It is
@@ -128,9 +132,9 @@ void setTo40M(void)
 	 */
 
 	RCC->CFGR &= ~RCC_CFGR_MCO2PRE;   //Primero se limpian los bits
-	//RCC->CFGR |=  RCC_CFGR_MCO2PRE; //Se ponen en 111 : División x5
-	RCC->CFGR |=  RCC_CFGR_MCO2PRE_1;
-	RCC->CFGR |=  RCC_CFGR_MCO2PRE_2;
+	RCC->CFGR |=  RCC_CFGR_MCO2PRE; //Se ponen en 111 : División x5, así queda en 20M la salida de este pin
+	//RCC->CFGR |=  RCC_CFGR_MCO2PRE_1;
+	//RCC->CFGR |=  RCC_CFGR_MCO2PRE_2;
 
 
 	/*6.Se activa el PLL: RCC_CR
@@ -138,6 +142,7 @@ void setTo40M(void)
 	 * 1: PLL ON
 	 */
 	RCC->CR |= RCC_CR_PLLON;
+
 	//Se hace un delay mientras el PLL está listo para usarse:
 	while (!(RCC->CR & RCC_CR_PLLRDY));
 
