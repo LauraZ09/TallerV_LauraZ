@@ -256,38 +256,38 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 			// Ver tabla de valores (Tabla 73), Frec = 50MHz, overr = 0;
 			if (ptrUsartHandler->USART_Config.USART_baudrate
 					== USART_BAUDRATE_9600) {
-				// El valor a cargar es 651.0625 -> Mantiza = 651,fraction = 0.0625
-				// Mantiza = 651 = 0x28B, fraction = 16 * 0.041667 = 1
-				// Valor a cargar 0x28B1
-				// Configurando el Baudrate generator para una velocidad de 9600bps
-				ptrUsartHandler->ptrUSARTx->BRR = 0x28B1;
-			}
-
-			else if (ptrUsartHandler->USART_Config.USART_baudrate
-					== USART_BAUDRATE_19200) {
-				// El valor a cargar es 325.5000 -> Mantiza = 325,fraction = 0.5000
-				// Mantiza = 325 = 0x145, fraction = 16 * 0.520833 = 8
+				// El valor a cargar es 325.5208 -> Mantiza = 325,fraction = 0.5208
+				// Mantiza = 325 = 0x145, fraction = 16 * 0.5208 = 8
 				// Valor a cargar 0x1458
-				// Configurando el Baudrate generator para una velocidad de 19200bps
+				// Configurando el Baudrate generator para una velocidad de 9600bps
 				ptrUsartHandler->ptrUSARTx->BRR = 0x1458;
 			}
 
 			else if (ptrUsartHandler->USART_Config.USART_baudrate
+					== USART_BAUDRATE_19200) {
+				// El valor a cargar es 162.7604 -> Mantiza = 162,fraction = 0.7604
+				// Mantiza = 162 = 0xAC, fraction = 16 * 0.7604 = C
+				// Valor a cargar 0xA2C
+				// Configurando el Baudrate generator para una velocidad de 19200bps
+				ptrUsartHandler->ptrUSARTx->BRR = 0xA2C;
+			}
+
+			else if (ptrUsartHandler->USART_Config.USART_baudrate
 					== USART_BAUDRATE_115200) {
-				// El valor a cargar es 54.2500 -> Mantiza = 54,fraction = 0.2500
-				// Mantiza = 54 = 0x36, fraction = 16 * 0.2500 = 4
-				// Valor a cargar 0x364
+				// El valor a cargar es 27.1267 -> Mantiza = 27,fraction = 0.1267
+				// Mantiza = 27 = 0x1B, fraction = 16 * 0.1267 = 2
+				// Valor a cargar 0x1B2
 				// Configurando el Baudrate generator para una velocidad de 115200bps
-				ptrUsartHandler->ptrUSARTx->BRR = 0x364;
+				ptrUsartHandler->ptrUSARTx->BRR = 0x1B2;
 			}
 
 			else if (ptrUsartHandler->USART_Config.USART_baudrate
 					== USART_BAUDRATE_57600) {
-				// El valor a cargar es 108.5000 -> Mantiza = 108,fraction = 0.5000
-				// Mantiza = 108 = 0x6C, fraction = 16 * 0.5000 = 8
+				// El valor a cargar es 54.2534 -> Mantiza = 54,fraction = 0.2534
+				// Mantiza = 54 = 0x36, fraction = 16 * 0.2534 = 4
 				// Valor a cargar 0x6C8
 				// Configurando el Baudrate generator para una velocidad de 115200bps
-				ptrUsartHandler->ptrUSARTx->BRR = 0x6C8;
+				ptrUsartHandler->ptrUSARTx->BRR = 0x364;
 			}
 		}
 

@@ -35,6 +35,9 @@
 #define USART_RX_INTERRUPT_DISABLE 0
 #define USART_RX_INTERRUPT_ENABLE  1
 
+#define CPU_CLOCK_FREQ_16		16
+#define CPU_CLOCK_FREQ_100 		100
+
 /* Estructura para la configuración de la comunicacion:
  * Velocidad (baudrate)
  * Tamaño de los datos

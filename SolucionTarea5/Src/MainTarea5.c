@@ -155,8 +155,8 @@ void initSystem(void) {
 	//Se configura el BlinkyTimer
 	handlerBlinkyTimer.ptrTIMx 					= TIM2;
 	handlerBlinkyTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
-	handlerBlinkyTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100M_100us;
-	handlerBlinkyTimer.TIMx_Config.TIMx_period 	= 2500; //Update period= 2ms*125 = 250ms
+	handlerBlinkyTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100M_1ms;
+	handlerBlinkyTimer.TIMx_Config.TIMx_period 	= 250; //Update period= 2ms*125 = 250ms
 
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerBlinkyTimer);
@@ -164,7 +164,7 @@ void initSystem(void) {
 
 	//Se configura el USART 2
 	handlerUsart2.ptrUSARTx					     = USART2;                	  //USART 2
-	handlerUsart2.USART_Config.clock_freq		 = 100;						  //Velocidad del reloj en 100M
+	handlerUsart2.USART_Config.clock_freq		 = CPU_CLOCK_FREQ_100;		  //Velocidad del reloj en 100M
 	handlerUsart2.USART_Config.USART_mode 	     = USART_MODE_RXTX;       	  //Modo de Recepción y transmisión
 	handlerUsart2.USART_Config.USART_baudrate    = USART_BAUDRATE_57600; 	  //57600 bps
 	handlerUsart2.USART_Config.USART_parity      = USART_PARITY_EVEN;         //Parity:EVEN, acá viene configurado el tamaño de dato
