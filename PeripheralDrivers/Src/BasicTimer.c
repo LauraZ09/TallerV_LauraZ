@@ -36,6 +36,22 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 	/* 0. Desactivamos las interrupciones globales mientras configuramos el sistema.*/
 	__disable_irq();
+
+	//Se configura el rgistro RCC_DCKCFGR: el bit TIMPRE configura si la frecuencia del TIMER es la misma del bus o se multiplica
+	/*TIMPRE: Timers clocks prescalers selection
+	 Set and reset by software to control the clock frequency of all the timers connected to APB1
+	 and APB2 domain.
+	 0: If the APB prescaler (PPRE1, PPRE2 in the RCC_CFGR register) is configured to a
+	 division factor of 1, TIMxCLK = HCKL . Otherwise, the timer clock frequencies are set to
+	 twice to the frequency of the APB domain to which the timers are connected:
+	 TIMxCLK = 2xPCLKx.
+	 1:If the APB prescaler ( PPRE1, PPRE2 in the RCC_CFGR register) is configured to a
+	 division factor of 1 or 2, TIMxCLK = HCKL. Otherwise, the timer clock frequencies are set to
+	 four times to the frequency of the APB domain to which the timers are connected:
+	 TIMxCLK = 4xPCLKx.*/
+
+	RCC->DCKCFGR &= ~RCC_DCKCFGR_TIMPRE;
+
 	/* 1. Activar la señal de reloj del periférico requerido */
 	if(ptrBTimerHandler->ptrTIMx == TIM2){
 		// Registro del RCC que nos activa la señal de reloj para el TIM2

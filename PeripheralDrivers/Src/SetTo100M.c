@@ -11,6 +11,8 @@
 
 void setTo100M(void)
 {
+	__disable_irq(); //Desactivamos las interrupciones globales
+
 	//Se deben configurar el RCC y el PLL mientras el PLL está deshabilitado:
 
 	//Primero se limpian los registros:
@@ -164,6 +166,8 @@ void setTo100M(void)
 
 	//SystemCoreClockUpdate();// TODO
 	//(void) SystemCoreClock;
+
+	__enable_irq(); //Se activan las interrupciones globales
 
 }
 
