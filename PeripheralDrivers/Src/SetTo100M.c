@@ -149,8 +149,24 @@ void setTo100M(void)
 	//Se hace un delay mientras el PLL está listo para usarse:
 	while (!(RCC->CR & RCC_CR_PLLRDY));
 
+	//Se cambia el rgistro PWR_CR
+	/*VOS[1:0]: Regulator voltage scaling output selection
+	 These bits control the main internal voltage regulator output voltage to achieve a trade-off
+	 between performance and power consumption when the device does not operate at the
+	 maximum frequency (refer to the corresponding datasheet for more details).
+	 These bits can be modified only when the PLL is OFF. The new value programmed is active
+	 only when the PLL is ON. When the PLL is OFF, the voltage regulator is set to scale 3
+	 independently of the VOS register content.
+	 00: Reserved (Scale 3 mode selected)
+	 01: Scale 3 mode <= 64 MHz
+	 10: Scale 2 mode (reset value) <= 84 MHz
+	 11: Scale 1 mode <= 100 MHz*/
+	PWR->CR |= PWR_CR_VOS;
+
 	//Se cambia la flash para poder acceder a ella
 	FLASH->ACR |= FLASH_ACR_LATENCY_3WS;
+
+	//Se
 
 	/*7. Se selecciona el PLL como System Clock: RCC_CFGR
 	 *00: HSI oscillator selected as system clock

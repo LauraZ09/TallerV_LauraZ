@@ -7,10 +7,35 @@
  *
  *********************************************************************************************************
  */
-
-/*
+/* En esta tarea se cambia la velocidad del micro y se prueba la comunicación serial
+ * y los TIMERS.
  *
+ * Para el cambio de la velocidad del micro se creó una función setTo100M(), la cual
+ * se llama en el main antes de la función initSystem, esta función se encuentra definida
+ * en el driver setTo100M.c y cambia la frecuencia del micro a 100 MHz.
+ *
+ * Para comprobar el adecuado funcionamiento de la comunicación serial, cuando la función
+ * initSystem llega a su fin, se envía un mensaje que dice "La funcion de iniciliazacion de
+ * sistema se ha aplicado correctamente"; adicionalmente, se crearon los siguientes comandos:
+ *
+ * 1. help @: este comando imprime el menú de comandos
+ * 2. setHour #Horas #minutos @: con este comando se puede configurar la hora inicial
+ *    del RTC.
+ * 3. getHour @: con este comando se obtiene la hora del RTC.
+ *
+ * La comunicación serial se prueba con el USART2. Para que la configuración del USART2
+ * sea adecuada, se debe ingresar un elemento adicional a la configuración, este es:
+ *
+ *       handlerUsart2.USART_Config.clock_freq = CPU_CLOCK_FREQ_100;
+ *
+ * dentro del driver del USART, esta configuración lo que hace es elegir entre 16 y 100 mega,
+ * para ingresarle al registro la facción del USART necesaria.
+ *
+ * Para comprobar el adecuado funcionamiento de los timers se hace un blinky de 250 ms con
+ * el TIMER 2 y, adicionalmente, se usan las interruociones de este timer para imprimir la
+ * hora por el serial cada segundo (cuando se ha ingresado el comando getHour).
  */
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,9 +62,17 @@ USART_Handler_t handlerUsart2            		= {0}; //Handler para el USART2
 
 BasicTimer_Handler_t handlerBlinkyTimer  		= {0}; //Handler para el TIMER2, con este se hará el Blinky
 
+Hour_and_Date_Config_t handlerHourDateConfig	= {0}; //Handler para la configuración de la hora
+
+uint8_t horas 			 = 0;	 //Para almacenar las horas
+uint8_t minutos 		 = 0; 	 //Para almacenar los minutos
+uint8_t segundos 		 = 0; 	 //Para almacenar los segundos
 uint8_t rxData        	 = 0;    //Datos de recepción
 uint8_t rxDataFlag 		 = 0;	 //Bandera para la recepción de datos del usart6
+uint8_t getHourFlag 	 = 0;    //Bandera para empezar a enviar la hora
+uint8_t getHourCounter   = 0;    //Contador para actualizar la hora
 uint8_t counterReception = 0;    //Contador para la recepción de datos por el usart2
+
 bool stringComplete 	 = false;//Bandera para la recepción de datos del usart2
 
 char Buffer[64]          = {0}; //En esta variable se almacenarán mensajes a enviar
@@ -54,6 +87,7 @@ unsigned int secondParameter = 0; //En esta variable se almacena el segundo núm
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
 void initSystem(void);       				    //Función para inicializar el sistema
 void parseCommands(char* ptrBufferReception);	//Función para evaluar los comandos que la consola recibe
+void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds); //Función que imprime la hora en un formato adecuado
 
 int main(void) {
 
@@ -96,6 +130,20 @@ int main(void) {
 		else {
 
 		}
+
+		if((getHourCounter == 4) && (getHourFlag == 1)){
+
+			getHourCounter = 0;
+
+			//Se obtiene la hora de los registros
+			horas = RTC_Get_Hours();
+			minutos = RTC_Get_Minutes();
+			segundos = RTC_Get_Seconds();
+			printHour(horas, minutos, segundos);
+
+			//Se imprime por el serial
+			writeMsg(&handlerUsart2, Buffer);
+		}
 	}
 	return 0;
 }
@@ -122,7 +170,7 @@ void initSystem(void) {
 	handlerTxPin.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
 	handlerTxPin.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
 	handlerTxPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	handlerTxPin.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF8;	              //AF08: Usart6
+	handlerTxPin.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF7;	              //AF08: Usart6
 
 	//Se carga la configuración
 	GPIO_Config(&handlerTxPin);
@@ -135,7 +183,7 @@ void initSystem(void) {
 	handlerRxPin.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
 	handlerRxPin.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
 	handlerRxPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	handlerRxPin.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF8;	              //AF08: Usart6
+	handlerRxPin.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF7;	              //AF08: Usart6
 
 	//Se carga la configuración
 	GPIO_Config(&handlerRxPin);
@@ -155,8 +203,8 @@ void initSystem(void) {
 	//Se configura el BlinkyTimer
 	handlerBlinkyTimer.ptrTIMx 					= TIM2;
 	handlerBlinkyTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
-	handlerBlinkyTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100M_1ms;
-	handlerBlinkyTimer.TIMx_Config.TIMx_period 	= 250; //Update period= 2ms*125 = 250ms
+	handlerBlinkyTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100M_05ms;
+	handlerBlinkyTimer.TIMx_Config.TIMx_period 	= 500; //Update period= 2ms*125 = 250ms
 
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerBlinkyTimer);
@@ -166,7 +214,7 @@ void initSystem(void) {
 	handlerUsart2.ptrUSARTx					     = USART2;                	  //USART 2
 	handlerUsart2.USART_Config.clock_freq		 = CPU_CLOCK_FREQ_100;		  //Velocidad del reloj en 100M
 	handlerUsart2.USART_Config.USART_mode 	     = USART_MODE_RXTX;       	  //Modo de Recepción y transmisión
-	handlerUsart2.USART_Config.USART_baudrate    = USART_BAUDRATE_57600; 	  //57600 bps
+	handlerUsart2.USART_Config.USART_baudrate    = USART_BAUDRATE_115200; 	  //57600 bps
 	handlerUsart2.USART_Config.USART_parity      = USART_PARITY_EVEN;         //Parity:EVEN, acá viene configurado el tamaño de dato
 	handlerUsart2.USART_Config.USART_stopbits    = USART_STOPBIT_1;	          //Un stopbit
 	handlerUsart2.USART_Config.USART_enableIntRX = USART_RX_INTERRUPT_ENABLE; //Interrupción de recepción del usart habilitada
@@ -174,12 +222,28 @@ void initSystem(void) {
 	//Se carga la configuración del USART
 	USART_Config(&handlerUsart2);
 
+	//configuración inicial del RTC
+	handlerHourDateConfig.Hours        = 11; //Por defecto se pone la hora 00:00:00
+	handlerHourDateConfig.Minutes      = 15;
+	handlerHourDateConfig.Seconds      = 0;
+	handlerHourDateConfig.Month        = 11;
+	handlerHourDateConfig.DayOfWeek    = 4;
+	handlerHourDateConfig.NumberOfDay  = 3;
+	handlerHourDateConfig.Year		   = 22;
+
+	//Se carga la configuración inicial del RTC
+	enableRTC(&handlerHourDateConfig);
+
+	//Se envía mensaje por el serial
+	writeMsg(&handlerUsart2, "La funcion de iniciliazacion de sistema se ha aplicado correctamente\n\r");
+
 }
 
 //Función Callback del BlinkyTimer
 void BasicTimer2_Callback(void) {
 	//Blinky del LED de estado
 	GPIOxTooglePin(&handlerBlinkyPin);
+	getHourCounter++;
 }
 
 /*Función Callback de la recepción del USART6
@@ -190,18 +254,115 @@ void usart2Rx_Callback(void){
 	rxDataFlag = 1;
 }
 
+
 void parseCommands(char* ptrBufferReception){
 	//Esta función lee lo obtenido por el puerto serial y toma decisiones en base a eso
 
 	sscanf(ptrBufferReception, "%s %u %u %s", cmd, &firstParameter, &secondParameter, userMsg);
 
 	if (strcmp(cmd, "help") == 0){
+		//getHourFlag se pone en 1
+		getHourFlag = 0;
+
 		//Se escribe el menú de comandos en la terminal serial
-		writeMsg(&handlerUsart2, "Menu de Comandos e instrucciones:\n\r");
+				writeMsg(&handlerUsart2, "Menu de Comandos e instrucciones:\n\r");
+				writeMsg(&handlerUsart2, "COMANDOS:\n\r1).  help -- Este comando imprime este menu\n");
+				writeMsg(&handlerUsart2, "2).  setHour #Horas #Minutos -- Este comando se utiliza para introducir la hora inicial (horas y minutos) en formato 24 horas\n");
+				writeMsg(&handlerUsart2, "3).  getHour -- Este comando se utiliza para imprimir la hora en formato 24 horas\n");
 	}
+
+	else if (strcmp(cmd, "setHour") == 0){
+			//Se apagan las banderas de los otros modos
+			getHourFlag = 0;
+
+			//Se llena la configuración del RTC con los parámetros recibidos por el serial
+			if ((0 > firstParameter) || (firstParameter > 24)) {
+				writeMsg(&handlerUsart2, "Por favor, ingrese una hora valida \n\r");
+			}
+
+			else if ((0 > secondParameter) || (secondParameter > 60)){
+				writeMsg(&handlerUsart2, "Por favor, ingrese una hora valida \n\r");
+			}
+
+			else{
+
+				handlerHourDateConfig.Hours = firstParameter;
+				handlerHourDateConfig.Minutes = secondParameter;
+				handlerHourDateConfig.Seconds = 0;
+
+				//Se activa el RTC para poder escribir en los registros la config ingresada
+				enableRTC(&handlerHourDateConfig);
+
+				//Se obtienen los valores de los registros
+				segundos = RTC_Get_Seconds();
+				minutos = RTC_Get_Minutes();
+				horas = RTC_Get_Hours();
+				printHour(horas, minutos, segundos);
+
+				//Se imprime la hora ingresada por el serial
+				writeMsg(&handlerUsart2, "La hora ingresada es\n");
+				writeMsg(&handlerUsart2, Buffer);
+			}
+	}
+
+	else if (strcmp(cmd, "getHour") == 0){
+		//getHourFlag se pone en 1
+		getHourFlag = 1;
+		getHourCounter = 0;
+	}
+
 	else {
 
+		getHourFlag = 0;
+		//Se escribe el mensaje de error por el serial y en la LCD
+		writeMsg(&handlerUsart2, "ERROR\n\r");
+
 	}
 
+}
+
+
+void printHour(uint8_t hours, uint8_t minutes, uint8_t seconds){
+	//En esta función se imprime la hora de forma adecuada
+
+	if((minutes/10 == 0) & (seconds/10 == 0) & (horas/10 == 0)){
+		//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+		sprintf(Buffer, " \n\rHora:0%d:0%d:0%d\n\r", horas, minutos, segundos);
+	}
+
+	else if((minutes/10 == 0) & (horas/10 == 0)){
+			//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+			sprintf(Buffer, " \n\rHora:0%d:0%d:%d\n\r", horas, minutos, segundos);
+		}
+
+
+	else if((minutes/10 == 0) & (segundos/10 == 0)){
+			//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+			sprintf(Buffer, " \n\rHora:%d:0%d:0%d\n\r", horas, minutos, segundos);
+		}
+
+	else if((horas/10 == 0) & (segundos/10 == 0)){
+			//Si el número de minutos y segundos es menor que 10, se les pone un 0 adelante
+			sprintf(Buffer, " \n\rHora:0%d:%d:0%d\n\r", horas, minutos, segundos);
+		}
+
+	else if((minutes/10 == 0)){
+		//Si el número de minutos es menor que 10 se le pone un 0 adelante
+		sprintf(Buffer, " \n\rHora:%d:0%d:%d\n\r", horas, minutos, segundos);
+	}
+
+	else if((horas/10 == 0)){
+		//Si el número de minutos es menor que 10 se le pone un 0 adelante
+		sprintf(Buffer, " \n\rHora:0%d:%d:%d\n\r", horas, minutos, segundos);
+	}
+
+	else if((seconds/10 == 0)){
+		//Si el número de segundos es menor que 10 se le pone un 0 adelante
+		sprintf(Buffer, " \n\rHora:%d:%d:0%d\n\r", horas, minutos, segundos);
+	}
+	else {
+		//En otro caso se imprime los datos normales obtenidos de los registros del RTC
+		sprintf(Buffer," \n\rHora:%d:%d:%d\n\r", horas, minutos, segundos);
+	}
 }
 
