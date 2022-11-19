@@ -23,16 +23,8 @@
  *    del RTC.
  * 3. getHour @: con este comando se obtiene la hora del RTC.
  *
- * La comunicación serial se prueba con el USART2. Para que la configuración del USART2
- * sea adecuada, se debe ingresar un elemento adicional a la configuración, este es:
- *
- *       handlerUsart2.USART_Config.clock_freq = CPU_CLOCK_FREQ_100;
- *
- * dentro del driver del USART, esta configuración lo que hace es elegir entre 16 y 100 mega,
- * para ingresarle al registro la facción del USART necesaria.
- *
  * Para comprobar el adecuado funcionamiento de los timers se hace un blinky de 250 ms con
- * el TIMER 2 y, adicionalmente, se usan las interruociones de este timer para imprimir la
+ * el TIMER 2 y, adicionalmente, se usan las interrupciones de este timer para imprimir la
  * hora por el serial cada segundo (cuando se ha ingresado el comando getHour).
  */
 
@@ -212,7 +204,6 @@ void initSystem(void) {
 
 	//Se configura el USART 2
 	handlerUsart2.ptrUSARTx					     = USART2;                	  //USART 2
-	handlerUsart2.USART_Config.clock_freq		 = CPU_CLOCK_FREQ_100;		  //Velocidad del reloj en 100M
 	handlerUsart2.USART_Config.USART_mode 	     = USART_MODE_RXTX;       	  //Modo de Recepción y transmisión
 	handlerUsart2.USART_Config.USART_baudrate    = USART_BAUDRATE_115200; 	  //57600 bps
 	handlerUsart2.USART_Config.USART_parity      = USART_PARITY_EVEN;         //Parity:EVEN, acá viene configurado el tamaño de dato

@@ -135,7 +135,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	// 2.5 Configuracion del Baudrate (SFR USART_BRR)
 	// Ver tabla de valores (Tabla 73), Frec = 16MHz, overr = 0;
 
-	if(ptrUsartHandler->USART_Config.clock_freq == 16){
+	if((RCC->CFGR & RCC_CFGR_SWS) == 0){
 
 		if(ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_9600){
 				// El valor a cargar es 104.1875 -> Mantiza = 104,fraction = 0.1875
@@ -170,7 +170,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 			}
 	}
 
-	else if (ptrUsartHandler->USART_Config.clock_freq == 100){
+	else if (RCC->CFGR & RCC_CFGR_SWS_1){
 
 		if(ptrUsartHandler->ptrUSARTx == USART1){
 

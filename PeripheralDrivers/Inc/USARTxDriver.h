@@ -47,7 +47,6 @@
 typedef struct
 {
 	uint8_t USART_mode;
-	uint8_t clock_freq;
 	uint8_t USART_baudrate;
 	uint8_t USART_datasize;
 	uint8_t USART_parity;
