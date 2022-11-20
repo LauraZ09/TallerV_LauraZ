@@ -27,14 +27,16 @@
 #define CAPTURE_TIMER_SPEED_10us	160
 #define CAPTURE_TIMER_SPEED_100us	1600
 #define CAPTURE_TIMER_SPEED_1ms		16000
+#define CAPTURE_TIMER_SPEED_4ms		64000
+
 
 typedef struct
 {
 
 	uint8_t channel;          //Canal PWM relacionado con el TIMER
 	uint8_t edgeSignal;	   	  //Selección del tipo de flanco que se desea capturar
-	uint8_t timerSpeed;	 	  //A qué velocidad se incrementa el Timer
-	uint8_t prescalerCapture; //A qué velocidad se incrementa el Timer
+	uint32_t timerSpeed;	 	  //A qué velocidad se incrementa el Timer
+	uint32_t prescalerCapture; //A qué velocidad se incrementa el Timer
 
 }Capture_Config_t;
 
@@ -46,6 +48,12 @@ typedef struct
 
 /*Prototipos de las funciones*/
 void capture_Config(Capture_Handler_t *ptrCaptureHandler);
+void CaptureFreqTimer2_Callback(void); /* Esta función debe ser sobre-escrita en el main para que el sistema funcione*/
+void CaptureFreqTimer3_Callback(void);
+void CaptureFreqTimer4_Callback(void);
+void CaptureFreqTimer5_Callback(void);
+void captureFreqInterruptModeEnable(Capture_Handler_t *ptrCaptureHandler);
+void captureFreqClearCNT(Capture_Handler_t *ptrCaptureHandler);
 uint32_t getPeriodFrec(Capture_Handler_t *ptrCaptureHandler);
 
 #endif /*CAPTUREFRECDRIVER_H_ */

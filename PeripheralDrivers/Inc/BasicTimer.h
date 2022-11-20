@@ -9,6 +9,7 @@
 #define INC_BASICTIMER_H_
 
 #include "stm32f4xx.h"
+#include "CaptureFrecDriver.h"
 
 #define BTIMER_MODE_UP		0
 #define BTIMER_MODE_DOWN	1
@@ -17,6 +18,8 @@
 #define BTIMER_SPEED_10us	159
 #define BTIMER_SPEED_100us	1599
 #define BTIMER_SPEED_1ms	15999
+#define BTIMER_SPEED_2ms	31999
+
 
 //El bus que alimenta los relojes máximo va a 50M
 #define BTIMER_SPEED_100M_10ns		0
@@ -51,5 +54,7 @@ void BasicTimer4_Callback(void);
 void BasicTimer5_Callback(void);
 void delayus(uint32_t delayTime);
 void delayms(uint32_t delayTime);
+uint32_t captureFreqPeriod(Capture_Handler_t *ptrCaptureHandler);
+uint32_t getTimeStamp(void);
 
 #endif /* INC_BASICTIMER_H_ */

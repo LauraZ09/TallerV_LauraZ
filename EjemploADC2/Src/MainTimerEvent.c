@@ -176,7 +176,6 @@ void initSystem(void) {
 
 	//Se configura el USART 2
 	handlerUsart2.ptrUSARTx					     = USART2;                	  //USART 2
-	handlerUsart2.USART_Config.clock_freq		 = CPU_CLOCK_FREQ_16;
 	handlerUsart2.USART_Config.USART_mode 	     = USART_MODE_RXTX;       	  //Modo de Recepción y transmisión
 	handlerUsart2.USART_Config.USART_baudrate    = USART_BAUDRATE_57600; 	  //115200 bps
 	handlerUsart2.USART_Config.USART_parity      = USART_PARITY_EVEN;         //Parity:NONE, acá viene configurado el tamaño de dato

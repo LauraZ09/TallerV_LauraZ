@@ -6,8 +6,10 @@
  */
 
 #include "BasicTimer.h"
+#include "CaptureFrecDriver.h"
 
 uint32_t delay_i = 0;
+uint8_t counterCaptureFreq = 0;
 BasicTimer_Handler_t handlerDelayTimer = {0};
 
 /* Variable que guarda la referencia del periférico que se esta utilizando*/
@@ -158,7 +160,6 @@ __attribute__((weak)) void BasicTimer3_Callback(void){
 	__NOP();
 }
 __attribute__((weak)) void BasicTimer4_Callback(void){
-	delay_i++;
 	  /* NOTE : This function should not be modified, when the callback is needed,
 	            the BasicTimerX_Callback could be implemented in the main file
 	   */
@@ -176,38 +177,127 @@ __attribute__((weak)) void BasicTimer5_Callback(void){
  * Al hacerlo correctamente, el sistema apunta a esta función y cuando la interrupción se lanza
  * el sistema inmediatamente salta a este lugar en la memoria*/
 void TIM2_IRQHandler(void){
-	/* Limpiamos la bandera que indica que la interrupción se ha generado */
-	TIM2->SR &= ~TIM_SR_UIF;
 
-	/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
-	BasicTimer2_Callback();
+	//Se analiza cuál interrupción es la que saltó (de captura o del timer)
+	if(TIM2->SR & TIM_SR_CC1IF){
+
+		/* Limpiamos la bandera que indica que la interrupción se ha generado */
+		TIM2->SR &= ~TIM_SR_CC1IF;
+
+		//Se llama a la función de Callback
+		CaptureFreqTimer2_Callback();
+	}
+
+	else if(TIM2->SR & TIM_SR_CC2IF){
+
+		/* Limpiamos la bandera que indica que la interrupción se ha generado */
+		TIM2->SR &= ~TIM_SR_CC2IF;
+
+		//Se llama a la función de Callback
+		CaptureFreqTimer2_Callback();
+	}
+
+	else if(TIM2->SR & TIM_SR_CC3IF){
+
+		/* Limpiamos la bandera que indica que la interrupción se ha generado */
+		TIM2->SR &= ~TIM_SR_CC3IF;
+
+		//Se llama a la función de Callback
+		CaptureFreqTimer2_Callback();
+	}
+
+	else if(TIM2->SR & TIM_SR_CC4IF){
+
+		/* Limpiamos la bandera que indica que la interrupción se ha generado */
+		TIM2->SR &= ~TIM_SR_CC4IF;
+
+		//Se llama a la función de Callback
+		CaptureFreqTimer2_Callback();
+	}
+
+	else if (TIM2->SR & TIM_SR_UIF){
+		/* Limpiamos la bandera que indica que la interrupción se ha generado */
+		TIM2->SR &= ~TIM_SR_UIF;
+
+		/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
+		BasicTimer2_Callback();
+	}
 }
 
 void TIM3_IRQHandler(void){
-	/* Limpiamos la bandera que indica que la interrupción se ha generado */
-	TIM3->SR &= ~TIM_SR_UIF;
 
-	/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
-	BasicTimer3_Callback();
+	if (TIM3->SR & TIM_SR_UIF){
+		/* Limpiamos la bandera que indica que la interrupción se ha generado */
+		TIM3->SR &= ~TIM_SR_UIF;
+
+		/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
+		BasicTimer3_Callback();
+	}
 }
 
 void TIM4_IRQHandler(void){
-	/* Limpiamos la bandera que indica que la interrupción se ha generado */
-	TIM4->SR &= ~TIM_SR_UIF;
 
-	/*Se llena la variable de la función delay*/
-	delay_i++;
 
-	/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
-	BasicTimer4_Callback();
+	//Se analiza cuál interrupción es la que saltó (de captura o del timer)
+		if(TIM4->SR & TIM_SR_CC1IF){
+
+			/* Limpiamos la bandera que indica que la interrupción se ha generado */
+			TIM4->SR &= ~TIM_SR_CC1IF;
+
+			//Se llama a la función de Callback
+			CaptureFreqTimer4_Callback();
+		}
+
+		else if(TIM4->SR & TIM_SR_CC2IF){
+
+			/* Limpiamos la bandera que indica que la interrupción se ha generado */
+			TIM4->SR &= ~TIM_SR_CC2IF;
+
+			//Se llama a la función de Callback
+			CaptureFreqTimer4_Callback();
+		}
+
+		else if(TIM4->SR & TIM_SR_CC3IF){
+
+			/* Limpiamos la bandera que indica que la interrupción se ha generado */
+			TIM4->SR &= ~TIM_SR_CC3IF;
+
+			//Capturamos el valor del tiempo almacenado en el CCRx
+			counterCaptureFreq = TIM4->CCR3;
+
+			TIM4->SR &= ~TIM_SR_CC3OF;
+
+			//Se llama a la función de Callback
+			CaptureFreqTimer4_Callback();
+		}
+
+		else if(TIM4->SR & TIM_SR_CC4IF){
+
+			/* Limpiamos la bandera que indica que la interrupción se ha generado */
+			TIM4->SR &= ~TIM_SR_CC4IF;
+
+			//Se llama a la función de Callback
+			CaptureFreqTimer4_Callback();
+		}
+
+		else if (TIM4->SR & TIM_SR_UIF){
+		/* Limpiamos la bandera que indica que la interrupción se ha generado */
+		TIM4->SR &= ~TIM_SR_UIF;
+
+		/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
+		BasicTimer4_Callback();
+	}
 }
 
 void TIM5_IRQHandler(void){
-	/* Limpiamos la bandera que indica que la interrupción se ha generado */
-	TIM5->SR &= ~TIM_SR_UIF;
+	if (TIM5->SR & TIM_SR_UIF){
 
-	/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
-	BasicTimer5_Callback();
+		/* Limpiamos la bandera que indica que la interrupción se ha generado */
+		TIM5->SR &= ~TIM_SR_UIF;
+
+		/* LLamamos a la función que se debe encargar de hacer algo con esta interrupción*/
+		BasicTimer5_Callback();
+	}
 }
 
 //Esta función trabaja ÚNICAMENTE con el Timer4
@@ -248,5 +338,9 @@ void delayms(uint32_t delayTime){
 	while(delay_i < delayTime){
 		__NOP();
 	}
+}
+
+uint32_t getTimeStamp(void){
+	return counterCaptureFreq;
 }
 

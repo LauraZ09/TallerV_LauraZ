@@ -4,7 +4,7 @@
  * @file           : MainTarea5.c
  * @author         : Laura Alejandra Zuluaga Moreno - lazuluagamo@unal.edu.co
  * @brief          : Tarea 5
- *
+ * NOTA: importar la librería PeripheralDrivers
  *********************************************************************************************************
  */
 /* En esta tarea se cambia la velocidad del micro y se prueba la comunicación serial
