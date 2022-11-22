@@ -31,51 +31,16 @@ int main(void)
 	setTo100M();
 	initSystem();
 
-	//ENSAYIS:
-	LogicOne(&handlerPWMOutput); //PARA CALIBRAR LOS NOP(), AL LLAMAR ESTA FUNCIÓN DEBE SALIR EL 0.85U0N Y 0.4OFF
-	LogicOne(&handlerPWMOutput);
-	LogicOne(&handlerPWMOutput);
-	LogicOne(&handlerPWMOutput);
-	LogicOne(&handlerPWMOutput);
-	LogicOne(&handlerPWMOutput);
-	LogicOne(&handlerPWMOutput);
-	LogicOne(&handlerPWMOutput);
-	LogicOne(&handlerPWMOutput);
-	LogicOne(&handlerPWMOutput);
-	LogicOne(&handlerPWMOutput);
-	//DEBEN SALIR 11 PULSOS COMO LOS DESCRITOS ANTERIORMENTE
-
-	//ENSAYIS 2:
-	LogicZero(&handlerPWMOutput); //PARA CALIBRAR LOS NOP(), AL LLAMAR ESTA FUNCIÓN DEBE SALIR EL 0.85U0N Y 0.4OFF
-	LogicZero(&handlerPWMOutput);
-	LogicZero(&handlerPWMOutput);
-	LogicZero(&handlerPWMOutput);
-	LogicZero(&handlerPWMOutput);
-	LogicZero(&handlerPWMOutput);
-	LogicZero(&handlerPWMOutput);
-	LogicZero(&handlerPWMOutput);
-	LogicZero(&handlerPWMOutput);
-	LogicZero(&handlerPWMOutput);
-	LogicZero(&handlerPWMOutput);
-
-	//ENSAYIS 3: DEBEN SALIR 1.25U OFF
+	clearLEDS(55, &handlerPWMOutput); //Se ponen en negro los 60 LEDS
 	ResetTime(&handlerPWMOutput);
-	ResetTime(&handlerPWMOutput);
-	ResetTime(&handlerPWMOutput);
-	ResetTime(&handlerPWMOutput);
-	ResetTime(&handlerPWMOutput);
-	ResetTime(&handlerPWMOutput);
-	ResetTime(&handlerPWMOutput);
-	ResetTime(&handlerPWMOutput);
-
-	//ENSAYIS 4:YA TENIENDO LAS ANTERIORES COSAS CALIBRADAS, SE DEBE CONTINUAR MIRANDO SI LAS FUNCIONES SÍ SIRVEN
-
 	setColorLED(255, 0, 0, &handlerPWMOutput); //se envía el primer LED en rojo
 	ResetTime(&handlerPWMOutput);
-	clearLEDS(60, &handlerPWMOutput); //Se ponen en negro los 60 LEDS
+	delayms(250);
+	setColorLED(255, 0, 0, &handlerPWMOutput); //se envía el primer LED en rojo
 	ResetTime(&handlerPWMOutput);
-	setColorNumberLED(255, 255, 0, 3, &handlerPWMOutput); //Se pone en amarillo el tercer LED
-	ResetTime(&handlerPWMOutput);
+	delayms(250);
+	//setColorNumberLED(255, 255, 0, 3, &handlerPWMOutput); //Se pone en amarillo el tercer LED
+	//ResetTime(&handlerPWMOutput);
 
 	while (1)
 	{
@@ -114,6 +79,9 @@ void initSystem(void) {
 
 	//Se carga la configuración
 	GPIO_Config(&handlerPWMOutput);
+
+	//Se pone el PIN en 0:
+	GPIO_WritePin(&handlerPWMOutput, RESET);
 
 
 	//Se configura el BlinkyTimer

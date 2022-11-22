@@ -5,17 +5,17 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Src/MainExamen.c \
+../Src/MainProyectoFinalV2.c \
 ../Src/syscalls.c \
 ../Src/sysmem.c 
 
 OBJS += \
-./Src/MainExamen.o \
+./Src/MainProyectoFinalV2.o \
 ./Src/syscalls.o \
 ./Src/sysmem.o 
 
 C_DEPS += \
-./Src/MainExamen.d \
+./Src/MainProyectoFinalV2.d \
 ./Src/syscalls.d \
 ./Src/sysmem.d 
 
