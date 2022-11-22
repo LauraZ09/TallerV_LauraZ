@@ -13,15 +13,9 @@
 #include "PWMDriver.h"
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
+#include "WS2812bDriver.h"
 
-#define TIM_FREQ 	100   	  //Frecuencia del Timer en MHz
-#define T0H 		16        //Este es el valor que se debe poner en el CCx para alcanzar 0.4u
-#define T1H 		8         //Este es el valor que se debe poner en el CCx para alcanzar 0.8u
-#define T0L 		9	      //Este es el valor que se debe poner en el CCx para alcanzar 0.85u
-#define T1L 		17        //Este es el valor que se debe poner en el CCx para alcanzar 0.45u
-#define TRESET 		25         //Este es el valor que se debe poner en el CCx para alcanzar 50u
-
-PWM_Handler_t handlerPWMTimer 	        = { 0 };  //Handler para el PWM (Timer)
+#define NUMBER_OF_LEDS 60;
 
 BasicTimer_Handler_t handlerBlinkyTimer = { 0 };  //Handler para el BlinkyTimer
 BasicTimer_Handler_t handlerIntTimer    = { 0 };
@@ -30,68 +24,62 @@ GPIO_Handler_t handlerBlinkyPin 	    = { 0 };  //Handler para el LED de estado
 GPIO_Handler_t handlerMCO_2  			= { 0 };  //Handler para el PIN de salida del Clock
 GPIO_Handler_t handlerPWMOutput 		= { 0 };  //Handler para la salida del PWM
 
-uint8_t flag            = 0;
-uint8_t counterLEDs		= 0;
-uint8_t counterBits 	= 0;
-uint8_t counterBytes	= 0;
-
-uint8_t mask = 0b10000000;
-
-uint8_t LED_data[180] = {0}; //En este arreglo se almacenan los números para la intensidad del RGB
-					   //el arreglo es de 180 porque son 60 LEDS y 3 bytes por LED
-
 void initSystem(void);
 
 int main(void)
 {
 	setTo100M();
 	initSystem();
-	startPwmSignal(&handlerPWMTimer);
-	enableOutput(&handlerPWMTimer);
 
-	for (uint8_t i = 0; i < 180; i += 9) {
-		LED_data[i] = 255; //Se usan valores bajos para no gastar mucha corriente
-		LED_data[i + 4] = 255; //Se usan valores bajos para no gastar mucha corriente
-		LED_data[i + 8] = 255;
-		//LED_data[i] = 255; //Se usan valores bajos para no gastar mucha corriente
-	}
+	//ENSAYIS:
+	LogicOne(&handlerPWMOutput); //PARA CALIBRAR LOS NOP(), AL LLAMAR ESTA FUNCIÓN DEBE SALIR EL 0.85U0N Y 0.4OFF
+	LogicOne(&handlerPWMOutput);
+	LogicOne(&handlerPWMOutput);
+	LogicOne(&handlerPWMOutput);
+	LogicOne(&handlerPWMOutput);
+	LogicOne(&handlerPWMOutput);
+	LogicOne(&handlerPWMOutput);
+	LogicOne(&handlerPWMOutput);
+	LogicOne(&handlerPWMOutput);
+	LogicOne(&handlerPWMOutput);
+	LogicOne(&handlerPWMOutput);
+	//DEBEN SALIR 11 PULSOS COMO LOS DESCRITOS ANTERIORMENTE
+
+	//ENSAYIS 2:
+	LogicZero(&handlerPWMOutput); //PARA CALIBRAR LOS NOP(), AL LLAMAR ESTA FUNCIÓN DEBE SALIR EL 0.85U0N Y 0.4OFF
+	LogicZero(&handlerPWMOutput);
+	LogicZero(&handlerPWMOutput);
+	LogicZero(&handlerPWMOutput);
+	LogicZero(&handlerPWMOutput);
+	LogicZero(&handlerPWMOutput);
+	LogicZero(&handlerPWMOutput);
+	LogicZero(&handlerPWMOutput);
+	LogicZero(&handlerPWMOutput);
+	LogicZero(&handlerPWMOutput);
+	LogicZero(&handlerPWMOutput);
+
+	//ENSAYIS 3: DEBEN SALIR 1.25U OFF
+	ResetTime(&handlerPWMOutput);
+	ResetTime(&handlerPWMOutput);
+	ResetTime(&handlerPWMOutput);
+	ResetTime(&handlerPWMOutput);
+	ResetTime(&handlerPWMOutput);
+	ResetTime(&handlerPWMOutput);
+	ResetTime(&handlerPWMOutput);
+	ResetTime(&handlerPWMOutput);
+
+	//ENSAYIS 4:YA TENIENDO LAS ANTERIORES COSAS CALIBRADAS, SE DEBE CONTINUAR MIRANDO SI LAS FUNCIONES SÍ SIRVEN
+
+	setColorLED(255, 0, 0, &handlerPWMOutput); //se envía el primer LED en rojo
+	ResetTime(&handlerPWMOutput);
+	clearLEDS(60, &handlerPWMOutput); //Se ponen en negro los 60 LEDS
+	ResetTime(&handlerPWMOutput);
+	setColorNumberLED(255, 255, 0, 3, &handlerPWMOutput); //Se pone en amarillo el tercer LED
+	ResetTime(&handlerPWMOutput);
 
 	while (1)
 	{
 
-
-	//Primero se llena el arreglo con una secuencia consecutiva de verde, rojo y azul
-
-		if(flag == 1){
-
-			flag = 0;
-
-			if (counterBytes < 180) {
-
-				if (mask != 1){
-
-					if (LED_data[counterBytes] & mask) {
-						TIM5->CCR1 = T1H;
-						mask = mask >> 1;
-					}
-
-					else {
-						TIM5->CCR1 = T0H;
-						mask = mask >> 1;
-					}
-				}
-
-				else {
-					mask = 0b10000000;
-					counterBytes++;
-				}
-			}
-
-			else{
-				updateDuttyCycle(&handlerPWMTimer, 0);
-				counterBytes = 0;
-			}
-		}
 
 	}
 
@@ -102,9 +90,6 @@ void BasicTimer2_Callback(void) {
 	GPIOxTooglePin(&handlerBlinkyPin);
 	}
 
-void BasicTimer3_Callback(void){
-	flag = 1;
-}
 
 void initSystem(void) {
 
@@ -119,11 +104,23 @@ void initSystem(void) {
 	//Se carga la configuración
 	GPIO_Config(&handlerBlinkyPin);
 
+	//Se configura el PIN "PWM"
+	handlerPWMOutput.pGPIOx 						      = GPIOA;
+	handlerPWMOutput.GPIO_PinConfig.GPIO_PinNumber 		  = PIN_0;
+	handlerPWMOutput.GPIO_PinConfig.GPIO_PinMode 	      = GPIO_MODE_OUT;
+	handlerPWMOutput.GPIO_PinConfig.GPIO_PinOPType 		  = GPIO_OTYPE_PUSHPULL;
+	handlerPWMOutput.GPIO_PinConfig.GPIO_PinSpeed 	      = GPIO_OSPEED_FAST;
+	handlerPWMOutput.GPIO_PinConfig.GPIO_PinPuPdControl	  = GPIO_PUPDR_NOTHING;
+
+	//Se carga la configuración
+	GPIO_Config(&handlerPWMOutput);
+
+
 	//Se configura el BlinkyTimer
 	handlerBlinkyTimer.ptrTIMx 					= TIM2;
 	handlerBlinkyTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
 	handlerBlinkyTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100M_05ms;
-	handlerBlinkyTimer.TIMx_Config.TIMx_period 	= 500; //Update period= 1ms*250 = 250ms
+	handlerBlinkyTimer.TIMx_Config.TIMx_period 	= 500; //Update period= 0.05ms*500 = 250ms
 
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerBlinkyTimer);
@@ -131,32 +128,13 @@ void initSystem(void) {
 
 	//Se configura el BlinkyTimer
 	handlerIntTimer.ptrTIMx 					= TIM3;
-	handlerIntTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
-	handlerIntTimer.TIMx_Config.TIMx_speed 	= 4;
-	handlerIntTimer.TIMx_Config.TIMx_period 	= 25; //Update period= 1ms*250 = 250ms
+	handlerIntTimer.TIMx_Config.TIMx_mode 	    = BTIMER_MODE_UP;
+	handlerIntTimer.TIMx_Config.TIMx_speed 	    = 0;
+	handlerIntTimer.TIMx_Config.TIMx_period 	= 1; //Update period = 10ns
 
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerIntTimer);
 
-	//Se configura el Timer del PWM
-	handlerPWMTimer.ptrTIMx            = TIM5;
-	handlerPWMTimer.config.channel     = PWM_CHANNEL_1;
-	handlerPWMTimer.config.prescaler   = 4;
-	handlerPWMTimer.config.periodo     = 25;
-	handlerPWMTimer.config.duttyCicle  = 25;
-
-	pwm_Config(&handlerPWMTimer);
-
-	//Se configura la salida del PWM
-	handlerPWMOutput.pGPIOx 						      = GPIOA;
-	handlerPWMOutput.GPIO_PinConfig.GPIO_PinNumber 		  = PIN_0;
-	handlerPWMOutput.GPIO_PinConfig.GPIO_PinMode 	      = GPIO_MODE_ALTFN;
-	handlerPWMOutput.GPIO_PinConfig.GPIO_PinOPType 		  = GPIO_OTYPE_PUSHPULL;
-	handlerPWMOutput.GPIO_PinConfig.GPIO_PinSpeed 	      = GPIO_OSPEED_FAST;
-	handlerPWMOutput.GPIO_PinConfig.GPIO_PinPuPdControl	  = GPIO_PUPDR_NOTHING;
-	handlerPWMOutput.GPIO_PinConfig.GPIO_PinAltFunMode 	  = AF2; //AF02: TIM5_CH1;
-
-	GPIO_Config(&handlerPWMOutput);
 
 	handlerMCO_2.pGPIOx 						    = GPIOC;
 	handlerMCO_2.GPIO_PinConfig.GPIO_PinNumber 		= PIN_9;
@@ -169,3 +147,6 @@ void initSystem(void) {
 	GPIO_Config(&handlerMCO_2);
 
 }
+
+
+
