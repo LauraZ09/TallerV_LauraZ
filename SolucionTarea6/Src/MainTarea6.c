@@ -4,6 +4,7 @@
  * @file           : MainTarea6.c
  * @author         : Laura Alejandra Zuluaga Moreno - lazuluagamo@unal.edu.co
  * @brief          : Tarea 6
+ *
  *NOTA: Importar la librería PeripheralDrivers
  *********************************************************************************************************
  */
