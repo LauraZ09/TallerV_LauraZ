@@ -7,6 +7,24 @@
  *NOTA: Importar la librería PeripheralDrivers
  *********************************************************************************************************
  */
+
+/* En esta tarea se configuró la captura de frecuencia por medio de interrupciones, así, cada que hay un flanco
+ * se lanza una interrupción. Esto se ve por la terminal serial en donde se está continuamente enviando el valor
+ * de la captura de frecuencia.
+ *
+ * Para activar las interrupciones se puso en 1 el bit CCxIE del registro DIER del TIMx. Aicionalmente se activa
+ * la innterrupción en el NVIC y se crea el callback. En la irq del timer, se pregunta cuál interrupción se activa
+ * (si la de Update o la de captura del canalx) y se llama el callback necesario.
+ *
+ * Para comprobar el adecuado funcionamiento se tiene un PWM en el PIN C7 con un período de 20 ms y se tiene el
+ * B8 para la captura de frecuencia.
+ *
+ * Finalmente, por el usart se envía el valor del período de la señal.  En este caso manda 20 ms.
+ *
+ * Es importante tener en cuenta lo siguiente:
+ *
+ */
+
 #include "stm32f4xx.h"
 
 #include <stdint.h>
