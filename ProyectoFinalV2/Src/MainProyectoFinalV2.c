@@ -32,14 +32,11 @@ int main(void)
 	initSystem();
 
 	clearLEDS(55, &handlerPWMOutput); //Se ponen en negro los 60 LEDS
-	ResetTime(&handlerPWMOutput);
 	setColorLED(255, 0, 0, &handlerPWMOutput); //se envía el primer LED en rojo
 	ResetTime(&handlerPWMOutput);
-	delayms(250);
-	setColorLED(255, 0, 0, &handlerPWMOutput); //se envía el primer LED en rojo
+	setColorNumberLED(255, 255, 0, 3, &handlerPWMOutput); //Se pone en amarillo el tercer LED
 	ResetTime(&handlerPWMOutput);
-	delayms(250);
-	//setColorNumberLED(255, 255, 0, 3, &handlerPWMOutput); //Se pone en amarillo el tercer LED
+	//setColorNumberLED(255, 0, 255, 2, &handlerPWMOutput);
 	//ResetTime(&handlerPWMOutput);
 
 	while (1)

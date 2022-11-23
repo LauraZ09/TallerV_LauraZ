@@ -624,7 +624,7 @@ void clearLEDS(uint8_t numberOfLEDS,GPIO_Handler_t *pGPIOHandler){
 void setColorNumberLED(uint8_t RED, uint8_t GREEN, uint8_t BLUE, uint8_t numberLED,GPIO_Handler_t *pGPIOHandler){
 
 	uint8_t buffer[180] = { 0 };
-	uint8_t index = numberLED*3;
+	uint8_t index = numberLED*3 - 1;
 
 	buffer[index] 	  = BLUE;
 	buffer[index - 1] = RED;
