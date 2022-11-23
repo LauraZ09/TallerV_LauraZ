@@ -21,7 +21,9 @@
  *
  * Finalmente, por el usart se envía el valor del período de la señal.  En este caso manda 20 ms.
  *
- * Es importante tener en cuenta lo siguiente:
+ * Es importante tener en cuenta que hay una frecuencia mínima y máxima que el timer de captura de frecuencia puede
+ * medir, esta dependerá de su prescaler y también es importante tener en cuenta la relación que debe haber entre la
+ * frecuencia de muestreo y la máxima frecuencia que puede medir el Timer.
  *
  */
 
@@ -34,7 +36,6 @@
 #include "string.h"
 #include "math.h"
 
-
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
 #include "USARTxDriver.h"
@@ -44,7 +45,7 @@
 //Definición de los handlers necesarios
 GPIO_Handler_t handlerBlinkyPin          		= {0}; //Handler para el USER_LED
 GPIO_Handler_t handlerTxPin              		= {0}; //Handler para el PIN por el cual se hará la transmisión
-GPIO_Handler_t handlerRxPin              		= {0}; //Handler para el PIN por el cual se hará la transmisión
+GPIO_Handler_t handlerRxPin              		= {0}; //Handler para el PIN por el cual se hará la recepción
 GPIO_Handler_t handlerPinCaptureFrec            = {0}; //Handler para el PIN por el cual se hará la captura de frecuencia
 GPIO_Handler_t handlerPinPWMChannel             = {0}; //Handler para el PIN por el cual sale la señal PWM
 
@@ -61,22 +62,23 @@ Capture_Handler_t handlerCaptureFrec 			= {0}; //Handler para la captura de frec
 uint8_t rxData        	 = 0;    //Datos de recepción
 uint8_t rxDataFlag 		 = 0;	 //Bandera para la recepción de datos del usart2
 uint32_t captureFreqFlag = 0;	 //Bandera para la captura de frecuencia
-uint32_t captureData 	 = 0;
-uint8_t captureCounter   = 0;
-uint32_t timeStamp1		 = 0;
-uint32_t timeStamp2		 = 0;
+uint32_t captureData 	 = 0;	 //Variable auxiliar para almacenar datos de captura
+uint8_t captureCounter   = 0;	 //Varibale auxiliar para la interrupción
+uint32_t timeStamp1		 = 0;	 //Variable auxiliar en la que se almacena el tiempo del primer flanco
+uint32_t timeStamp2		 = 0;	 //Variable auxiliar en la que se almacena el tiempo del segundo flanco
 uint32_t rawPeriod       = 0;    //Variable para la captura de frecuencia
 uint16_t duttyValue		 = 5000; //Valor del dutty
 
-char Buffer[64]          = {0}; //En esta variable se almacenarán mensajes a enviar
+char Buffer[64]          = {0}; //En esta variable se almacenarán los mensajes a enviar
 
 //Definición de la cabecera de las funciones que se crean para el desarrollo de los ejercicios
-void initSystem(void);       				    //Función para inicializar el sistema
+void initSystem(void); //Función para inicializar el sistema
+
 
 int main(void) {
 
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
-	captureFreqInterruptModeEnable(&handlerCaptureFrec);
+	captureFreqInterruptModeEnable(&handlerCaptureFrec); //Esta función inicia el conteo y limpia los registros de captura
 
 	while (1) {
 
@@ -112,20 +114,21 @@ int main(void) {
 
 		if((captureFreqFlag == 1) && (captureCounter == 0)){
 
-			captureFreqClearCNT(&handlerCaptureFrec);
-			captureFreqFlag = 0;
-			timeStamp1 = getTimeStamp();
-			captureCounter = 1;
+			//Si la bandera se levanta(es decir, se detectó un flanco) y el contador es 0, entonces es el primer dato
+			captureFreqClearCNT(&handlerCaptureFrec); //Se limpia el registro CNT
+			captureFreqFlag = 0;         //Se baja la bandera
+			timeStamp1 = getTimeStamp(); //Se obtiene el valor obtenido en el ccr
+			captureCounter = 1;			 //Se pone el contador en 1
 		}
 
 		else if ((captureFreqFlag == 1) && (captureCounter == 1)){
-			captureFreqFlag = 0;
-			timeStamp2 = getTimeStamp();
-			captureCounter = 0;
+			captureFreqFlag = 0;         //Se baja la bandera
+			timeStamp2 = getTimeStamp(); //Se obtiene el valor de la captura
+			captureCounter = 0;			 //Se pone el contador nuevamente en 0
 
-			rawPeriod = abs(timeStamp2 - timeStamp1);
+			rawPeriod = abs(timeStamp2 - timeStamp1); //Se obtiene el período
 
-			sprintf(Buffer, "rawPeriod = %u ms \n",(unsigned int) rawPeriod);
+			sprintf(Buffer, "rawPeriod = %u ms \n",(unsigned int) rawPeriod); //Se imprime el período
 			writeMsg(&handlerUsart2, Buffer);
 
 		}
@@ -251,6 +254,7 @@ void BasicTimer2_Callback(void) {
 }
 
 void CaptureFreqTimer4_Callback(void){
+	//Cada que se da un flanco se levanta una bandera
 	captureFreqFlag = 1;
 }
 
