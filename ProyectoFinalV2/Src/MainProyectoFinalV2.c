@@ -250,18 +250,45 @@ void parseCommands(char *ptrBufferReception) {
 		writeMsg(&handlerUsart2, "Otros modos:\n"
 				"Adicional al juego de carreras, la pista de LEDs se puede poner en otros modos:\n"
 				"1.Modo Fiesta: se inicializa con el comando setPartyMode @, al enviar este comando, la pista se encendera aleatoriamente de\n"
-				"diferentes colores. "
+				"diferentes colores.\n\r"
 				);
 
 	}
 
 	else if (strcmp(cmd, "setRaceMode") == 0) {
 
-		writeMsg(&handlerUsart2, "Modo de juego configurado:\n");
-		sprintf(bufferTx, "Numero de jugadores: %d\n", firstParameter);
-		writeMsg(&handlerUsart2, bufferTx);
-		sprintf(bufferTx, "Numero de vueltas: %d\n\r", secondParameter);
-		writeMsg(&handlerUsart2, bufferTx);
+		if ((firstParameter != 2) & (firstParameter != 4)) {
+			writeMsg(&handlerUsart2, "Por favor, ingrese un numero de jugadores valido \n\r");
+		}
+
+		else if (secondParameter > 10){
+			writeMsg(&handlerUsart2, "¿Seguro que desea configurar mas de 10 vueltas?\n\r");
+		}
+
+		else{
+			writeMsg(&handlerUsart2, "Modo de juego configurado:\n");
+			sprintf(bufferTx, "Numero de jugadores: %d\n", firstParameter);
+			writeMsg(&handlerUsart2, bufferTx);
+			sprintf(bufferTx, "Numero de vueltas: %d\n\r", secondParameter);
+			writeMsg(&handlerUsart2, bufferTx);
+		}
+	}
+
+	else if (strcmp(cmd, "initRace") == 0){
+		writeMsg(&handlerUsart2, "La carrera iniciara en...:\n");
+		writeMsg(&handlerUsart2, "5...:\n");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "4...:\n");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "3...:\n");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "2...:\n");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "1...:\n");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "GO!:\n");
+		delayms(1000);
+
 	}
 }
 
