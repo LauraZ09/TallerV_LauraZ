@@ -634,3 +634,6 @@ void setColorNumberLED(uint8_t RED, uint8_t GREEN, uint8_t BLUE, uint8_t numberL
 		colorByte(buffer[i], pGPIOHandler);
 	}
 }
+
+
+

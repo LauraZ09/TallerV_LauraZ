@@ -9,13 +9,30 @@
  */
 
 #include <stdint.h>
+#include <stdlib.h>
 #include "RccConfig.h"
+#include "ExtiDriver.h"
 #include "PWMDriver.h"
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
 #include "WS2812bDriver.h"
+#include "USARTxDriver.h"
+#include <stdbool.h>
+#include "string.h"
 
 #define NUMBER_OF_LEDS 60;
+
+uint8_t buffer[180] = {0};
+
+uint8_t posP1 = 0;
+uint8_t posP2 = 0;
+
+uint8_t flag   = 0;
+uint8_t flagP2 = 0;
+uint8_t rxData        = 0;  //Datos de recepción
+uint8_t rxDataFlag 				= 0;	//Bandera para la recepción de datos del usart6
+uint8_t counterReception = 0; //Contador para la recepción de datos por el usart6
+bool stringComplete 			= false;//Bandera para la recepción de datos del usart6
 
 BasicTimer_Handler_t handlerBlinkyTimer = { 0 };  //Handler para el BlinkyTimer
 BasicTimer_Handler_t handlerIntTimer    = { 0 };
@@ -23,26 +40,152 @@ BasicTimer_Handler_t handlerIntTimer    = { 0 };
 GPIO_Handler_t handlerBlinkyPin 	    = { 0 };  //Handler para el LED de estado
 GPIO_Handler_t handlerMCO_2  			= { 0 };  //Handler para el PIN de salida del Clock
 GPIO_Handler_t handlerPWMOutput 		= { 0 };  //Handler para la salida del PWM
+GPIO_Handler_t handlerUserButton 		= { 0 };
+GPIO_Handler_t handlerButton 		    = { 0 };
+GPIO_Handler_t handlerTxPin             = { 0 }; //Handler para el PIN por el cual se hará la transmisión
+GPIO_Handler_t handlerRxPin             = { 0 }; //Handler para el PIN por el cual se hará la transmisión
+
+USART_Handler_t handlerUsart2           = { 0 }; //Handler para el USART2
+
+
+EXTI_Config_t ButtonExtiConfig          = { 0 };
+EXTI_Config_t UserButtonExtiConfig      = { 0 };
+
+char bufferReception[200] = {0}; //En esta variable se almacenan variables de recepción
+char bufferTx[200]        = {0}; //En esta variable se almacenan variables de recepción
+char userMsg[64]          = {0}; //En esta variable se almacenan mensajes ingresados por la terminal serial
+char cmd[64]              = {0};	//En esta variable se almacenan los comandos ingresados por el usuario
+
+unsigned int firstParameter  = 0; //En esta variable se almacena el número ingresado por la terminal serial
+unsigned int secondParameter = 0; //En esta variable se almacena el segundo número ingresado por la terminal serial
+
 
 void initSystem(void);
+void parseCommands(char *ptrBufferReception);
 
 int main(void)
 {
 	setTo100M();
 	initSystem();
-
-	clearLEDS(55, &handlerPWMOutput); //Se ponen en negro los 60 LEDS
-	setColorLED(255, 0, 0, &handlerPWMOutput); //se envía el primer LED en rojo
-	ResetTime(&handlerPWMOutput);
-	setColorNumberLED(255, 255, 0, 3, &handlerPWMOutput); //Se pone en amarillo el tercer LED
-	ResetTime(&handlerPWMOutput);
-	//setColorNumberLED(255, 0, 255, 2, &handlerPWMOutput);
-	//ResetTime(&handlerPWMOutput);
+	clearLEDS(52, &handlerPWMOutput);
 
 	while (1)
 	{
+		//el sistema está constantemente verificando si se levanta la bandeta de recepción del USART6
+		if (rxDataFlag == 1) {
+
+			rxDataFlag = 0;         //Se baja la bandera
+			rxData = getRxData();	//Se guarda la información recibida en una variable auxiliar
+			if (rxData != '\0') {   //Si el carácter recibido es \0 estamos al final del string
+
+				for (uint8_t j; j <= 64; j++) {  //Este ciclo llena el bufferReception de 0 para que quede limpio
+					bufferReception[j] = 0;
+				}
+
+				bufferReception[counterReception] = rxData;  //Cuando se llega al final del string, se almacena en el buffer
+				counterReception++;
+
+				if (rxData == '@') {
+					stringComplete = true;                    //Cuando se reconoce el final del comando, selevanta una bandera
+					bufferReception[counterReception] = '\0';
+					counterReception = 0;
+				}
+
+				rxData = '\0';
+			}
+
+			if (stringComplete) {                //Si el string está completo, se aplica la función parseCommands al buffer, para anlizar el comando recibido
+				parseCommands(bufferReception);
+				stringComplete = false;			 //Se baja la bandera
+			}
+			rxData = '\0';
+		}
+
+		else {
+
+		}
 
 
+		if((flag == 1) | (flagP2 == 1)){
+
+			flag   = 0;
+			flagP2 = 0;
+
+			clearLEDS(60, &handlerPWMOutput);
+			ResetTime(&handlerPWMOutput);
+
+			for(uint8_t i = 0; i < posP1*3-1; i++){
+				buffer[i] = 0;
+			}
+
+			for(uint8_t i = (posP1 + 4)*3; i < 180; i++){
+				buffer[i] = 0;
+			}
+
+			for(uint8_t i = 0; i < posP2*3-1; i++){
+				buffer[i] = 0;
+			}
+
+			for(uint8_t i = (posP2 + 4)*3; i < 180; i++){
+				buffer[i] = 0;
+			}
+
+			//Jugador 1
+			buffer[posP1*3 - 1] = 0;
+			buffer[posP1*3 - 2] = 255;
+			buffer[posP1*3 - 3] = 0;
+
+			buffer[(posP1 + 1)*3 - 1] = 0;
+			buffer[(posP1 + 1)*3 - 2] = 255;
+			buffer[(posP1 + 1)*3 - 3] = 0;
+
+			buffer[(posP1 + 2)*3 - 1] = 0;
+			buffer[(posP1 + 2)*3 - 2] = 255;
+			buffer[(posP1 + 2)*3 - 3] = 0;
+
+			buffer[(posP1 + 3)*3 - 1] = 0;
+			buffer[(posP1 + 3)*3 - 2] = 255;
+			buffer[(posP1 + 3)*3 - 3] = 0;
+
+			buffer[(posP1 + 4)*3 - 1] = 0;
+			buffer[(posP1 + 4)*3 - 2] = 255;
+			buffer[(posP1 + 4)*3 - 3] = 0;
+
+			//Jugador 2
+			buffer[posP2*3 - 1] = 0;
+			buffer[posP2*3 - 2] = 0;
+			buffer[posP2*3 - 3] = 255;
+
+			buffer[(posP2 + 1)*3 - 1] = 0;
+			buffer[(posP2 + 1)*3 - 2] = 0;
+			buffer[(posP2 + 1)*3 - 3] = 255;
+
+			buffer[(posP2 + 2)*3 - 1] = 0;
+			buffer[(posP2 + 2)*3 - 2] = 0;
+			buffer[(posP2 + 2)*3 - 3] = 255;
+
+			buffer[(posP2 + 3)*3 - 1] = 0;
+			buffer[(posP2 + 3)*3 - 2] = 0;
+			buffer[(posP2 + 3)*3 - 3] = 255;
+
+			buffer[(posP2 + 4)*3 - 1] = 0;
+			buffer[(posP2 + 4)*3 - 2] = 0;
+			buffer[(posP2 + 4)*3 - 3] = 255;
+
+			for (uint8_t i = 0; i < 180; i++){
+				colorByte(buffer[i], &handlerPWMOutput);
+			}
+
+			ResetTime(&handlerPWMOutput);
+
+			if(posP1 == 52){
+				posP1 = 0;
+			}
+
+			if(posP2 == 52){
+				posP2 = 0;
+			}
+		}
 	}
 
 	return 0;
@@ -51,6 +194,77 @@ int main(void)
 void BasicTimer2_Callback(void) {
 	GPIOxTooglePin(&handlerBlinkyPin);
 	}
+
+void callback_extInt13(void) {
+//Se sube la bandera del PinClock a 1
+	posP2++;
+	flag = 1;
+}
+
+void callback_extInt8(void) {
+//Se sube la bandera del PinClock a 1
+	posP1++;
+	flagP2 = 1;
+}
+
+void usart2Rx_Callback(void){
+	//Activamos una bandera, dentro de la función main se lee el registro DR lo que baja la bandera de la interrupción
+	rxDataFlag = 1;
+}
+
+void parseCommands(char *ptrBufferReception) {
+	//esta función lee lo obtenido por el puerto serial y toma decisiones en base a eso
+
+	sscanf(ptrBufferReception, "%s %u %u %s", cmd, &firstParameter,
+			&secondParameter, userMsg);
+
+	if (strcmp(cmd, "help") == 0) {
+
+		//Se escribe el menú de comandos en la terminal serial
+		writeMsg(&handlerUsart2, "\n\rInstrucciones de juego:\n\r");
+		writeMsg(&handlerUsart2,
+				"Este juego es un juego de carreras, en el que cada competidor debe oprimir su respectivo boton\n"
+				"lo mas rapido posible, en pro de que su respectivo color llegue al final de la carrera en primer lugar.\n\r"
+				"El juego cuenta con dos posibles modos de juego seleccionables:\n\r"
+				"1. Modo 2 Jugadores: en este modo solo habran dos competidores. Para este modo es posible configurar\n"
+				"con cuantas vueltas de la pista contara la carrera.\n"
+				"2. Modo 4 Jugadores: en este modo seran 4 competidores. Para este modo es posible configurar con cuantas vueltas\n"
+				"de la pista contara la carrera.\n"
+				"En caso de no hacerse la configuracion del modo de juego antes de iniciar la carrera, por defecto el juego se\n"
+				"inicilizara en modo de 2 jugadores y 3 vueltas.\n\r");
+
+		writeMsg(&handlerUsart2, "Para configurar el modo de juego:\n"
+				"Con el comando setRaceMode #numeroDeJugadores #numeroDeVueltas @ se configura el modo de juego.\n"
+				"Por ejemplo, para 2 jugadores y 5 vueltas: "
+				"Con el comando setRaceMode #numeroDeJugadores #numeroDeVueltas @ se configura el modo de juego.\n"
+				"Por ejemplo,para 2 jugadores y 5 vueltas: setPlayersMode 2 5 @\n\r"
+				);
+
+		writeMsg(&handlerUsart2, "Para iniciar la carrera:\n"
+				"La carrera se inicia con el comando initRace @, este comando empezara a hacer una cuenta reegresiva de 5 segundos\n"
+				"y posteriormente se dara inicio a la carrera.\n\r");
+
+		writeMsg(&handlerUsart2, "Al finalizar la carrera se mostrará en la pantalla el color ganador, adicionalmente, la pista se pintara\n"
+				"toda de este color.\n\r");
+
+		writeMsg(&handlerUsart2, "Otros modos:\n"
+				"Adicional al juego de carreras, la pista de LEDs se puede poner en otros modos:\n"
+				"1.Modo Fiesta: se inicializa con el comando setPartyMode @, al enviar este comando, la pista se encendera aleatoriamente de\n"
+				"diferentes colores. "
+				);
+
+	}
+
+	else if (strcmp(cmd, "setRaceMode") == 0) {
+
+		writeMsg(&handlerUsart2, "Modo de juego configurado:\n");
+		sprintf(bufferTx, "Numero de jugadores: %d\n", firstParameter);
+		writeMsg(&handlerUsart2, bufferTx);
+		sprintf(bufferTx, "Numero de vueltas: %d\n\r", secondParameter);
+		writeMsg(&handlerUsart2, bufferTx);
+	}
+}
+
 
 
 void initSystem(void) {
@@ -110,6 +324,67 @@ void initSystem(void) {
 	handlerMCO_2.GPIO_PinConfig.GPIO_PinAltFunMode  = AF0;
 
 	GPIO_Config(&handlerMCO_2);
+
+	//Se configura el TxPin (PIN por el cual se hace la transmisión)
+	//Este PIN se configura en la función alternativa AF07 que corresponde al USART2
+	handlerTxPin.pGPIOx = GPIOA;
+	handlerTxPin.GPIO_PinConfig.GPIO_PinNumber      = PIN_2;
+	handlerTxPin.GPIO_PinConfig.GPIO_PinMode        = GPIO_MODE_ALTFN; //Función alternativa
+	handlerTxPin.GPIO_PinConfig.GPIO_PinOPType      = GPIO_OTYPE_PUSHPULL;
+	handlerTxPin.GPIO_PinConfig.GPIO_PinSpeed       = GPIO_OSPEED_FAST;
+	handlerTxPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerTxPin.GPIO_PinConfig.GPIO_PinAltFunMode  = AF7;	      //AF07: Usart2
+
+	//Se carga la configuración
+	GPIO_Config(&handlerTxPin);
+
+	//Se configura el TxPin (PIN por el cual se hace la transmisión)
+	//Este PIN se configura en la función alternativa AF07 que corresponde al USART2
+	handlerRxPin.pGPIOx = GPIOA;
+	handlerRxPin.GPIO_PinConfig.GPIO_PinNumber      = PIN_3;
+	handlerRxPin.GPIO_PinConfig.GPIO_PinMode        = GPIO_MODE_ALTFN; //Función alternativa
+	handlerRxPin.GPIO_PinConfig.GPIO_PinOPType      = GPIO_OTYPE_PUSHPULL;
+	handlerRxPin.GPIO_PinConfig.GPIO_PinSpeed       = GPIO_OSPEED_FAST;
+	handlerRxPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerRxPin.GPIO_PinConfig.GPIO_PinAltFunMode  = AF7;	      //AF07: Usart2
+
+	//Se carga la configuración
+	GPIO_Config(&handlerRxPin);
+
+	//Se configura el USART 2
+	handlerUsart2.ptrUSARTx					     = USART2;                	  //USART 2
+	handlerUsart2.USART_Config.USART_mode 	     = USART_MODE_RXTX;       	  //Modo de Recepción y transmisión
+	handlerUsart2.USART_Config.USART_baudrate    = USART_BAUDRATE_57600; 	  //115200 bps
+	handlerUsart2.USART_Config.USART_parity      = USART_PARITY_EVEN;         //Parity:NONE, acá viene configurado el tamaño de dato
+	handlerUsart2.USART_Config.USART_stopbits    = USART_STOPBIT_1;	          //Un stopbit
+	handlerUsart2.USART_Config.USART_enableIntRX = USART_RX_INTERRUPT_ENABLE; //Interrupción de recepción del usart habilitada
+
+	//Se carga la configuración del USART
+	USART_Config(&handlerUsart2);
+
+	//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
+	handlerButton.pGPIOx 							 = GPIOA;
+	handlerButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_8;
+	handlerButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
+
+	//Se configura el EXTI del botón
+	ButtonExtiConfig.pGPIOHandler = &handlerButton;
+	ButtonExtiConfig.edgeType 	  = EXTERNAL_INTERRUPT_RISING_EDGE;
+
+	//Se carga la configuración: al cargar la configuración del exti, se carga también la del GPIO
+	extInt_Config(&ButtonExtiConfig);
+
+	//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
+	handlerUserButton.pGPIOx 						     = GPIOC;
+	handlerUserButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_13;
+	handlerUserButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+
+	//Se configura el EXTI del botón
+	UserButtonExtiConfig.pGPIOHandler = &handlerUserButton;
+	UserButtonExtiConfig.edgeType 	  = EXTERNAL_INTERRUPT_RISING_EDGE;
+
+	//Se carga la configuración: al cargar la configuración del exti, se carga también la del GPIO
+	extInt_Config(&UserButtonExtiConfig);
 
 }
 
