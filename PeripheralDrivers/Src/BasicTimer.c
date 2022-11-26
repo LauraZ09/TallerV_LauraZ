@@ -329,7 +329,7 @@ void delayms(uint32_t delayTime){
 
 	handlerDelayTimer.ptrTIMx 					= TIM4;
 	handlerDelayTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
-	handlerDelayTimer.TIMx_Config.TIMx_speed 	= 1000;
+	handlerDelayTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100M_05ms;
 	handlerDelayTimer.TIMx_Config.TIMx_period 	= 2; //Update period = 1ms
 	handlerDelayTimer.TIMx_Config.TIMx_interruptEnable = 1;
 

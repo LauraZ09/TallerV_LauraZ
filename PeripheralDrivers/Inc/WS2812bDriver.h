@@ -18,5 +18,14 @@ void colorByte(uint8_t byte, GPIO_Handler_t *pGPIOHandler);
 void setColorLED(uint8_t RED, uint8_t GREEN, uint8_t BLUE, GPIO_Handler_t *pGPIOHandler);
 void clearLEDS(uint8_t numberOfLEDS,GPIO_Handler_t *pGPIOHandler);
 void setColorNumberLED(uint8_t RED, uint8_t GREEN, uint8_t BLUE, uint8_t numberLED,GPIO_Handler_t *pGPIOHandler);
+void moveCarsTwoPlayers(uint8_t positionP1, uint8_t positionP2, GPIO_Handler_t *pGPIOHandler);
+void moveCarsFourPlayers(uint8_t positionP1, uint8_t positionP2,uint8_t positionP3, uint8_t positionP4, GPIO_Handler_t *pGPIOHandler);
+
+typedef struct
+{
+	uint8_t numberOfPlayers;
+	uint8_t numberOfLaps;
+
+}raceLED;
 
 #endif /* INC_WS2812b_H_ */

@@ -19,17 +19,15 @@
 #include "USARTxDriver.h"
 #include <stdbool.h>
 #include "string.h"
-#include "I2CDriver.h"
-#include "SH1106OLED.h"
 
 //Buffer auxiliar para almacenar los colores de la cinta
 uint8_t buffer[180] = {0};
 
 //Contadores de la posición de los jugadores en la pista(número de LED en el que están)
 uint8_t posP1 = 1; //Jugador 1
-uint8_t posP2 = 1; //Jugador 2
-uint8_t posP4 = 1; //Jugador 3
-uint8_t posP3 = 1; //Jugador 4
+uint8_t posP2 = 15; //Jugador 2
+uint8_t posP4 = 5; //Jugador 3
+uint8_t posP3 = 10; //Jugador 4
 
 //Contador de vueltas para los jugadores
 uint8_t lapCounterP1 = 0; //Jugador 1
@@ -41,11 +39,8 @@ uint8_t lapCounterP4 = 0; //Jugador 4
 uint8_t partyModeFlag 		 = 0;
 uint8_t partyModeUpdateFlag  = 0;
 
-uint8_t autodestructionModeFlag = 0;
-
 //Bandera auxiliar para el modo race
-uint8_t raceModeFlag      = 0;
-uint8_t counterRaceState  = 0;
+uint8_t raceModeFlag = 0;
 
 //Banderas auxiliares para la actualización de la posición de los jugadores
 uint8_t flagP1 = 0; //Jugador 1
@@ -83,8 +78,6 @@ GPIO_Handler_t handlerUserButton 		= { 0 };
 GPIO_Handler_t handlerButton 		    = { 0 };
 GPIO_Handler_t handlerTxPin             = { 0 }; //Handler para el PIN por el cual se hará la transmisión
 GPIO_Handler_t handlerRxPin             = { 0 }; //Handler para el PIN por el cual se hará la transmisión
-GPIO_Handler_t handlerSCLPin			= { 0 };
-GPIO_Handler_t handlerSDAPin			= { 0 };
 
 //Handler para el USART2
 USART_Handler_t handlerUsart2           = { 0 }; //Handler para el USART2
@@ -92,8 +85,6 @@ USART_Handler_t handlerUsart2           = { 0 }; //Handler para el USART2
 //Handler de las interrupciones externas
 EXTI_Config_t ButtonExtiConfig          = { 0 };
 EXTI_Config_t UserButtonExtiConfig      = { 0 };
-
-I2C_Handler_t handlerI2COLED 			= { 0 };
 
 //Handler para la carrera de LEDS
 raceLED handlerRaceLED = { 0 };
@@ -165,13 +156,14 @@ int main(void)
 		}
 
 		//MODO RACE 2 PLAYERS:
-		if ((flagP1 == 1) || (flagP2 == 1)) {
+		if ((flagP1 == 1)|(flagP2 == 1)){
 
 			if(raceModeFlag == 1){
+
 				flagP1 = 0;
 				flagP2 = 0;
 
-				moveCarsFourPlayers(posP1, posP2, posP3, posP4,&handlerPWMOutput);
+				moveCarsFourPlayers(posP1, posP2, posP3, posP4, &handlerPWMOutput);
 
 				if (posP1 == 52) {
 					posP1 = 0;
@@ -182,27 +174,28 @@ int main(void)
 					posP2 = 0;
 					lapCounterP2++;
 				}
-			//}
-		}
 
-		if (lapCounterP2 == handlerRaceLED.numberOfLaps) {
-			raceModeFlag = 0;
-			lapCounterP2 = 0;
-			clearLEDS(60, &handlerPWMOutput);
-			ResetTime(&handlerPWMOutput);
-			ResetTime(&handlerPWMOutput);
-		}
+				if (lapCounterP2 == handlerRaceLED.numberOfLaps) {
+					raceModeFlag = 0;
+					clearLEDS(60, &handlerPWMOutput);
+				}
 
-		if (lapCounterP1 == handlerRaceLED.numberOfLaps) {
-			raceModeFlag = 0;
-			lapCounterP1 = 0;
-			counterRaceState = 0;
-			ResetTime(&handlerPWMOutput);
-			clearLEDS(60, &handlerPWMOutput);
-			ResetTime(&handlerPWMOutput);
-			ResetTime(&handlerPWMOutput);
-		}
+				else if (lapCounterP1 == handlerRaceLED.numberOfLaps) {
+					raceModeFlag = 0;
+					clearLEDS(60, &handlerPWMOutput);
+					ResetTime(&handlerPWMOutput);
+				}
 
+				else{
+					__NOP();
+				}
+
+			}
+
+			else{
+				__NOP();
+			}
+		}
 	}
 
 	return 0;
@@ -281,7 +274,6 @@ void parseCommands(char *ptrBufferReception) {
 		raceModeFlag  = 0;
 		partyModeFlag = 0;
 
-
 		if ((firstParameter != 2) & (firstParameter != 4)) {
 			writeMsg(&handlerUsart2, "Por favor, ingrese un numero de jugadores valido \n\r");
 		}
@@ -302,150 +294,48 @@ void parseCommands(char *ptrBufferReception) {
 			handlerRaceLED.numberOfLaps    = secondParameter;
 		}
 
-
 	}
 
 	else if (strcmp(cmd, "initRace") == 0){
 
-		posP1 = 1;
-		posP2 = 1;
-		posP3 = 1;
-		posP4 = 1;
+		clearLEDS(60, &handlerPWMOutput);
 
+		writeMsg(&handlerUsart2, "La carrera iniciara en...:\n");
+		writeMsg(&handlerUsart2, "5...:\n");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "4...:\n");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "3...:\n");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "2...:\n");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "1...:\n");
+		delayms(1000);
+		writeMsg(&handlerUsart2, "GO!:\n");
+		delayms(1000);
+
+		posP1 = 1;
+		posP2 = 15;
+		posP3 = 37;
+		posP4 = 27;
+
+		raceModeFlag  = 1;
 		partyModeFlag = 0;
 
 		lapCounterP1 = 0;
 		lapCounterP2 = 0;
 		lapCounterP3 = 0;
 		lapCounterP4 = 0;
-
-		raceModeFlag       = 1;
-		counterRaceState   = 1;
 	}
 
 	else if (strcmp(cmd, "setPartyMode") == 0){
 
-		partyModeFlag 			= 1;
-		raceModeFlag  			= 0;
-		autodestructionModeFlag = 0;
-	}
-
-	else if (strcmp(cmd, "initAutodestruction") == 0){
-
-		partyModeFlag 			= 0;
-		raceModeFlag  			= 0;
-		autodestructionModeFlag = 1;
-
-		//CONTEO REGRESIVO
-		//3
-		clearLEDS(60, &handlerPWMOutput);
-		delayms(100);
-
-		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
-			buffer[i] = 0;
-		}
-
-		for (uint8_t i = 0; i < 180; i += 3) {
-			buffer[i] = 255;
-		}
-
-		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
-			colorByte(buffer[i], &handlerPWMOutput);
-		}
-
-		//Se envía un reset, para que se encienda adecacuadamente la cinta
-		ResetTime(&handlerPWMOutput);
-
-		delayms(1000);
-
-		clearLEDS(60, &handlerPWMOutput);
-		delayms(500);
-
-		//CONTEO REGRESIVO
-		//2
-		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
-			buffer[i] = 0;
-		}
-
-		for (uint8_t i = 1; i < 180; i += 3) {
-			buffer[i] = 255;
-		}
-
-		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
-			colorByte(buffer[i], &handlerPWMOutput);
-		}
-
-		//Se envía un reset, para que se encienda adecacuadamente la cinta
-		ResetTime(&handlerPWMOutput);
-
-		delayms(1000);
-
-		clearLEDS(60, &handlerPWMOutput);
-		delayms(500);
-
-		//CONTEO REGRESIVO
-		//1
-		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
-			buffer[i] = 0;
-		}
-
-		for (uint8_t i = 2; i < 180; i += 3) {
-			buffer[i] = 255;
-		}
-
-		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
-			colorByte(buffer[i], &handlerPWMOutput);
-		}
-
-		//Se envía un reset, para que se encienda adecacuadamente la cinta
-		ResetTime(&handlerPWMOutput);
-
-		delayms(1000);
-
-		clearLEDS(60, &handlerPWMOutput);
-		delayms(500);
-
-
-		//CONTEO REGRESIVO
-		//F
-		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
-			buffer[i] = 0;
-		}
-
-		for (uint8_t i = 2; i < 180; i += 3) {
-			buffer[i] = 82;
-		}
-
-		for (uint8_t i = 1; i < 180; i += 3) {
-			buffer[i] = 227;
-		}
-
-
-		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
-			colorByte(buffer[i], &handlerPWMOutput);
-		}
-
-		//Se envía un reset, para que se encienda adecacuadamente la cinta
-		ResetTime(&handlerPWMOutput);
-	}
-
-	else if (strcmp(cmd, "joyStickMode") == 0) {
-
-		partyModeFlag           = 0;
-		raceModeFlag            = 0;
-		autodestructionModeFlag = 0;
-
+		partyModeFlag = 1;
+		raceModeFlag  = 0;
 
 	}
 }
+
 
 void initSystem(void) {
 
@@ -492,6 +382,17 @@ void initSystem(void) {
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerIntTimer);
 
+
+	handlerMCO_2.pGPIOx 						    = GPIOC;
+	handlerMCO_2.GPIO_PinConfig.GPIO_PinNumber 		= PIN_9;
+	handlerMCO_2.GPIO_PinConfig.GPIO_PinMode 		= GPIO_MODE_ALTFN;
+	handlerMCO_2.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
+	handlerMCO_2.GPIO_PinConfig.GPIO_PinSpeed 		= GPIO_OSPEED_FAST;
+	handlerMCO_2.GPIO_PinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
+	handlerMCO_2.GPIO_PinConfig.GPIO_PinAltFunMode  = AF0;
+
+	GPIO_Config(&handlerMCO_2);
+
 	//Se configura el TxPin (PIN por el cual se hace la transmisión)
 	//Este PIN se configura en la función alternativa AF07 que corresponde al USART2
 	handlerTxPin.pGPIOx = GPIOA;
@@ -535,7 +436,7 @@ void initSystem(void) {
 
 	//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
 	handlerButton.pGPIOx 							 = GPIOA;
-	handlerButton.GPIO_PinConfig.GPIO_PinNumber		 = PIN_8;
+	handlerButton.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_8;
 	handlerButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
 
 	//Se configura el EXTI del botón
@@ -546,7 +447,7 @@ void initSystem(void) {
 	extInt_Config(&ButtonExtiConfig);
 
 	//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
-	handlerUserButton.pGPIOx        					 = GPIOC;
+	handlerUserButton.pGPIOx							 = GPIOC;
 	handlerUserButton.GPIO_PinConfig.GPIO_PinNumber      = PIN_13;
 	handlerUserButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 
@@ -557,49 +458,8 @@ void initSystem(void) {
 	//Se carga la configuración: al cargar la configuración del exti, se carga también la del GPIO
 	extInt_Config(&UserButtonExtiConfig);
 
-
-	//Se configura el SDA del I2C de la OLED
-	/*handlerSDAPin.pGPIOx 							 = GPIOC;
-	handlerSDAPin.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_9;
-	handlerSDAPin.GPIO_PinConfig.GPIO_PinMode 		 = GPIO_MODE_ALTFN; //Función alternativa
-	handlerSDAPin.GPIO_PinConfig.GPIO_PinOPType 	 = GPIO_OTYPE_OPENDRAIN;
-	handlerSDAPin.GPIO_PinConfig.GPIO_PinSpeed 		 = GPIO_OSPEED_FAST;
-	handlerSDAPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
-	handlerSDAPin.GPIO_PinConfig.GPIO_PinAltFunMode  = AF4;	    //AF04: I2C3 SDA
-
-	//Se carga la configuración
-	GPIO_Config(&handlerSDAPin);*/
-
-	//Se configura el SCL del I2C del acelerómetro y la OLED
-	/*handlerSCLPin.pGPIOx 							 = GPIOA;
-	handlerSCLPin.GPIO_PinConfig.GPIO_PinNumber	     = PIN_8;
-	handlerSCLPin.GPIO_PinConfig.GPIO_PinMode 		 = GPIO_MODE_ALTFN; //Función alternativa
-	handlerSCLPin.GPIO_PinConfig.GPIO_PinOPType 	 = GPIO_OTYPE_OPENDRAIN;
-	handlerSCLPin.GPIO_PinConfig.GPIO_PinSpeed 		 = GPIO_OSPEED_FAST;
-	handlerSCLPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
-	handlerSCLPin.GPIO_PinConfig.GPIO_PinAltFunMode  = AF4;	    //AF04: I2C3 SCL
-
-	//Se carga la configuración
-	GPIO_Config(&handlerSCLPin);
-
-	 //Se configura el HandlerI2C de la OLED
-	handlerI2COLED.slaveAddress = OLED_ADD;
-	handlerI2COLED.modeI2C      = I2C_MODE_FM; //Es necesario que sea en fastmode
-	handlerI2COLED.ptrI2Cx 		= I2C3;
-
-	//Se carga la configuración
-	i2c_config(&handlerI2COLED);*/
-/*
-	initOLED(&handlerI2COLED);
-	clearOLED(&handlerI2COLED);
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
-	setColumn(&handlerI2COLED, 0x10);
-	printBytesArray(&handlerI2COLED, " BIENVENIDO ");*/
-
 	//Se limpia la cinta de LEDs
 	clearLEDS(52, &handlerPWMOutput);
-	delayms(100);
-
 }
 
 

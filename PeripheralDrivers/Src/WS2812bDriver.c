@@ -5,6 +5,7 @@
  *      Author: namontoy
  */
 #include "WS2812bDriver.h"
+#include "BasicTimer.h"
 
 
 void LogicZero(GPIO_Handler_t *pGPIOHandler){
@@ -633,6 +634,209 @@ void setColorNumberLED(uint8_t RED, uint8_t GREEN, uint8_t BLUE, uint8_t numberL
 	for (uint8_t i = 0; i < 180; i++){
 		colorByte(buffer[i], pGPIOHandler);
 	}
+}
+
+void moveCarsTwoPlayers(uint8_t positionP1, uint8_t positionP2, GPIO_Handler_t *pGPIOHandler) {
+
+	uint8_t buffer[180] = { 0 };
+
+	clearLEDS(52, pGPIOHandler);
+	ResetTime(pGPIOHandler);
+
+	for (uint8_t i = 0; i < positionP1 * 3 - 1; i++) {
+		buffer[i] = 0;
+	}
+
+	for (uint8_t i = (positionP1 + 4) * 3; i < 180; i++) {
+		buffer[i] = 0;
+	}
+
+	for (uint8_t i = 0; i < positionP2 * 3 - 1; i++) {
+		buffer[i] = 0;
+	}
+
+	for (uint8_t i = (positionP2 + 4) * 3; i < 180; i++) {
+		buffer[i] = 0;
+	}
+
+	//Jugador 1
+	buffer[positionP1 * 3 - 1] = 0;
+	buffer[positionP1 * 3 - 2] = 255;
+	buffer[positionP1 * 3 - 3] = 0;
+
+	buffer[(positionP1 + 1) * 3 - 1] = 0;
+	buffer[(positionP1 + 1) * 3 - 2] = 255;
+	buffer[(positionP1 + 1) * 3 - 3] = 0;
+
+	buffer[(positionP1 + 2) * 3 - 1] = 0;
+	buffer[(positionP1 + 2) * 3 - 2] = 255;
+	buffer[(positionP1 + 2) * 3 - 3] = 0;
+
+	buffer[(positionP1 + 3) * 3 - 1] = 0;
+	buffer[(positionP1 + 3) * 3 - 2] = 255;
+	buffer[(positionP1 + 3) * 3 - 3] = 0;
+
+	buffer[(positionP1 + 4) * 3 - 1] = 0;
+	buffer[(positionP1 + 4) * 3 - 2] = 255;
+	buffer[(positionP1 + 4) * 3 - 3] = 0;
+
+	//Jugador 2
+	buffer[positionP2 * 3 - 1] = 0;
+	buffer[positionP2 * 3 - 2] = 0;
+	buffer[positionP2 * 3 - 3] = 255;
+
+	buffer[(positionP2 + 1) * 3 - 1] = 0;
+	buffer[(positionP2 + 1) * 3 - 2] = 0;
+	buffer[(positionP2 + 1) * 3 - 3] = 255;
+
+	buffer[(positionP2 + 2) * 3 - 1] = 0;
+	buffer[(positionP2 + 2) * 3 - 2] = 0;
+	buffer[(positionP2 + 2) * 3 - 3] = 255;
+
+	buffer[(positionP2 + 3) * 3 - 1] = 0;
+	buffer[(positionP2 + 3) * 3 - 2] = 0;
+	buffer[(positionP2 + 3) * 3 - 3] = 255;
+
+	buffer[(positionP2 + 4) * 3 - 1] = 0;
+	buffer[(positionP2 + 4) * 3 - 2] = 0;
+	buffer[(positionP2 + 4) * 3 - 3] = 255;
+
+	for (uint8_t i = 0; i < 180; i++) {
+		colorByte(buffer[i], pGPIOHandler);
+	}
+
+	ResetTime(pGPIOHandler);
+}
+
+
+void moveCarsFourPlayers(uint8_t positionP1, uint8_t positionP2,uint8_t positionP3, uint8_t positionP4, GPIO_Handler_t *pGPIOHandler){
+
+	uint8_t buffer[180] = { 0 };
+
+	clearLEDS(60, pGPIOHandler);
+	ResetTime(pGPIOHandler);
+	for (uint8_t i = 0; i < positionP1 * 3 - 1; i++) {
+		buffer[i] = 0;
+	}
+
+	for (uint8_t i = (positionP1 + 4) * 3; i < 180; i++) {
+		buffer[i] = 0;
+	}
+
+	for (uint8_t i = 0; i < positionP2 * 3 - 1; i++) {
+		buffer[i] = 0;
+	}
+
+	for (uint8_t i = (positionP2 + 4) * 3; i < 180; i++) {
+		buffer[i] = 0;
+	}
+
+	for (uint8_t i = 0; i < positionP3 * 3 - 1; i++) {
+		buffer[i] = 0;
+	}
+
+	for (uint8_t i = (positionP3 + 4) * 3; i < 180; i++) {
+		buffer[i] = 0;
+	}
+
+	for (uint8_t i = 0; i < positionP4 * 3 - 1; i++) {
+		buffer[i] = 0;
+	}
+
+	for (uint8_t i = (positionP4 + 4) * 3; i < 180; i++) {
+		buffer[i] = 0;
+	}
+
+	//Jugador 1
+	buffer[positionP1 * 3 - 1] = 0;
+	buffer[positionP1 * 3 - 2] = 255;
+	buffer[positionP1 * 3 - 3] = 0;
+
+	buffer[(positionP1 + 1) * 3 - 1] = 0;
+	buffer[(positionP1 + 1) * 3 - 2] = 255;
+	buffer[(positionP1 + 1) * 3 - 3] = 0;
+
+	buffer[(positionP1 + 2) * 3 - 1] = 0;
+	buffer[(positionP1 + 2) * 3 - 2] = 255;
+	buffer[(positionP1 + 2) * 3 - 3] = 0;
+
+	buffer[(positionP1 + 3) * 3 - 1] = 0;
+	buffer[(positionP1 + 3) * 3 - 2] = 255;
+	buffer[(positionP1 + 3) * 3 - 3] = 0;
+
+	buffer[(positionP1 + 4) * 3 - 1] = 0;
+	buffer[(positionP1 + 4) * 3 - 2] = 255;
+	buffer[(positionP1 + 4) * 3 - 3] = 0;
+
+	//Jugador 2
+	buffer[positionP2 * 3 - 1] = 0;
+	buffer[positionP2 * 3 - 2] = 0;
+	buffer[positionP2 * 3 - 3] = 255;
+
+	buffer[(positionP2 + 1) * 3 - 1] = 0;
+	buffer[(positionP2 + 1) * 3 - 2] = 0;
+	buffer[(positionP2 + 1) * 3 - 3] = 255;
+
+	buffer[(positionP2 + 2) * 3 - 1] = 0;
+	buffer[(positionP2 + 2) * 3 - 2] = 0;
+	buffer[(positionP2 + 2) * 3 - 3] = 255;
+
+	buffer[(positionP2 + 3) * 3 - 1] = 0;
+	buffer[(positionP2 + 3) * 3 - 2] = 0;
+	buffer[(positionP2 + 3) * 3 - 3] = 255;
+
+	buffer[(positionP2 + 4) * 3 - 1] = 0;
+	buffer[(positionP2 + 4) * 3 - 2] = 0;
+	buffer[(positionP2 + 4) * 3 - 3] = 255;
+
+
+	//Jugador 3
+	buffer[positionP3 * 3 - 1] = 0;
+	buffer[positionP3 * 3 - 2] = 255;
+	buffer[positionP3 * 3 - 3] = 255;
+
+	buffer[(positionP3 + 1) * 3 - 1] = 0;
+	buffer[(positionP3 + 1) * 3 - 2] = 255;
+	buffer[(positionP3 + 1) * 3 - 3] = 255;
+
+	buffer[(positionP3 + 2) * 3 - 1] = 0;
+	buffer[(positionP3 + 2) * 3 - 2] = 255;
+	buffer[(positionP3 + 2) * 3 - 3] = 255;
+
+	buffer[(positionP3 + 3) * 3 - 1] = 0;
+	buffer[(positionP3 + 3) * 3 - 2] = 255;
+	buffer[(positionP3 + 3) * 3 - 3] = 255;
+
+	buffer[(positionP3 + 4) * 3 - 1] = 0;
+	buffer[(positionP3 + 4) * 3 - 2] = 255;
+	buffer[(positionP3 + 4) * 3 - 3] = 255;
+
+	//Jugador 4
+	buffer[positionP4 * 3 - 1] = 0;
+	buffer[positionP4 * 3 - 2] = 255;
+	buffer[positionP4 * 3 - 3] = 128;
+
+	buffer[(positionP4 + 1) * 3 - 1] = 0;
+	buffer[(positionP4 + 1) * 3 - 2] = 255;
+	buffer[(positionP4 + 1) * 3 - 3] = 128;
+
+	buffer[(positionP4 + 2) * 3 - 1] = 0;
+	buffer[(positionP4 + 2) * 3 - 2] = 255;
+	buffer[(positionP4 + 2) * 3 - 3] = 128;
+
+	buffer[(positionP4 + 3) * 3 - 1] = 0;
+	buffer[(positionP4 + 3) * 3 - 2] = 255;
+	buffer[(positionP4 + 3) * 3 - 3] = 128;
+
+	buffer[(positionP4 + 4) * 3 - 1] = 0;
+	buffer[(positionP4 + 4) * 3 - 2] = 255;
+	buffer[(positionP4 + 4) * 3 - 3] = 128;
+
+	for (uint8_t i = 0; i < 180; i++) {
+		colorByte(buffer[i], pGPIOHandler);
+	}
+
+	ResetTime(pGPIOHandler);
 }
 
 
