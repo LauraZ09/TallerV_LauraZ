@@ -135,7 +135,7 @@ void adc_Config(ADC_Config_t *adcConfig){
 
 
 	/* 9. Configuramos el preescaler del ADC en 2:1 (el mas rápido que se puede tener) */
-	ADC->CCR |= ADC_CCR_ADCPRE_0;
+	ADC->CCR |= ADC_CCR_ADCPRE;
 
 	/* 10. Desactivamos las interrupciones globales */
 	__disable_irq();

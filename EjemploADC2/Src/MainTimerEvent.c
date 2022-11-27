@@ -19,6 +19,7 @@
 #include "AdcDriver.h"
 #include "ExtiDriver.h"
 #include "PwmDriver.h"
+#include "RccConfig.h"
 
 
 //Definición de los handlers necesarios
@@ -36,9 +37,9 @@ PWM_Handler_t handlerPWMTimer 	         = {0}; //Handler para el PWM (Timer)
 //Definición de otras variables necesarias para el desarrollo de los ejercicios:
 uint8_t i          = 0;      //Contador
 uint8_t rxData     = 0;      //Datos de recepción
-uint8_t channels[2]= {ADC_CHANNEL_0, ADC_CHANNEL_1};
-uint16_t adcData[2]= {0,0};  //Datos del ADC
-uint8_t adcFlag	   = 0;	     //Bandera del ADC
+uint8_t channels[4]= {ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_4, ADC_CHANNEL_8};
+uint16_t adcData[4]= {0};  //Datos del ADC
+uint8_t adcFlag	   = 0;	     //Bandera del ADC+
 bool adcIsComplete = false;  //Bandera para la interrupción
 char Buffer[64]    = {0};    //En esta variable se almacenarán mensajes
 char greetingMsg[] = "SIUU \n\r"; //Mensaje que se imprime
@@ -48,6 +49,7 @@ void initSystem(void);       //Función para inicializar el sistema
 
 int main(void) {
 
+	setTo100M();
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
 	enableOutput(&handlerPWMTimer);
 	enableEvent(&handlerPWMTimer);
@@ -59,7 +61,7 @@ int main(void) {
 		//(lo cual sucede en la ISR de la recepción)
 		//Si este valor dejó de ser '\0' significa que se recibió un carácter
 		//por lo tanto entra en el bloque if para analizar que se recibió
-		if(rxData != '\0'){
+		/*if(rxData != '\0'){
 			//Se imprime el carácter recibido
 			writeChar(&handlerUsart2, rxData);
 
@@ -74,24 +76,41 @@ int main(void) {
 			}
 
 			rxData = '\0';
-		}
+		}*/
 
 		if (adcIsComplete == true) {
 
 			adcData[0] = 0;
 			adcData[1] = 0;
+			adcData[2] = 0;
+			adcData[3] = 0;
+
 
 			if (i == 1) {
 				adcIsComplete = false;
 				adcData[0] = getADC();
-				sprintf(Buffer, "\n\rADCx: %u\n", adcData[0]);
+				sprintf(Buffer, "\n\rADC1: %u\n", adcData[0]);
 				writeMsg(&handlerUsart2, Buffer);
 			}
 
 			else if (i == 2) {
 				adcIsComplete = false;
 				adcData[1] = getADC();
-				sprintf(Buffer, "ADCy: %u\n\r", adcData[1]);
+				sprintf(Buffer, "ADC2: %u\n", adcData[1]);
+				writeMsg(&handlerUsart2, Buffer);
+			}
+
+			else if (i == 3) {
+				adcIsComplete = false;
+				adcData[2] = getADC();
+				sprintf(Buffer, "ADC3: %u\n", adcData[2]);
+				writeMsg(&handlerUsart2, Buffer);
+			}
+
+			else if (i == 4) {
+				adcIsComplete = false;
+				adcData[3] = getADC();
+				sprintf(Buffer, "ADC4: %u\n\r", adcData[3]);
 				writeMsg(&handlerUsart2, Buffer);
 				i = 0;
 			}
@@ -102,6 +121,7 @@ int main(void) {
 
 			}
 		}
+
 	}
 	return 0;
 }
@@ -168,8 +188,8 @@ void initSystem(void) {
 	//Se configura el BlinkyTimer
 	handlerBlinkyTimer.ptrTIMx 					= TIM2;
 	handlerBlinkyTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
-	handlerBlinkyTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100us;
-	handlerBlinkyTimer.TIMx_Config.TIMx_period 	= 2500; //Update period= 100us*2500 = 250000us = 250ms
+	handlerBlinkyTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100M_05ms;
+	handlerBlinkyTimer.TIMx_Config.TIMx_period 	= 500; //Update period= 100us*2500 = 250000us = 250ms
 
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerBlinkyTimer);
@@ -187,10 +207,10 @@ void initSystem(void) {
 
 	//Se configura la conversión ADC
 	adcConfig.channels          = channels;
-	adcConfig.numberOfChannels  = ADC_NUMBER_OF_CHANNELS_2;
+	adcConfig.numberOfChannels  = ADC_NUMBER_OF_CHANNELS_4;
 	adcConfig.dataAlignment		= ADC_ALIGNMENT_RIGHT;
-	adcConfig.resolution		= ADC_RESOLUTION_12_BIT;
-	adcConfig.samplingPeriod	= ADC_SAMPLING_PERIOD_28_CYCLES;
+	adcConfig.resolution		= ADC_RESOLUTION_6_BIT;
+	adcConfig.samplingPeriod	= ADC_SAMPLING_PERIOD_480_CYCLES;
 
 	//Se carga la configuración, así la interrupción se activa por defecto
 	adc_Config(&adcConfig);
@@ -203,10 +223,10 @@ void initSystem(void) {
 	adcConfigExternal(&adcConfigEvent);
 
 	//Se configura el Timer del PWM
-	handlerPWMTimer.ptrTIMx = TIM5;
+	handlerPWMTimer.ptrTIMx 		  = TIM5;
 	handlerPWMTimer.config.channel 	  = PWM_CHANNEL_3;
-	handlerPWMTimer.config.prescaler  = BTIMER_SPEED_1ms;
-	handlerPWMTimer.config.periodo 	  = 1000;
+	handlerPWMTimer.config.prescaler  = BTIMER_SPEED_100M_05ms;
+	handlerPWMTimer.config.periodo 	  = 2000;
 	handlerPWMTimer.config.duttyCicle = 500;
 
 	pwm_Config(&handlerPWMTimer);

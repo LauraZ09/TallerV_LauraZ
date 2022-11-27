@@ -708,8 +708,110 @@ void moveCarsTwoPlayers(uint8_t positionP1, uint8_t positionP2, GPIO_Handler_t *
 	ResetTime(pGPIOHandler);
 }
 
+void redLED(GPIO_Handler_t *pGPIOHandler){
+	setColorLED(255, 0, 0,pGPIOHandler);
+}
+
+void (*ptr_redFunct)(GPIO_Handler_t *pGPIOHandler) = redLED;
+
+
+void blueLED(GPIO_Handler_t *pGPIOHandler){
+	setColorLED(0, 0, 255,pGPIOHandler);
+}
+
+void (*ptr_blueFunct)(GPIO_Handler_t *pGPIOHandler) = blueLED;
+
+void greenLED(GPIO_Handler_t *pGPIOHandler){
+	setColorLED(0, 255, 0,pGPIOHandler);
+}
+
+void (*ptr_greenFunct)(GPIO_Handler_t *pGPIOHandler) = greenLED;
+
+void yellowLED(GPIO_Handler_t *pGPIOHandler){
+	setColorLED(255, 255, 0,pGPIOHandler);
+}
+
+void (*ptr_yellowFunct)(GPIO_Handler_t *pGPIOHandler) = yellowLED;
+
+void nullLED(GPIO_Handler_t *pGPIOHandler){
+	setColorLED(0, 0, 0,pGPIOHandler);
+}
+
+void (*ptr_nullFunct)(GPIO_Handler_t *pGPIOHandler) = nullLED;
 
 void moveCarsFourPlayers(uint8_t positionP1, uint8_t positionP2,uint8_t positionP3, uint8_t positionP4, GPIO_Handler_t *pGPIOHandler){
+
+	uint8_t buffer[60] = {0};
+
+	buffer[positionP1 + 0] = 1;
+	buffer[positionP1 + 1] = 1;
+	buffer[positionP1 + 2] = 1;
+	buffer[positionP1 + 3] = 1;
+
+	buffer[positionP2 + 0] = 2;
+	buffer[positionP2 + 1] = 2;
+	buffer[positionP2 + 2] = 2;
+	buffer[positionP2 + 3] = 2;
+
+	buffer[positionP3 + 0] = 3;
+	buffer[positionP3 + 1] = 3;
+	buffer[positionP3 + 2] = 3;
+	buffer[positionP3 + 3] = 3;
+
+	buffer[positionP4 + 0] = 4;
+	buffer[positionP4 + 1] = 4;
+	buffer[positionP4 + 2] = 4;
+	buffer[positionP4 + 3] = 4;
+
+	for (uint8_t i = 0; i < 60; i++) {
+
+		__disable_irq();
+
+		switch(buffer[i]){
+
+		case 0: {
+			ptr_nullFunct(pGPIOHandler);
+
+			break;
+		}
+
+		case 1: {
+			ptr_redFunct(pGPIOHandler);
+
+			break;
+		}
+
+		case 2: {
+			ptr_greenFunct(pGPIOHandler);
+
+			break;
+		}
+
+		case 3: {
+			ptr_blueFunct(pGPIOHandler);
+
+			break;
+		}
+
+		case 4: {
+			ptr_yellowFunct(pGPIOHandler);
+
+			break;
+		}
+
+		default: {
+			__NOP();
+			break;
+		}
+		}
+	}
+
+	ResetTime(pGPIOHandler);
+
+	__enable_irq();
+}
+
+/*void moveCarsFourPlayers(uint8_t positionP1, uint8_t positionP2,uint8_t positionP3, uint8_t positionP4, GPIO_Handler_t *pGPIOHandler){
 
 	uint8_t buffer[180] = { 0 };
 
@@ -837,7 +939,7 @@ void moveCarsFourPlayers(uint8_t positionP1, uint8_t positionP2,uint8_t position
 	}
 
 	ResetTime(pGPIOHandler);
-}
+}*/
 
 
 

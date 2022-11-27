@@ -21,6 +21,28 @@ void setColorNumberLED(uint8_t RED, uint8_t GREEN, uint8_t BLUE, uint8_t numberL
 void moveCarsTwoPlayers(uint8_t positionP1, uint8_t positionP2, GPIO_Handler_t *pGPIOHandler);
 void moveCarsFourPlayers(uint8_t positionP1, uint8_t positionP2,uint8_t positionP3, uint8_t positionP4, GPIO_Handler_t *pGPIOHandler);
 
+
+void redLED(GPIO_Handler_t *pGPIOHandler);
+
+void (*ptr_redFunct)(GPIO_Handler_t *pGPIOHandler);
+
+
+void blueLED(GPIO_Handler_t *pGPIOHandler);
+
+void (*ptr_blueFunct)(GPIO_Handler_t *pGPIOHandler);
+
+void greenLED(GPIO_Handler_t *pGPIOHandler);
+
+void (*ptr_greenFunct)(GPIO_Handler_t *pGPIOHandler);
+
+void yellowLED(GPIO_Handler_t *pGPIOHandler);
+void (*ptr_yellowFunct)(GPIO_Handler_t *pGPIOHandler);
+
+void nullLED(GPIO_Handler_t *pGPIOHandler);
+
+void (*ptr_nullFunct)(GPIO_Handler_t *pGPIOHandler);
+
+
 typedef struct
 {
 	uint8_t numberOfPlayers;
