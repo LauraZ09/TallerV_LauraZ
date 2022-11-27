@@ -67,10 +67,11 @@ uint8_t counterReception = 0;     //Contador para la recepción de datos por el 
 bool stringComplete 	 = false; //Bandera para la recepción de datos del usart2
 
 //Arreglos para la conversión ADC
-uint8_t channels[6]= {ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_4, ADC_CHANNEL_8, ADC_CHANNEL_6, ADC_CHANNEL_7};
+uint8_t channels[6]= {ADC_CHANNEL_10, ADC_CHANNEL_1, ADC_CHANNEL_4, ADC_CHANNEL_8, ADC_CHANNEL_6, ADC_CHANNEL_7};
 uint16_t adcData[6]= {0};  //Datos del ADC
 
 uint8_t intensityConfigFlag = 0;
+char intensityColorCars[4] = { 0 };
 
 //Arreglos auxiliares
 char bufferReception[200] = {0}; //En esta variable se almacenan variables de recepción
@@ -122,12 +123,15 @@ raceLED handlerRaceLED 					= { 0 };
 //Funciones definidas para el desarrollo del proyecto
 void initSystem(void); //Inicialización del sistema
 void parseCommands(char *ptrBufferReception); //Recepción de comandos
+char* intensityColorCarsFunction (uint16_t* carsIntensityADC);
 
 int main(void)
 {
 	setTo100M();  //Se pone la CPU a 100MHz
 	initSystem(); //Se inicializan los periféricos
+
 	enableOutput(&handlerPWMTimer);
+
 	enableEvent(&handlerPWMTimer);
 	startPwmSignal(&handlerPWMTimer);
 
@@ -212,12 +216,17 @@ int main(void)
 
 				counterADC = 0;
 
+				intensityColorCarsFunction(adcData);
+				showFourCarsToConfig(posP1, posP2, posP3, posP4, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
+						intensityColorCars[3], &handlerPWMOutput);
+
 			}
 
 			else {
 				adcIsComplete = false;
 				counterADC = 0;
 			}
+
 		}
 
 		//MODO PARTY:
@@ -247,7 +256,12 @@ int main(void)
 
 			if(raceModeFlag){
 
-				moveCarsFourPlayers(posP1, posP2, posP3, posP4,&handlerPWMOutput);
+				intensityColorCarsFunction(adcData);
+				showFourCarsToConfig(posP1, posP2, posP3, posP4, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
+						intensityColorCars[3], &handlerPWMOutput);
+
+				//moveCarsFourPlayers (posP1, posP2, posP3, posP4, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
+												//intensityColorCars[3], &handlerPWMOutput);
 
 				if (posP1 == 52) {
 					posP1 = 0;
@@ -318,6 +332,17 @@ void callback_extInt8(void) {
 void usart2Rx_Callback(void){
 	//Activamos una bandera, dentro de la función main se lee el registro DR lo que baja la bandera de la interrupción
 	rxDataFlag = 1;
+}
+
+char* intensityColorCarsFunction (uint16_t* carsIntensityADC){
+
+	intensityColorCars[0] = carsIntensityADC[0]/16;
+	intensityColorCars[1] = carsIntensityADC[1]/16;
+	intensityColorCars[2] = carsIntensityADC[2]/16;
+	intensityColorCars[3] = carsIntensityADC[3]/16;
+
+	return intensityColorCars;
+
 }
 
 void parseCommands(char *ptrBufferReception) {
@@ -404,12 +429,17 @@ void parseCommands(char *ptrBufferReception) {
 			handlerRaceLED.numberOfLaps    = secondParameter;
 
 
+			writeMsg(&handlerUsart2, "Configure la intesnsidad de los colores deseada, posteriormente escriba el comando\n"
+					"initRace @ para iniciar la carrera.");
 
-			writeMsg(&handlerUsart2, "Modo de juego configurado:\n");
-			sprintf(bufferTx, "Numero de jugadores: %d\n", firstParameter);
-			writeMsg(&handlerUsart2, bufferTx);
-			sprintf(bufferTx, "Numero de vueltas: %d\n\r", secondParameter);
-			writeMsg(&handlerUsart2, bufferTx);
+			posP1 = 1;
+			posP2 = 15;
+			posP3 = 25;
+			posP4 = 35;
+
+			showFourCarsToConfig(posP1, posP2, posP3, posP4, 255, 255, 255, 255, &handlerPWMOutput);
+
+			intensityConfigFlag = 1;
 
 		}
 
@@ -418,11 +448,12 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "initRace") == 0){
 
+		intensityConfigFlag = 0;
 
 		posP1 = 1;
-		posP2 = 1;
-		posP3 = 1;
-		posP4 = 1;
+		posP2 = 15;
+		posP3 = 25;
+		posP4 = 35;
 
 		partyModeFlag = 0;
 
@@ -723,17 +754,17 @@ void initSystem(void) {
 
 	//Se configura el evento externo
 	adcConfigEvent.extEventTrigger    = ADC_EXT_TRIG_FALLING_EDGE;
-	adcConfigEvent.extEventTypeSelect = ADC_EXT_EVENT_TIM5_CC3;
+	adcConfigEvent.extEventTypeSelect = ADC_EXT_EVENT_TIM5_CC1;
 
 	//Se carga la configuración
 	adcConfigExternal(&adcConfigEvent);
 
 	//Se configura el Timer del PWM
 	handlerPWMTimer.ptrTIMx 		  = TIM5;
-	handlerPWMTimer.config.channel 	  = PWM_CHANNEL_3;
+	handlerPWMTimer.config.channel 	  = PWM_CHANNEL_1;
 	handlerPWMTimer.config.prescaler  = BTIMER_SPEED_100M_05ms;
-	handlerPWMTimer.config.periodo 	  = 2000;
-	handlerPWMTimer.config.duttyCicle = 500;
+	handlerPWMTimer.config.periodo 	  = 500;
+	handlerPWMTimer.config.duttyCicle = 125;
 
 	pwm_Config(&handlerPWMTimer);
 /*
@@ -744,12 +775,10 @@ void initSystem(void) {
 	printBytesArray(&handlerI2COLED, " BIENVENIDO ");
 */
 	//Se limpia la cinta de LEDs
-	/*GPIO_WritePin( &handlerPWMOutput, 0);
+	GPIO_WritePin( &handlerPWMOutput, 0);
 	clearLEDS(60, &handlerPWMOutput);
 	ResetTime(&handlerPWMOutput);
-	delayms(100);*/
-
-
+	delayms(100);
 }
 
 
