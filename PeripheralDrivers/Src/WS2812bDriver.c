@@ -812,7 +812,6 @@ void showFourCarsToConfig(uint8_t positionP1, uint8_t positionP2,uint8_t positio
 
 	uint8_t buffer[60] = {0};
 
-	__disable_irq();
 	buffer[positionP1 + 0] = 1;
 	buffer[positionP1 + 1] = 1;
 	buffer[positionP1 + 2] = 1;
@@ -833,6 +832,7 @@ void showFourCarsToConfig(uint8_t positionP1, uint8_t positionP2,uint8_t positio
 	buffer[positionP4 + 2] = 4;
 	buffer[positionP4 + 3] = 4;
 
+	__disable_irq();
 	for (uint8_t i = 0; i < 60; i++) {
 
 		switch(buffer[i]){

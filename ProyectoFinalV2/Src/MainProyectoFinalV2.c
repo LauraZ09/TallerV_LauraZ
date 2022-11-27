@@ -130,11 +130,6 @@ int main(void)
 	setTo100M();  //Se pone la CPU a 100MHz
 	initSystem(); //Se inicializan los periféricos
 
-	enableOutput(&handlerPWMTimer);
-
-	enableEvent(&handlerPWMTimer);
-	startPwmSignal(&handlerPWMTimer);
-
 	while (1)
 	{
 		//el sistema está constantemente verificando si se levanta la bandeta de recepción del USART2
@@ -256,12 +251,8 @@ int main(void)
 
 			if(raceModeFlag){
 
-				intensityColorCarsFunction(adcData);
-				showFourCarsToConfig(posP1, posP2, posP3, posP4, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
-						intensityColorCars[3], &handlerPWMOutput);
-
-				//moveCarsFourPlayers (posP1, posP2, posP3, posP4, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
-												//intensityColorCars[3], &handlerPWMOutput);
+				moveCarsFourPlayers (posP1, posP2, posP3, posP4, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
+												intensityColorCars[3], &handlerPWMOutput);
 
 				if (posP1 == 52) {
 					posP1 = 0;
@@ -440,13 +431,18 @@ void parseCommands(char *ptrBufferReception) {
 			showFourCarsToConfig(posP1, posP2, posP3, posP4, 255, 255, 255, 255, &handlerPWMOutput);
 
 			intensityConfigFlag = 1;
-
+			enableEvent(&handlerPWMTimer);
+			enableOutput(&handlerPWMTimer);
+			startPwmSignal(&handlerPWMTimer);
 		}
 
 
 	}
 
 	else if (strcmp(cmd, "initRace") == 0){
+		disableEvent(&handlerPWMTimer);
+		disableOutput(&handlerPWMTimer);
+		stopPwmSignal(&handlerPWMTimer);
 
 		intensityConfigFlag = 0;
 
