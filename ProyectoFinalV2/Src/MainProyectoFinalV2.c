@@ -21,6 +21,8 @@
 #include "string.h"
 #include "I2CDriver.h"
 #include "SH1106OLED.h"
+#include "AdcDriver.h"
+#include "ExtiDriver.h"
 
 //Buffer auxiliar para almacenar los colores de la cinta
 uint8_t buffer[180] = {0};
@@ -48,6 +50,10 @@ uint8_t raceModeFlag       = 0;
 uint8_t counterRaceState   = 0;
 uint8_t updateRaceModeFlag = 0;
 
+//Banderas auxiliares para la conversión ADC
+uint8_t counterADC = 0;
+bool adcIsComplete = false;
+
 //Banderas auxiliares para la actualización de la posición de los jugadores
 uint8_t flagP1 = 0; //Jugador 1
 uint8_t flagP2 = 0; //Jugador 2
@@ -59,6 +65,12 @@ uint8_t rxData           = 0;     //Datos de recepción
 uint8_t rxDataFlag       = 0;	  //Bandera para la recepción de datos del usart2
 uint8_t counterReception = 0;     //Contador para la recepción de datos por el usart2
 bool stringComplete 	 = false; //Bandera para la recepción de datos del usart2
+
+//Arreglos para la conversión ADC
+uint8_t channels[6]= {ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_4, ADC_CHANNEL_8, ADC_CHANNEL_6, ADC_CHANNEL_7};
+uint16_t adcData[6]= {0};  //Datos del ADC
+
+uint8_t intensityConfigFlag = 0;
 
 //Arreglos auxiliares
 char bufferReception[200] = {0}; //En esta variable se almacenan variables de recepción
@@ -75,6 +87,9 @@ unsigned int secondParameter = 0; //En esta variable se almacena el segundo núm
 //Handler de los timers usados
 BasicTimer_Handler_t handlerBlinkyTimer = { 0 };  //Handler para el BlinkyTimer
 BasicTimer_Handler_t handlerIntTimer    = { 0 };
+
+//Handler para el PWM de los eventos ADC
+PWM_Handler_t handlerPWMTimer 			= { 0 };
 
 //Handler de los GPIOs usados
 GPIO_Handler_t handlerBlinkyPin 	    = { 0 };  //Handler para el LED de estado
@@ -94,10 +109,15 @@ USART_Handler_t handlerUsart2           = { 0 }; //Handler para el USART2
 EXTI_Config_t ButtonExtiConfig          = { 0 };
 EXTI_Config_t UserButtonExtiConfig      = { 0 };
 
+//Handler para el I2C de la OLED
 I2C_Handler_t handlerI2COLED 			= { 0 };
 
+//Handlers para la conversión ADC y los eventos
+ADC_Config_t adcConfig 					= { 0 }; //Configuración del ADC
+ADC_Config_Event_t adcConfigEvent		= { 0 }; //Configuración del evento externo
+
 //Handler para la carrera de LEDS
-raceLED handlerRaceLED = { 0 };
+raceLED handlerRaceLED 					= { 0 };
 
 //Funciones definidas para el desarrollo del proyecto
 void initSystem(void); //Inicialización del sistema
@@ -107,6 +127,9 @@ int main(void)
 {
 	setTo100M();  //Se pone la CPU a 100MHz
 	initSystem(); //Se inicializan los periféricos
+	enableOutput(&handlerPWMTimer);
+	enableEvent(&handlerPWMTimer);
+	startPwmSignal(&handlerPWMTimer);
 
 	while (1)
 	{
@@ -138,6 +161,63 @@ int main(void)
 				stringComplete = false;			 //Se baja la bandera
 			}
 			rxData = '\0';
+		}
+
+		//CONVERSIÓN ADC PARA LA INTENSIDAD DE LOS COLORES:
+		if ((adcIsComplete == true) & (intensityConfigFlag == 1)) {
+
+			if (counterADC == 1) {
+				adcIsComplete = false;
+				adcData[0] = getADC();
+			}
+
+			else if (counterADC == 2) {
+				adcIsComplete = false;
+				adcData[1] = getADC();
+			}
+
+			else if (counterADC == 3) {
+				adcIsComplete = false;
+				adcData[2] = getADC();
+			}
+
+			else if (counterADC == 4) {
+				adcIsComplete = false;
+				adcData[3] = getADC();
+
+			}
+
+			else if (counterADC == 5) {
+				adcIsComplete = false;
+				adcData[4] = getADC();
+
+			}
+
+			else if (counterADC == 6) {
+				adcIsComplete = false;
+				adcData[5] = getADC();
+
+				sprintf(bufferTx, "\n\rADC1: %u\n", adcData[0]);
+				writeMsg(&handlerUsart2, bufferTx);
+				sprintf(bufferTx, "ADC2: %u\n", adcData[1]);
+				writeMsg(&handlerUsart2, bufferTx);
+				sprintf(bufferTx, "ADC3: %u\n", adcData[2]);
+				writeMsg(&handlerUsart2, bufferTx);
+				sprintf(bufferTx, "ADC4: %u\n", adcData[3]);
+				writeMsg(&handlerUsart2, bufferTx);
+				sprintf(bufferTx, "ADCx: %u\n", adcData[4]);
+				writeMsg(&handlerUsart2, bufferTx);
+				sprintf(bufferTx, "ADCy: %u\n\r", adcData[5]);
+				writeMsg(&handlerUsart2, bufferTx);
+
+				counterADC = 0;
+
+			}
+
+			else {
+				adcIsComplete = false;
+				counterADC = 0;
+			}
 		}
 
 		//MODO PARTY:
@@ -209,12 +289,17 @@ int main(void)
 	return 0;
 }
 
+void adcComplete_Callback(void){
+	adcIsComplete = true;
+	counterADC++;
+}
+
 void BasicTimer2_Callback(void) {
 	GPIOxTooglePin(&handlerBlinkyPin);
 	partyModeUpdateFlag = 1;
 	}
 
-void BasicTimer5_Callback(void){
+void BasicTimer3_Callback(void){
 	updateRaceModeFlag = 1;
 }
 
@@ -317,12 +402,22 @@ void parseCommands(char *ptrBufferReception) {
 
 			handlerRaceLED.numberOfPlayers = firstParameter;
 			handlerRaceLED.numberOfLaps    = secondParameter;
+
+
+
+			writeMsg(&handlerUsart2, "Modo de juego configurado:\n");
+			sprintf(bufferTx, "Numero de jugadores: %d\n", firstParameter);
+			writeMsg(&handlerUsart2, bufferTx);
+			sprintf(bufferTx, "Numero de vueltas: %d\n\r", secondParameter);
+			writeMsg(&handlerUsart2, bufferTx);
+
 		}
 
 
 	}
 
 	else if (strcmp(cmd, "initRace") == 0){
+
 
 		posP1 = 1;
 		posP2 = 1;
@@ -338,6 +433,7 @@ void parseCommands(char *ptrBufferReception) {
 
 		raceModeFlag       = 1;
 		counterRaceState   = 1;
+
 	}
 
 	else if (strcmp(cmd, "setPartyMode") == 0){
@@ -355,8 +451,10 @@ void parseCommands(char *ptrBufferReception) {
 
 		//CONTEO REGRESIVO
 		//3
+		GPIO_WritePin( &handlerPWMOutput, 0);
 		clearLEDS(60, &handlerPWMOutput);
-		delayms(100);
+		ResetTime(&handlerPWMOutput);
+	    delayms(500);
 
 		//Se llena el arreglo con número aleatorios entre el 0 y el 255
 		for (uint8_t i = 0; i < 180; i++) {
@@ -377,8 +475,10 @@ void parseCommands(char *ptrBufferReception) {
 
 		delayms(1000);
 
+		GPIO_WritePin( &handlerPWMOutput, 0);
 		clearLEDS(60, &handlerPWMOutput);
-		delayms(500);
+		ResetTime(&handlerPWMOutput);
+	    delayms(500);
 
 		//CONTEO REGRESIVO
 		//2
@@ -401,8 +501,10 @@ void parseCommands(char *ptrBufferReception) {
 
 		delayms(1000);
 
+		GPIO_WritePin( &handlerPWMOutput, 0);
 		clearLEDS(60, &handlerPWMOutput);
-		delayms(500);
+		ResetTime(&handlerPWMOutput);
+	    delayms(500);
 
 		//CONTEO REGRESIVO
 		//1
@@ -425,8 +527,10 @@ void parseCommands(char *ptrBufferReception) {
 
 		delayms(1000);
 
+		GPIO_WritePin( &handlerPWMOutput, 0);
 		clearLEDS(60, &handlerPWMOutput);
-		delayms(500);
+		ResetTime(&handlerPWMOutput);
+	    delayms(500);
 
 
 		//CONTEO REGRESIVO
@@ -479,7 +583,7 @@ void initSystem(void) {
 
 	//Se configura el PIN "PWM"
 	handlerPWMOutput.pGPIOx 						      = GPIOA;
-	handlerPWMOutput.GPIO_PinConfig.GPIO_PinNumber 		  = PIN_0;
+	handlerPWMOutput.GPIO_PinConfig.GPIO_PinNumber 		  = PIN_8;
 	handlerPWMOutput.GPIO_PinConfig.GPIO_PinMode 	      = GPIO_MODE_OUT;
 	handlerPWMOutput.GPIO_PinConfig.GPIO_PinOPType 		  = GPIO_OTYPE_PUSHPULL;
 	handlerPWMOutput.GPIO_PinConfig.GPIO_PinSpeed 	      = GPIO_OSPEED_FAST;
@@ -501,7 +605,7 @@ void initSystem(void) {
 	BasicTimer_Config(&handlerBlinkyTimer);
 
 	//Se configura el BlinkyTimer
-	handlerIntTimer.ptrTIMx 					= TIM5;
+	handlerIntTimer.ptrTIMx 					= TIM3;
 	handlerIntTimer.TIMx_Config.TIMx_mode 	    = BTIMER_MODE_UP;
 	handlerIntTimer.TIMx_Config.TIMx_speed 	    = BTIMER_SPEED_100M_05ms;
 	handlerIntTimer.TIMx_Config.TIMx_period 	= 30; //Update period = 15ms
@@ -575,7 +679,7 @@ void initSystem(void) {
 	extInt_Config(&UserButtonExtiConfig);
 
 
-	//Se configura el SDA del I2C de la OLED
+/*	//Se configura el SDA del I2C de la OLED
 	handlerSDAPin.pGPIOx 							 = GPIOC;
 	handlerSDAPin.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_9;
 	handlerSDAPin.GPIO_PinConfig.GPIO_PinMode 		 = GPIO_MODE_ALTFN; //Función alternativa
@@ -605,19 +709,47 @@ void initSystem(void) {
 	handlerI2COLED.ptrI2Cx 		= I2C3;
 
 	//Se carga la configuración
-	i2c_config(&handlerI2COLED);
+	i2c_config(&handlerI2COLED);*/
 
+	//Se configura la conversión ADC
+	adcConfig.channels          = channels;
+	adcConfig.numberOfChannels  = ADC_NUMBER_OF_CHANNELS_6;
+	adcConfig.dataAlignment		= ADC_ALIGNMENT_RIGHT;
+	adcConfig.resolution		= ADC_RESOLUTION_12_BIT;
+	adcConfig.samplingPeriod	= ADC_SAMPLING_PERIOD_480_CYCLES;
+
+	//Se carga la configuración, así la interrupción se activa por defecto
+	adc_Config(&adcConfig);
+
+	//Se configura el evento externo
+	adcConfigEvent.extEventTrigger    = ADC_EXT_TRIG_FALLING_EDGE;
+	adcConfigEvent.extEventTypeSelect = ADC_EXT_EVENT_TIM5_CC3;
+
+	//Se carga la configuración
+	adcConfigExternal(&adcConfigEvent);
+
+	//Se configura el Timer del PWM
+	handlerPWMTimer.ptrTIMx 		  = TIM5;
+	handlerPWMTimer.config.channel 	  = PWM_CHANNEL_3;
+	handlerPWMTimer.config.prescaler  = BTIMER_SPEED_100M_05ms;
+	handlerPWMTimer.config.periodo 	  = 2000;
+	handlerPWMTimer.config.duttyCicle = 500;
+
+	pwm_Config(&handlerPWMTimer);
+/*
 	initOLED(&handlerI2COLED);
 	clearOLED(&handlerI2COLED);
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
 	setColumn(&handlerI2COLED, 0x10);
 	printBytesArray(&handlerI2COLED, " BIENVENIDO ");
-
+*/
 	//Se limpia la cinta de LEDs
-	GPIO_WritePin( &handlerPWMOutput, 0);
+	/*GPIO_WritePin( &handlerPWMOutput, 0);
 	clearLEDS(60, &handlerPWMOutput);
 	ResetTime(&handlerPWMOutput);
-	delayms(100);
+	delayms(100);*/
+
+
 }
 
 

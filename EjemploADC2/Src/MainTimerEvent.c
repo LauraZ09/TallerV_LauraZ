@@ -80,47 +80,43 @@ int main(void) {
 
 		if (adcIsComplete == true) {
 
-			adcData[0] = 0;
-			adcData[1] = 0;
-			adcData[2] = 0;
-			adcData[3] = 0;
-
-
-			if (i == 1) {
+			if(i == 1){
 				adcIsComplete = false;
 				adcData[0] = getADC();
-				sprintf(Buffer, "\n\rADC1: %u\n", adcData[0]);
-				writeMsg(&handlerUsart2, Buffer);
 			}
 
-			else if (i == 2) {
+			else if (i == 2){
 				adcIsComplete = false;
 				adcData[1] = getADC();
-				sprintf(Buffer, "ADC2: %u\n", adcData[1]);
-				writeMsg(&handlerUsart2, Buffer);
 			}
 
-			else if (i == 3) {
+			else if (i == 3){
 				adcIsComplete = false;
 				adcData[2] = getADC();
-				sprintf(Buffer, "ADC3: %u\n", adcData[2]);
-				writeMsg(&handlerUsart2, Buffer);
 			}
 
-			else if (i == 4) {
+			else if (i == 4){
 				adcIsComplete = false;
 				adcData[3] = getADC();
+
+				sprintf(Buffer, "\n\rADC1: %u\n", adcData[0]);
+				writeMsg(&handlerUsart2, Buffer);
+				sprintf(Buffer, "ADC2: %u\n", adcData[1]);
+				writeMsg(&handlerUsart2, Buffer);
+				sprintf(Buffer, "ADC3: %u\n", adcData[2]);
+				writeMsg(&handlerUsart2, Buffer);
 				sprintf(Buffer, "ADC4: %u\n\r", adcData[3]);
 				writeMsg(&handlerUsart2, Buffer);
+
 				i = 0;
 			}
 
 			else {
-				adcIsComplete = false;
-				i = 0;
-
+			adcIsComplete = false;
+			i = 0;
 			}
 		}
+
 
 	}
 	return 0;
@@ -209,7 +205,7 @@ void initSystem(void) {
 	adcConfig.channels          = channels;
 	adcConfig.numberOfChannels  = ADC_NUMBER_OF_CHANNELS_4;
 	adcConfig.dataAlignment		= ADC_ALIGNMENT_RIGHT;
-	adcConfig.resolution		= ADC_RESOLUTION_6_BIT;
+	adcConfig.resolution		= ADC_RESOLUTION_12_BIT;
 	adcConfig.samplingPeriod	= ADC_SAMPLING_PERIOD_480_CYCLES;
 
 	//Se carga la configuración, así la interrupción se activa por defecto
