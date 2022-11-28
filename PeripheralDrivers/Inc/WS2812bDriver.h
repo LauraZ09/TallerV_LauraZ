@@ -25,6 +25,7 @@ void moveCarsFourPlayers (uint8_t positionP1, uint8_t positionP2,uint8_t positio
 void showFourCarsToConfig(uint8_t positionP1, uint8_t positionP2,uint8_t positionP3, uint8_t positionP4,
 		uint8_t intensityColorP1,  uint8_t intensityColorP2, uint8_t intensityColorP3, uint8_t intensityColorP4,
 		GPIO_Handler_t *pGPIOHandler);
+void moveCarJoyStickMode (uint8_t positionPJ, uint8_t color, GPIO_Handler_t *pGPIOHandler);
 
 
 void redLED(GPIO_Handler_t *pGPIOHandler, uint8_t intensityColorR);

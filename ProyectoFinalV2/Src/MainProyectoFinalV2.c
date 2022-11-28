@@ -8,21 +8,28 @@
  ******************************************************************************
  */
 
+//Se incluyen algunas librerías de C
 #include <stdint.h>
 #include <stdlib.h>
-#include "RccConfig.h"
-#include "ExtiDriver.h"
-#include "PWMDriver.h"
-#include "GPIOxDriver.h"
-#include "BasicTimer.h"
-#include "WS2812bDriver.h"
-#include "USARTxDriver.h"
 #include <stdbool.h>
-#include "string.h"
+#include <string.h>
+
+//Se incluyen los drivers para los periféricos de la board de STM
 #include "I2CDriver.h"
-#include "SH1106OLED.h"
+#include "RccConfig.h"
+#include "PWMDriver.h"
 #include "AdcDriver.h"
 #include "ExtiDriver.h"
+#include "BasicTimer.h"
+#include "GPIOxDriver.h"
+#include "USARTxDriver.h"
+
+//Se incluyen los drivers para los elementos externos
+#include "SH1106OLED.h"
+#include "KY006Buzzer.h"
+#include "WS2812bDriver.h"
+
+//DEFINICIÓN DE VARIABLES:
 
 //Buffer auxiliar para almacenar los colores de la cinta
 uint8_t buffer[180] = {0};
@@ -42,6 +49,11 @@ uint8_t lapCounterP4 = 0; //Jugador 4
 //Banderas auxiliares para la activavión y actualización del modo Party
 uint8_t partyModeFlag 		 = 0;
 uint8_t partyModeUpdateFlag  = 0;
+
+uint8_t joyStickModeFlag = 0;
+uint8_t joyStickModePosition = 0;
+uint8_t updateJoyStickModeFlag = 0;
+uint8_t colorJoyStickMode = 0;
 
 uint8_t autodestructionModeFlag = 0;
 
@@ -67,11 +79,11 @@ uint8_t counterReception = 0;     //Contador para la recepción de datos por el 
 bool stringComplete 	 = false; //Bandera para la recepción de datos del usart2
 
 //Arreglos para la conversión ADC
-uint8_t channels[6]= {ADC_CHANNEL_10, ADC_CHANNEL_1, ADC_CHANNEL_4, ADC_CHANNEL_8, ADC_CHANNEL_6, ADC_CHANNEL_7};
+uint8_t channels[6]= {ADC_CHANNEL_1, ADC_CHANNEL_4, ADC_CHANNEL_8, ADC_CHANNEL_10, ADC_CHANNEL_6, ADC_CHANNEL_7};
 uint16_t adcData[6]= {0};  //Datos del ADC
 
 uint8_t intensityConfigFlag = 0;
-char intensityColorCars[4] = { 0 };
+char intensityColorCars[4] = {255, 255, 255, 255 };
 
 //Arreglos auxiliares
 char bufferReception[200] = {0}; //En esta variable se almacenan variables de recepción
@@ -91,6 +103,7 @@ BasicTimer_Handler_t handlerIntTimer    = { 0 };
 
 //Handler para el PWM de los eventos ADC
 PWM_Handler_t handlerPWMTimer 			= { 0 };
+PWM_Handler_t handlerPWMTimerBuzzer     = { 0 };
 
 //Handler de los GPIOs usados
 GPIO_Handler_t handlerBlinkyPin 	    = { 0 };  //Handler para el LED de estado
@@ -102,6 +115,7 @@ GPIO_Handler_t handlerTxPin             = { 0 }; //Handler para el PIN por el cu
 GPIO_Handler_t handlerRxPin             = { 0 }; //Handler para el PIN por el cual se hará la transmisión
 GPIO_Handler_t handlerSCLPin			= { 0 };
 GPIO_Handler_t handlerSDAPin			= { 0 };
+GPIO_Handler_t handlerPinPWMChannel	    = { 0 };
 
 //Handler para el USART2
 USART_Handler_t handlerUsart2           = { 0 }; //Handler para el USART2
@@ -244,6 +258,51 @@ int main(void)
 			ResetTime(&handlerPWMOutput);
 		}
 
+		//MODO JOYSTICK:
+	/*	if (joyStickModeFlag & updateJoyStickModeFlag){
+
+			updateJoyStickModeFlag = 0;
+
+			if ((4050 < adcData[5]) & (adcData[5]< 5000)) {
+
+				joyStickModePosition++;
+
+			}
+
+			else if ((0 < adcData[5]) & (adcData[5]< 100)) {
+
+				joyStickModePosition--;
+
+			}
+
+			else {
+
+				__NOP();
+
+			}
+
+			if ((4050 < adcData[4]) & (adcData[4]< 5000)) {
+
+				colorJoyStickMode = rand() % 5;
+
+			}
+
+			else if ((0 < adcData[4]) & (adcData[4]< 100)){
+
+				colorJoyStickMode = rand() % 5;
+
+			}
+
+			else {
+
+				__NOP();
+
+			}
+
+			moveCarJoyStickMode (joyStickModePosition, colorJoyStickMode, &handlerPWMOutput);
+
+		}*/
+
 		//MODO RACE 2 PLAYERS:
 		if (updateRaceModeFlag) {
 
@@ -270,23 +329,31 @@ int main(void)
 			raceModeFlag = 0;
 			lapCounterP2 = 0;
 			delayms(10);
+
+
 			clearLEDS(60, &handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
-			delayms(10);
+			delayms(500);
+
 			clearLEDS(60, &handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
+			delayms(500);
+
 		}
 
 		if (lapCounterP1 == handlerRaceLED.numberOfLaps) {
 			raceModeFlag = 0;
 			lapCounterP1 = 0;
-			counterRaceState = 0;
-			ResetTime(&handlerPWMOutput);
+
+			GPIO_WritePin( &handlerPWMOutput, 0);
+
 			clearLEDS(60, &handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
-			delayms(10);
+			delayms(500);
+
 			clearLEDS(60, &handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
+			delayms(500);
 		}
 
 	}
@@ -299,13 +366,14 @@ void adcComplete_Callback(void){
 	counterADC++;
 }
 
-void BasicTimer2_Callback(void) {
+void BasicTimer10_Callback(void) {
 	GPIOxTooglePin(&handlerBlinkyPin);
 	partyModeUpdateFlag = 1;
 	}
 
 void BasicTimer3_Callback(void){
 	updateRaceModeFlag = 1;
+	updateJoyStickModeFlag = 1;
 }
 
 void callback_extInt13(void) {
@@ -436,7 +504,6 @@ void parseCommands(char *ptrBufferReception) {
 			startPwmSignal(&handlerPWMTimer);
 		}
 
-
 	}
 
 	else if (strcmp(cmd, "initRace") == 0){
@@ -458,9 +525,130 @@ void parseCommands(char *ptrBufferReception) {
 		lapCounterP3 = 0;
 		lapCounterP4 = 0;
 
+
+		//CONTEO REGRESIVO
+		//3
+		GPIO_WritePin( &handlerPWMOutput, 0);
+		clearLEDS(60, &handlerPWMOutput);
+		ResetTime(&handlerPWMOutput);
+	    delayms(500);
+
+		//Se llena el arreglo con número aleatorios entre el 0 y el 255
+		for (uint8_t i = 0; i < 180; i++) {
+			buffer[i] = 0;
+		}
+
+		for (uint8_t i = 0; i < 180; i += 3) {
+			buffer[i] = 255;
+		}
+
+		//Se prende la cinta con los colores del arreglo
+		for (uint8_t i = 0; i < 180; i++) {
+			colorByte(buffer[i], &handlerPWMOutput);
+		}
+
+		//Se envía un reset, para que se encienda adecacuadamente la cinta
+		ResetTime(&handlerPWMOutput);
+
+		//Se pone el sonido
+		Tone(&handlerPWMTimerBuzzer, 1);
+		delayms(500);
+		noTone(&handlerPWMTimerBuzzer);
+		GPIO_WritePin( &handlerPWMOutput, 0);
+		clearLEDS(60, &handlerPWMOutput);
+		ResetTime(&handlerPWMOutput);
+		delayms(1000);
+
+		//CONTEO REGRESIVO
+		//2
+		//Se llena el arreglo con número aleatorios entre el 0 y el 255
+		for (uint8_t i = 0; i < 180; i++) {
+			buffer[i] = 0;
+		}
+
+		for (uint8_t i = 1; i < 180; i += 3) {
+			buffer[i] = 255;
+		}
+
+		//Se prende la cinta con los colores del arreglo
+		for (uint8_t i = 0; i < 180; i++) {
+			colorByte(buffer[i], &handlerPWMOutput);
+		}
+
+		//Se envía un reset, para que se encienda adecacuadamente la cinta
+		ResetTime(&handlerPWMOutput);
+
+		//Se pone el sonido
+		Tone(&handlerPWMTimerBuzzer, 1);
+		delayms(500);
+		noTone(&handlerPWMTimerBuzzer);
+		GPIO_WritePin( &handlerPWMOutput, 0);
+		clearLEDS(60, &handlerPWMOutput);
+		ResetTime(&handlerPWMOutput);
+		delayms(1000);
+
+		//CONTEO REGRESIVO
+		//1
+		//Se llena el arreglo con número aleatorios entre el 0 y el 255
+		for (uint8_t i = 0; i < 180; i++) {
+			buffer[i] = 0;
+		}
+
+		for (uint8_t i = 2; i < 180; i += 3) {
+			buffer[i] = 255;
+		}
+
+		//Se prende la cinta con los colores del arreglo
+		for (uint8_t i = 0; i < 180; i++) {
+			colorByte(buffer[i], &handlerPWMOutput);
+		}
+
+		//Se envía un reset, para que se encienda adecacuadamente la cinta
+		ResetTime(&handlerPWMOutput);
+
+		//Se pone el sonido
+		Tone(&handlerPWMTimerBuzzer, 1);
+		delayms(500);
+		noTone(&handlerPWMTimerBuzzer);
+		GPIO_WritePin( &handlerPWMOutput, 0);
+		clearLEDS(60, &handlerPWMOutput);
+		ResetTime(&handlerPWMOutput);
+		delayms(1000);
+
+
+		//CONTEO REGRESIVO
+		//F
+		//Se llena el arreglo con número aleatorios entre el 0 y el 255
+		for (uint8_t i = 0; i < 180; i++) {
+			buffer[i] = 0;
+		}
+
+		for (uint8_t i = 2; i < 180; i += 3) {
+			buffer[i] = 82;
+		}
+
+		for (uint8_t i = 1; i < 180; i += 3) {
+			buffer[i] = 227;
+		}
+
+
+		//Se prende la cinta con los colores del arreglo
+		for (uint8_t i = 0; i < 180; i++) {
+			colorByte(buffer[i], &handlerPWMOutput);
+		}
+
+		//Se envía un reset, para que se encienda adecacuadamente la cinta
+		ResetTime(&handlerPWMOutput);
+
+		Tone(&handlerPWMTimerBuzzer, 2);
+		delayms(1000);
+		noTone(&handlerPWMTimerBuzzer);
+		clearLEDS(60, &handlerPWMOutput);
+		ResetTime(&handlerPWMOutput);
+		delayms(100);
+
 		raceModeFlag       = 1;
 		counterRaceState   = 1;
-
 	}
 
 	else if (strcmp(cmd, "setPartyMode") == 0){
@@ -589,9 +777,12 @@ void parseCommands(char *ptrBufferReception) {
 
 		partyModeFlag           = 0;
 		raceModeFlag            = 0;
+		joyStickModeFlag		= 1;
 		autodestructionModeFlag = 0;
 
-
+		enableEvent(&handlerPWMTimer);
+		enableOutput(&handlerPWMTimer);
+		startPwmSignal(&handlerPWMTimer);
 	}
 }
 
@@ -623,13 +814,13 @@ void initSystem(void) {
 	GPIO_WritePin(&handlerPWMOutput, RESET);
 
 	//Se configura el BlinkyTimer
-	handlerBlinkyTimer.ptrTIMx 					= TIM2;
+	handlerBlinkyTimer.ptrTIMx 					= TIM10;
 	handlerBlinkyTimer.TIMx_Config.TIMx_mode 	= BTIMER_MODE_UP;
 	handlerBlinkyTimer.TIMx_Config.TIMx_speed 	= BTIMER_SPEED_100M_05ms;
 	handlerBlinkyTimer.TIMx_Config.TIMx_period 	= 500; //Update period= 0.05ms*500 = 250ms
 
 	//Se carga la configuración del BlinkyTimer
-	BasicTimer_Config(&handlerBlinkyTimer);
+	Timer10_Config(&handlerBlinkyTimer);
 
 	//Se configura el BlinkyTimer
 	handlerIntTimer.ptrTIMx 					= TIM3;
@@ -755,7 +946,7 @@ void initSystem(void) {
 	//Se carga la configuración
 	adcConfigExternal(&adcConfigEvent);
 
-	//Se configura el Timer del PWM
+	//Se configura el Timer del PWM de los eventos ADC
 	handlerPWMTimer.ptrTIMx 		  = TIM5;
 	handlerPWMTimer.config.channel 	  = PWM_CHANNEL_1;
 	handlerPWMTimer.config.prescaler  = BTIMER_SPEED_100M_05ms;
@@ -763,6 +954,28 @@ void initSystem(void) {
 	handlerPWMTimer.config.duttyCicle = 125;
 
 	pwm_Config(&handlerPWMTimer);
+
+	//Se configura el Timer del PWM
+	handlerPWMTimerBuzzer.ptrTIMx 		      = TIM2;
+	handlerPWMTimerBuzzer.config.channel 	  = PWM_CHANNEL_3;
+	handlerPWMTimerBuzzer.config.prescaler    = BTIMER_SPEED_100M_05ms;
+	handlerPWMTimerBuzzer.config.periodo 	  = 4;
+	handlerPWMTimerBuzzer.config.duttyCicle   = 2;
+
+	pwm_Config(&handlerPWMTimerBuzzer);
+
+    //Se configura el PIN por el que sale la señal del PWM
+	handlerPinPWMChannel.pGPIOx 					        = GPIOB;
+	handlerPinPWMChannel.GPIO_PinConfig.GPIO_PinNumber 	    = PIN_10;
+	handlerPinPWMChannel.GPIO_PinConfig.GPIO_PinMode 	    = GPIO_MODE_ALTFN;    //Función alternativa
+	handlerPinPWMChannel.GPIO_PinConfig.GPIO_PinOPType 	    = GPIO_OTYPE_PUSHPULL;
+	handlerPinPWMChannel.GPIO_PinConfig.GPIO_PinSpeed 	    = GPIO_OSPEED_FAST;
+	handlerPinPWMChannel.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerPinPWMChannel.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF1;
+
+	//Se carga la configuración
+	GPIO_Config(&handlerPinPWMChannel);
+
 /*
 	initOLED(&handlerI2COLED);
 	clearOLED(&handlerI2COLED);

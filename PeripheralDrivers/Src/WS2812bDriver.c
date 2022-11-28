@@ -734,6 +734,62 @@ void nullLED(GPIO_Handler_t *pGPIOHandler){
 }
 void (*ptr_nullFunct)(GPIO_Handler_t *pGPIOHandler) = nullLED;
 
+void moveCarJoyStickMode (uint8_t positionPJ, uint8_t color, GPIO_Handler_t *pGPIOHandler){
+
+	uint8_t buffer[60] = {0};
+
+	__disable_irq();
+
+	buffer[positionPJ + 0] = color;
+	buffer[positionPJ + 1] = color;
+	buffer[positionPJ + 2] = color;
+	buffer[positionPJ + 3] = color;
+
+	for (uint8_t i = 0; i < 60; i++) {
+
+		switch (buffer[i]) {
+
+		case 0: {
+			ptr_nullFunct(pGPIOHandler);
+
+			break;
+		}
+
+		case 1: {
+			ptr_redFunct(pGPIOHandler, 255);
+
+			break;
+		}
+
+		case 2: {
+			ptr_greenFunct(pGPIOHandler, 255);
+
+			break;
+		}
+
+		case 3: {
+			ptr_blueFunct(pGPIOHandler, 255);
+
+			break;
+		}
+
+		case 4: {
+			ptr_yellowFunct(pGPIOHandler, 255);
+
+			break;
+		}
+
+		default: {
+			__NOP();
+			break;
+		}
+		}
+	}
+
+	ResetTime(pGPIOHandler);
+	__enable_irq();
+}
+
 void moveCarsFourPlayers (uint8_t positionP1, uint8_t positionP2,uint8_t positionP3, uint8_t positionP4,
 		uint8_t intensityColorP1,  uint8_t intensityColorP2, uint8_t intensityColorP3, uint8_t intensityColorP4,
 		GPIO_Handler_t *pGPIOHandler){

@@ -54,6 +54,7 @@ void BasicTimer4_Callback(void);
 void BasicTimer5_Callback(void);
 void delayus(uint32_t delayTime);
 void delayms(uint32_t delayTime);
+void Timer10_Config(BasicTimer_Handler_t *ptrBTimerHandler);
 uint32_t captureFreqPeriod(Capture_Handler_t *ptrCaptureHandler);
 uint32_t getTimeStamp(void);
 

@@ -56,6 +56,7 @@ int main(void) {
 	startPwmSignal(&handlerPWMTimer);
 	writeChar(&handlerUsart2,' ');
 
+
 	while (1) {
 		//El sistema siempre está verificando si el valor de rxData ha cambiado
 		//(lo cual sucede en la ISR de la recepción)
