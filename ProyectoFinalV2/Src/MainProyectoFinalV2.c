@@ -51,9 +51,9 @@ uint8_t partyModeFlag 		 = 0;
 uint8_t partyModeUpdateFlag  = 0;
 
 uint8_t joyStickModeFlag = 0;
-uint8_t joyStickModePosition = 0;
+uint8_t joyStickModePosition = 5;
 uint8_t updateJoyStickModeFlag = 0;
-uint8_t colorJoyStickMode = 0;
+uint8_t colorJoyStickMode = 3;
 
 uint8_t autodestructionModeFlag = 0;
 
@@ -258,50 +258,91 @@ int main(void)
 			ResetTime(&handlerPWMOutput);
 		}
 
-		//MODO JOYSTICK:
-	/*	if (joyStickModeFlag & updateJoyStickModeFlag){
+		if((adcIsComplete == true) & (joyStickModeFlag == 1)) {
 
-			updateJoyStickModeFlag = 0;
+			if (counterADC == 1) {
+				adcIsComplete = false;
+				adcData[0] = getADC();
+			}
 
-			if ((4050 < adcData[5]) & (adcData[5]< 5000)) {
+			else if (counterADC == 2) {
+				adcIsComplete = false;
+				adcData[1] = getADC();
+			}
 
-				joyStickModePosition++;
+			else if (counterADC == 3) {
+				adcIsComplete = false;
+				adcData[2] = getADC();
+			}
+
+			else if (counterADC == 4) {
+				adcIsComplete = false;
+				adcData[3] = getADC();
 
 			}
 
-			else if ((0 < adcData[5]) & (adcData[5]< 100)) {
+			else if (counterADC == 5) {
+				adcIsComplete = false;
+				adcData[4] = getADC();
 
-				joyStickModePosition--;
+			}
 
+			else if (counterADC == 6) {
+				adcIsComplete = false;
+				adcData[5] = getADC();
+				sprintf(bufferTx, "ADCx: %u\n", adcData[4]);
+				writeMsg(&handlerUsart2, bufferTx);
+				sprintf(bufferTx, "ADCy: %u\n\r", adcData[5]);
+				writeMsg(&handlerUsart2, bufferTx);
+
+				counterADC = 0;
+
+				if ((4050 < adcData[5]) & (adcData[5] < 5000)) {
+
+					joyStickModePosition++;
+
+				}
+
+				else if ((0 < adcData[5]) & (adcData[5] < 100)) {
+
+					joyStickModePosition--;
+
+				}
+
+				else {
+
+					__NOP();
+
+				}
+
+				if ((4050 < adcData[4]) & (adcData[4] < 5000)) {
+
+					colorJoyStickMode = (rand() % 4) + 1;
+
+				}
+
+				else if ((0 < adcData[4]) & (adcData[4] < 100)) {
+
+					colorJoyStickMode = (rand() % 4) + 1;
+
+				}
+
+				else {
+
+					__NOP();
+
+				}
+
+				moveCarJoyStickMode (joyStickModePosition, colorJoyStickMode, &handlerPWMOutput);
 			}
 
 			else {
-
-				__NOP();
-
+				adcIsComplete = false;
+				counterADC = 0;
 			}
 
-			if ((4050 < adcData[4]) & (adcData[4]< 5000)) {
 
-				colorJoyStickMode = rand() % 5;
-
-			}
-
-			else if ((0 < adcData[4]) & (adcData[4]< 100)){
-
-				colorJoyStickMode = rand() % 5;
-
-			}
-
-			else {
-
-				__NOP();
-
-			}
-
-			moveCarJoyStickMode (joyStickModePosition, colorJoyStickMode, &handlerPWMOutput);
-
-		}*/
+		}
 
 		//MODO RACE 2 PLAYERS:
 		if (updateRaceModeFlag) {
@@ -412,6 +453,7 @@ void parseCommands(char *ptrBufferReception) {
 
 	if (strcmp(cmd, "help") == 0) {
 
+		joyStickModeFlag		= 0;
 		raceModeFlag  = 0;
 		partyModeFlag = 0;
 
@@ -464,6 +506,7 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "setRaceMode") == 0) {
 
+		joyStickModeFlag		= 0;
 		raceModeFlag  = 0;
 		partyModeFlag = 0;
 
@@ -507,6 +550,9 @@ void parseCommands(char *ptrBufferReception) {
 	}
 
 	else if (strcmp(cmd, "initRace") == 0){
+
+		joyStickModeFlag		= 0;
+
 		disableEvent(&handlerPWMTimer);
 		disableOutput(&handlerPWMTimer);
 		stopPwmSignal(&handlerPWMTimer);
@@ -653,6 +699,7 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "setPartyMode") == 0){
 
+		joyStickModeFlag		= 0;
 		partyModeFlag 			= 1;
 		raceModeFlag  			= 0;
 		autodestructionModeFlag = 0;
@@ -660,6 +707,7 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "initAutodestruction") == 0){
 
+		joyStickModeFlag		= 0;
 		partyModeFlag 			= 0;
 		raceModeFlag  			= 0;
 		autodestructionModeFlag = 1;
@@ -783,6 +831,7 @@ void parseCommands(char *ptrBufferReception) {
 		enableEvent(&handlerPWMTimer);
 		enableOutput(&handlerPWMTimer);
 		startPwmSignal(&handlerPWMTimer);
+
 	}
 }
 
@@ -950,7 +999,7 @@ void initSystem(void) {
 	handlerPWMTimer.ptrTIMx 		  = TIM5;
 	handlerPWMTimer.config.channel 	  = PWM_CHANNEL_1;
 	handlerPWMTimer.config.prescaler  = BTIMER_SPEED_100M_05ms;
-	handlerPWMTimer.config.periodo 	  = 500;
+	handlerPWMTimer.config.periodo 	  = 250;
 	handlerPWMTimer.config.duttyCicle = 125;
 
 	pwm_Config(&handlerPWMTimer);

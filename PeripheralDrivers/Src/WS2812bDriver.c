@@ -738,13 +738,13 @@ void moveCarJoyStickMode (uint8_t positionPJ, uint8_t color, GPIO_Handler_t *pGP
 
 	uint8_t buffer[60] = {0};
 
-	__disable_irq();
 
 	buffer[positionPJ + 0] = color;
 	buffer[positionPJ + 1] = color;
 	buffer[positionPJ + 2] = color;
 	buffer[positionPJ + 3] = color;
 
+	__disable_irq();
 	for (uint8_t i = 0; i < 60; i++) {
 
 		switch (buffer[i]) {

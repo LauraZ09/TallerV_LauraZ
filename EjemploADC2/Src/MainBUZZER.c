@@ -33,7 +33,7 @@ int main(void) {
 	setTo100M();
 	initSystem();  //Se inicializa el sistema, con la configuración de los periféricos que se van a usar
 
-	Tone(&handlerPWMTimer, 1);
+	/*Tone(&handlerPWMTimer, 1);
 	delayms(500);
 	noTone(&handlerPWMTimer);
 	delayms(1000);
@@ -51,7 +51,7 @@ int main(void) {
 	Tone(&handlerPWMTimer, 2);
 	delayms(1000);
 	noTone(&handlerPWMTimer);
-	delayms(1000);
+	delayms(1000);*/
 
 
 	while (1) {
