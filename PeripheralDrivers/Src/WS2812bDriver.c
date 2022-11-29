@@ -608,6 +608,30 @@ void colorByte(uint8_t byte, GPIO_Handler_t *pGPIOHandler){
 	}
 }
 
+void clearAllStrip(GPIO_Handler_t *pGPIOHandler){
+	uint8_t buffer[180] = {0};
+
+	__disable_irq();
+	for (uint8_t i = 0; i < 180; i++) {
+
+		switch (buffer[i]) {
+
+		case 0: {
+			ptr_nullFunct(pGPIOHandler);
+
+			break;
+		}
+
+		default:{
+			__NOP();
+		}
+		}
+	}
+		ResetTime(pGPIOHandler);
+		__enable_irq();
+
+}
+
 void setColorLED(uint8_t RED, uint8_t GREEN, uint8_t BLUE, GPIO_Handler_t *pGPIOHandler){
 
 	colorByte(GREEN, pGPIOHandler);
@@ -617,7 +641,7 @@ void setColorLED(uint8_t RED, uint8_t GREEN, uint8_t BLUE, GPIO_Handler_t *pGPIO
 
 void clearLEDS(uint8_t numberOfLEDS,GPIO_Handler_t *pGPIOHandler){
 
-	for(uint8_t i = 0; i < numberOfLEDS; i++){
+	for(uint16_t i = 0; i < numberOfLEDS; i++){
 		setColorLED(0,0,0,pGPIOHandler);
 	}
 }
@@ -713,7 +737,6 @@ void redLED(GPIO_Handler_t *pGPIOHandler, uint8_t intensityColorR){
 }
 void (*ptr_redFunct)(GPIO_Handler_t *pGPIOHandler, uint8_t intensityColorR) = redLED;
 
-
 void blueLED(GPIO_Handler_t *pGPIOHandler, uint8_t intensityColorB){
 	setColorLED(0, 0, intensityColorB,pGPIOHandler);
 }
@@ -734,9 +757,20 @@ void nullLED(GPIO_Handler_t *pGPIOHandler){
 }
 void (*ptr_nullFunct)(GPIO_Handler_t *pGPIOHandler) = nullLED;
 
+void magentaLED(GPIO_Handler_t *pGPIOHandler, uint8_t intensityColorM){
+	setColorLED(intensityColorM, 0, intensityColorM, pGPIOHandler);
+}
+void (*ptr_magentaFunct)(GPIO_Handler_t *pGPIOHandler, uint8_t intensityColorM) = magentaLED;
+
+void roseLED(GPIO_Handler_t *pGPIOHandler, uint8_t intensityColorRo){
+	setColorLED(intensityColorRo, 0, (intensityColorRo)*30/100, pGPIOHandler);
+}
+void (*ptr_roseFunct)(GPIO_Handler_t *pGPIOHandler, uint8_t intensityColorRo) = roseLED;
+
+
 void moveCarJoyStickMode (uint8_t positionPJ, uint8_t color, GPIO_Handler_t *pGPIOHandler){
 
-	uint8_t buffer[60] = {0};
+	uint8_t buffer[180] = {0};
 
 
 	buffer[positionPJ + 0] = color;
@@ -745,7 +779,7 @@ void moveCarJoyStickMode (uint8_t positionPJ, uint8_t color, GPIO_Handler_t *pGP
 	buffer[positionPJ + 3] = color;
 
 	__disable_irq();
-	for (uint8_t i = 0; i < 60; i++) {
+	for (uint8_t i = 0; i < 180; i++) {
 
 		switch (buffer[i]) {
 
@@ -779,6 +813,19 @@ void moveCarJoyStickMode (uint8_t positionPJ, uint8_t color, GPIO_Handler_t *pGP
 			break;
 		}
 
+		case 5: {
+			ptr_roseFunct(pGPIOHandler, 255);
+
+			break;
+		}
+
+		case 6:{
+			ptr_magentaFunct(pGPIOHandler, 255);
+
+			break;
+		}
+
+
 		default: {
 			__NOP();
 			break;
@@ -794,7 +841,7 @@ void moveCarsFourPlayers (uint8_t positionP1, uint8_t positionP2,uint8_t positio
 		uint8_t intensityColorP1,  uint8_t intensityColorP2, uint8_t intensityColorP3, uint8_t intensityColorP4,
 		GPIO_Handler_t *pGPIOHandler){
 
-	uint8_t buffer[60] = {0};
+	uint8_t buffer[180] = {0};
 
 	__disable_irq();
 	buffer[positionP1 + 0] = 1;
@@ -817,7 +864,7 @@ void moveCarsFourPlayers (uint8_t positionP1, uint8_t positionP2,uint8_t positio
 	buffer[positionP4 + 2] = 4;
 	buffer[positionP4 + 3] = 4;
 
-	for (uint8_t i = 0; i < 60; i++) {
+	for (uint8_t i = 0; i < 180; i++) {
 
 		switch(buffer[i]){
 
@@ -840,13 +887,13 @@ void moveCarsFourPlayers (uint8_t positionP1, uint8_t positionP2,uint8_t positio
 		}
 
 		case 3: {
-			ptr_blueFunct(pGPIOHandler, intensityColorP3);
+			ptr_roseFunct(pGPIOHandler, intensityColorP3);
 
 			break;
 		}
 
 		case 4: {
-			ptr_yellowFunct(pGPIOHandler, intensityColorP4);
+			ptr_magentaFunct(pGPIOHandler, intensityColorP4);
 
 			break;
 		}
@@ -866,7 +913,7 @@ void showFourCarsToConfig(uint8_t positionP1, uint8_t positionP2,uint8_t positio
 		uint8_t intensityColorP1,  uint8_t intensityColorP2, uint8_t intensityColorP3, uint8_t intensityColorP4,
 		GPIO_Handler_t *pGPIOHandler){
 
-	uint8_t buffer[60] = {0};
+	uint8_t buffer[180] = {0};
 
 	buffer[positionP1 + 0] = 1;
 	buffer[positionP1 + 1] = 1;
@@ -889,7 +936,7 @@ void showFourCarsToConfig(uint8_t positionP1, uint8_t positionP2,uint8_t positio
 	buffer[positionP4 + 3] = 4;
 
 	__disable_irq();
-	for (uint8_t i = 0; i < 60; i++) {
+	for (uint8_t i = 0; i < 180; i++) {
 
 		switch(buffer[i]){
 
@@ -912,13 +959,13 @@ void showFourCarsToConfig(uint8_t positionP1, uint8_t positionP2,uint8_t positio
 		}
 
 		case 3: {
-			ptr_blueFunct(pGPIOHandler, intensityColorP3);
+			ptr_roseFunct(pGPIOHandler, intensityColorP3);
 
 			break;
 		}
 
 		case 4: {
-			ptr_yellowFunct(pGPIOHandler, intensityColorP4);
+			ptr_magentaFunct(pGPIOHandler, intensityColorP4);
 
 			break;
 		}

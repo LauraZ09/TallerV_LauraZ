@@ -32,7 +32,7 @@
 //DEFINICIÓN DE VARIABLES:
 
 //Buffer auxiliar para almacenar los colores de la cinta
-uint8_t buffer[180] = {0};
+uint8_t buffer[540] = {0};
 
 //Contadores de la posición de los jugadores en la pista(número de LED en el que están)
 uint8_t posP1 = 1; //Jugador 1
@@ -51,7 +51,7 @@ uint8_t partyModeFlag 		 = 0;
 uint8_t partyModeUpdateFlag  = 0;
 
 uint8_t joyStickModeFlag = 0;
-uint8_t joyStickModePosition = 5;
+uint8_t joyStickModePosition = 1;
 uint8_t updateJoyStickModeFlag = 0;
 uint8_t colorJoyStickMode = 3;
 
@@ -245,12 +245,12 @@ int main(void)
 			partyModeUpdateFlag = 0; //Se baja la bandera de actualización
 
 			//Se llena el arreglo con número aleatorios entre el 0 y el 255
-			for (uint8_t i = 0; i < 180; i++) {
+			for (uint16_t i = 0; i < 540; i++) {
 				buffer[i] = rand() % 256;
 			}
 
 			//Se prende la cinta con los colores del arreglo
-			for (uint8_t i = 0; i < 180; i++) {
+			for (uint16_t i = 0; i < 540; i++) {
 				colorByte(buffer[i], &handlerPWMOutput);
 			}
 
@@ -299,14 +299,25 @@ int main(void)
 
 				if ((4050 < adcData[5]) & (adcData[5] < 5000)) {
 
-					joyStickModePosition++;
+					if(joyStickModePosition < 179){
+						joyStickModePosition++;
+					}
+
+					else if(joyStickModePosition == 179){
+						joyStickModePosition = 1;
+					}
 
 				}
 
-				else if ((0 < adcData[5]) & (adcData[5] < 100)) {
+				else if ((0 < adcData[5]) & (adcData[5] < 400)) {
 
-					joyStickModePosition--;
+					if(joyStickModePosition == 0){
+						joyStickModePosition = 179;
+					}
 
+					else if(joyStickModePosition > 0){
+						joyStickModePosition--;
+					}
 				}
 
 				else {
@@ -317,13 +328,13 @@ int main(void)
 
 				if ((4050 < adcData[4]) & (adcData[4] < 5000)) {
 
-					colorJoyStickMode = (rand() % 4) + 1;
+					colorJoyStickMode = (rand() % 6) + 1;
 
 				}
 
-				else if ((0 < adcData[4]) & (adcData[4] < 100)) {
+				else if ((0 < adcData[4]) & (adcData[4] < 400)) {
 
-					colorJoyStickMode = (rand() % 4) + 1;
+					colorJoyStickMode = (rand() % 6) + 1;
 
 				}
 
@@ -354,12 +365,12 @@ int main(void)
 				moveCarsFourPlayers (posP1, posP2, posP3, posP4, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
 												intensityColorCars[3], &handlerPWMOutput);
 
-				if (posP1 == 52) {
+				if (posP1 == 179) {
 					posP1 = 0;
 					lapCounterP1++;
 				}
 
-				if (posP2 == 52) {
+				if (posP2 == 179) {
 					posP2 = 0;
 					lapCounterP2++;
 				}
@@ -372,11 +383,11 @@ int main(void)
 			delayms(10);
 
 
-			clearLEDS(60, &handlerPWMOutput);
+			clearLEDS(180, &handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
 			delayms(500);
 
-			clearLEDS(60, &handlerPWMOutput);
+			clearLEDS(180, &handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
 			delayms(500);
 
@@ -388,11 +399,11 @@ int main(void)
 
 			GPIO_WritePin( &handlerPWMOutput, 0);
 
-			clearLEDS(60, &handlerPWMOutput);
+			clearLEDS(180, &handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
 			delayms(500);
 
-			clearLEDS(60, &handlerPWMOutput);
+			clearLEDS(180, &handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
 			delayms(500);
 		}
@@ -417,16 +428,16 @@ void BasicTimer3_Callback(void){
 	updateJoyStickModeFlag = 1;
 }
 
-void callback_extInt13(void) {
-//Se sube la bandera del PinClock a 1
-	posP1++;
-	flagP1 = 1;
-}
-
-void callback_extInt8(void) {
+void callback_extInt10(void) {
 //Se sube la bandera del PinClock a 1
 	posP2++;
 	flagP2 = 1;
+}
+
+void callback_extInt15(void) {
+//Se sube la bandera del PinClock a 1
+	posP1++;
+	flagP1 = 1;
 }
 
 void usart2Rx_Callback(void){
@@ -574,22 +585,21 @@ void parseCommands(char *ptrBufferReception) {
 
 		//CONTEO REGRESIVO
 		//3
-		GPIO_WritePin( &handlerPWMOutput, 0);
-		clearLEDS(60, &handlerPWMOutput);
-		ResetTime(&handlerPWMOutput);
+		clearAllStrip(&handlerPWMOutput);
+		delayms(100);
 	    delayms(500);
 
 		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			buffer[i] = 0;
 		}
 
-		for (uint8_t i = 0; i < 180; i += 3) {
+		for (uint16_t i = 0; i < 540; i += 3) {
 			buffer[i] = 255;
 		}
 
 		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 180; i++) {
 			colorByte(buffer[i], &handlerPWMOutput);
 		}
 
@@ -600,24 +610,23 @@ void parseCommands(char *ptrBufferReception) {
 		Tone(&handlerPWMTimerBuzzer, 1);
 		delayms(500);
 		noTone(&handlerPWMTimerBuzzer);
-		GPIO_WritePin( &handlerPWMOutput, 0);
-		clearLEDS(60, &handlerPWMOutput);
-		ResetTime(&handlerPWMOutput);
+		clearAllStrip(&handlerPWMOutput);
+		delayms(100);
 		delayms(1000);
 
 		//CONTEO REGRESIVO
 		//2
 		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			buffer[i] = 0;
 		}
 
-		for (uint8_t i = 1; i < 180; i += 3) {
+		for (uint16_t i = 0; i < 540; i += 3) {
 			buffer[i] = 255;
 		}
 
 		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			colorByte(buffer[i], &handlerPWMOutput);
 		}
 
@@ -628,24 +637,23 @@ void parseCommands(char *ptrBufferReception) {
 		Tone(&handlerPWMTimerBuzzer, 1);
 		delayms(500);
 		noTone(&handlerPWMTimerBuzzer);
-		GPIO_WritePin( &handlerPWMOutput, 0);
-		clearLEDS(60, &handlerPWMOutput);
-		ResetTime(&handlerPWMOutput);
+		clearAllStrip(&handlerPWMOutput);
+		delayms(100);
 		delayms(1000);
 
 		//CONTEO REGRESIVO
 		//1
 		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			buffer[i] = 0;
 		}
 
-		for (uint8_t i = 2; i < 180; i += 3) {
+		for (uint16_t i = 2; i < 540; i += 3) {
 			buffer[i] = 255;
 		}
 
 		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			colorByte(buffer[i], &handlerPWMOutput);
 		}
 
@@ -656,30 +664,29 @@ void parseCommands(char *ptrBufferReception) {
 		Tone(&handlerPWMTimerBuzzer, 1);
 		delayms(500);
 		noTone(&handlerPWMTimerBuzzer);
-		GPIO_WritePin( &handlerPWMOutput, 0);
-		clearLEDS(60, &handlerPWMOutput);
-		ResetTime(&handlerPWMOutput);
+		clearAllStrip(&handlerPWMOutput);
+		delayms(100);
 		delayms(1000);
 
 
 		//CONTEO REGRESIVO
 		//F
 		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			buffer[i] = 0;
 		}
 
-		for (uint8_t i = 2; i < 180; i += 3) {
+		for (uint16_t i = 2; i < 540; i += 3) {
 			buffer[i] = 82;
 		}
 
-		for (uint8_t i = 1; i < 180; i += 3) {
+		for (uint16_t i = 1; i < 540; i += 3) {
 			buffer[i] = 227;
 		}
 
 
 		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			colorByte(buffer[i], &handlerPWMOutput);
 		}
 
@@ -689,8 +696,8 @@ void parseCommands(char *ptrBufferReception) {
 		Tone(&handlerPWMTimerBuzzer, 2);
 		delayms(1000);
 		noTone(&handlerPWMTimerBuzzer);
-		clearLEDS(60, &handlerPWMOutput);
-		ResetTime(&handlerPWMOutput);
+		clearAllStrip(&handlerPWMOutput);
+		delayms(100);
 		delayms(100);
 
 		raceModeFlag       = 1;
@@ -711,25 +718,25 @@ void parseCommands(char *ptrBufferReception) {
 		partyModeFlag 			= 0;
 		raceModeFlag  			= 0;
 		autodestructionModeFlag = 1;
+		intensityConfigFlag = 0;
 
 		//CONTEO REGRESIVO
 		//3
-		GPIO_WritePin( &handlerPWMOutput, 0);
-		clearLEDS(60, &handlerPWMOutput);
-		ResetTime(&handlerPWMOutput);
-	    delayms(500);
+		clearAllStrip(&handlerPWMOutput);
+		delayms(100);
+		delayms(500);
 
 		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			buffer[i] = 0;
 		}
 
-		for (uint8_t i = 0; i < 180; i += 3) {
+		for (uint16_t i = 0; i < 540; i += 3) {
 			buffer[i] = 255;
 		}
 
 		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			colorByte(buffer[i], &handlerPWMOutput);
 		}
 
@@ -738,24 +745,23 @@ void parseCommands(char *ptrBufferReception) {
 
 		delayms(1000);
 
-		GPIO_WritePin( &handlerPWMOutput, 0);
-		clearLEDS(60, &handlerPWMOutput);
-		ResetTime(&handlerPWMOutput);
-	    delayms(500);
+		clearAllStrip(&handlerPWMOutput);
+		delayms(100);
+		delayms(500);
 
 		//CONTEO REGRESIVO
 		//2
 		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			buffer[i] = 0;
 		}
 
-		for (uint8_t i = 1; i < 180; i += 3) {
+		for (uint16_t i = 1; i < 540; i += 3) {
 			buffer[i] = 255;
 		}
 
 		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			colorByte(buffer[i], &handlerPWMOutput);
 		}
 
@@ -764,24 +770,23 @@ void parseCommands(char *ptrBufferReception) {
 
 		delayms(1000);
 
-		GPIO_WritePin( &handlerPWMOutput, 0);
-		clearLEDS(60, &handlerPWMOutput);
-		ResetTime(&handlerPWMOutput);
-	    delayms(500);
+		clearAllStrip(&handlerPWMOutput);
+		delayms(100);
+		delayms(500);
 
 		//CONTEO REGRESIVO
 		//1
 		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			buffer[i] = 0;
 		}
 
-		for (uint8_t i = 2; i < 180; i += 3) {
+		for (uint16_t i = 2; i < 540; i += 3) {
 			buffer[i] = 255;
 		}
 
 		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			colorByte(buffer[i], &handlerPWMOutput);
 		}
 
@@ -790,30 +795,30 @@ void parseCommands(char *ptrBufferReception) {
 
 		delayms(1000);
 
-		GPIO_WritePin( &handlerPWMOutput, 0);
-		clearLEDS(60, &handlerPWMOutput);
-		ResetTime(&handlerPWMOutput);
-	    delayms(500);
+		clearAllStrip(&handlerPWMOutput);
+		delayms(100);
+		delayms(500);
+
 
 
 		//CONTEO REGRESIVO
 		//F
 		//Se llena el arreglo con número aleatorios entre el 0 y el 255
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			buffer[i] = 0;
 		}
 
-		for (uint8_t i = 2; i < 180; i += 3) {
+		for (uint16_t i = 2; i < 540; i += 3) {
 			buffer[i] = 82;
 		}
 
-		for (uint8_t i = 1; i < 180; i += 3) {
+		for (uint16_t i = 1; i < 540; i += 3) {
 			buffer[i] = 227;
 		}
 
 
 		//Se prende la cinta con los colores del arreglo
-		for (uint8_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			colorByte(buffer[i], &handlerPWMOutput);
 		}
 
@@ -827,6 +832,7 @@ void parseCommands(char *ptrBufferReception) {
 		raceModeFlag            = 0;
 		joyStickModeFlag		= 1;
 		autodestructionModeFlag = 0;
+		intensityConfigFlag = 0;
 
 		enableEvent(&handlerPWMTimer);
 		enableOutput(&handlerPWMTimer);
@@ -875,7 +881,7 @@ void initSystem(void) {
 	handlerIntTimer.ptrTIMx 					= TIM3;
 	handlerIntTimer.TIMx_Config.TIMx_mode 	    = BTIMER_MODE_UP;
 	handlerIntTimer.TIMx_Config.TIMx_speed 	    = BTIMER_SPEED_100M_05ms;
-	handlerIntTimer.TIMx_Config.TIMx_period 	= 30; //Update period = 15ms
+	handlerIntTimer.TIMx_Config.TIMx_period 	= 20; //Update period = 15ms
 
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerIntTimer);
@@ -921,21 +927,21 @@ void initSystem(void) {
 	handlerRaceLED.numberOfLaps    = 1;
 	handlerRaceLED.numberOfPlayers = 2;
 
-	/*//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
-	handlerButton.pGPIOx 							 = GPIOA;
-	handlerButton.GPIO_PinConfig.GPIO_PinNumber		 = PIN_8;
-	handlerButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
+	//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
+	handlerButton.pGPIOx 							 = GPIOC;
+	handlerButton.GPIO_PinConfig.GPIO_PinNumber		 = PIN_10;
+	handlerButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 
 	//Se configura el EXTI del botón
 	ButtonExtiConfig.pGPIOHandler = &handlerButton;
 	ButtonExtiConfig.edgeType     = EXTERNAL_INTERRUPT_RISING_EDGE;
 
 	//Se carga la configuración: al cargar la configuración del exti, se carga también la del GPIO
-	extInt_Config(&ButtonExtiConfig);*/
+	extInt_Config(&ButtonExtiConfig);
 
 	//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
-	handlerUserButton.pGPIOx        					 = GPIOC;
-	handlerUserButton.GPIO_PinConfig.GPIO_PinNumber      = PIN_13;
+	handlerUserButton.pGPIOx        					 = GPIOA;
+	handlerUserButton.GPIO_PinConfig.GPIO_PinNumber      = PIN_15;
 	handlerUserButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 
 	//Se configura el EXTI del botón
@@ -1034,7 +1040,7 @@ void initSystem(void) {
 */
 	//Se limpia la cinta de LEDs
 	GPIO_WritePin( &handlerPWMOutput, 0);
-	clearLEDS(60, &handlerPWMOutput);
+	clearLEDS(180, &handlerPWMOutput);
 	ResetTime(&handlerPWMOutput);
 	delayms(100);
 }
