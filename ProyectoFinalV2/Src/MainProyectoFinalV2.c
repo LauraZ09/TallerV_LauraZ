@@ -62,6 +62,8 @@ uint8_t raceModeFlag       = 0;
 uint8_t counterRaceState   = 0;
 uint8_t updateRaceModeFlag = 0;
 
+uint8_t updateOLEDRaceMode = 0;
+
 //Banderas auxiliares para la conversión ADC
 uint8_t counterADC = 0;
 bool adcIsComplete = false;
@@ -138,6 +140,9 @@ raceLED handlerRaceLED 					= { 0 };
 void initSystem(void); //Inicialización del sistema
 void parseCommands(char *ptrBufferReception); //Recepción de comandos
 char* intensityColorCarsFunction (uint16_t* carsIntensityADC);
+void updateRaceModeOLED(void);
+void updatePartyOLEDFunction(void);
+void updateJoyStickModeOLED(void);
 
 int main(void)
 {
@@ -242,6 +247,7 @@ int main(void)
 		if(partyModeFlag & partyModeUpdateFlag){
 			//Si las dos banderas están levantadas, estamos en modo party y se da una actualización
 
+			updatePartyOLEDFunction();
 			partyModeUpdateFlag = 0; //Se baja la bandera de actualización
 
 			//Se llena el arreglo con número aleatorios entre el 0 y el 255
@@ -297,7 +303,7 @@ int main(void)
 
 				counterADC = 0;
 
-				if ((4050 < adcData[5]) & (adcData[5] < 5000)) {
+				if ((3200 < adcData[5]) & (adcData[5] < 5000)) {
 
 					if(joyStickModePosition < 179){
 						joyStickModePosition++;
@@ -309,7 +315,7 @@ int main(void)
 
 				}
 
-				else if ((0 < adcData[5]) & (adcData[5] < 400)) {
+				else if ((0 < adcData[5]) & (adcData[5] < 500)) {
 
 					if(joyStickModePosition == 0){
 						joyStickModePosition = 179;
@@ -326,13 +332,13 @@ int main(void)
 
 				}
 
-				if ((4050 < adcData[4]) & (adcData[4] < 5000)) {
+				if ((3200 < adcData[4]) & (adcData[4] < 5000)) {
 
 					colorJoyStickMode = (rand() % 6) + 1;
 
 				}
 
-				else if ((0 < adcData[4]) & (adcData[4] < 400)) {
+				else if ((0 < adcData[4]) & (adcData[4] < 500)) {
 
 					colorJoyStickMode = (rand() % 6) + 1;
 
@@ -345,6 +351,7 @@ int main(void)
 				}
 
 				moveCarJoyStickMode (joyStickModePosition, colorJoyStickMode, &handlerPWMOutput);
+				updateJoyStickModeOLED();
 			}
 
 			else {
@@ -364,6 +371,7 @@ int main(void)
 
 				moveCarsFourPlayers (posP1, posP2, posP3, posP4, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
 												intensityColorCars[3], &handlerPWMOutput);
+				updateRaceModeOLED();
 
 				if (posP1 == 179) {
 					posP1 = 0;
@@ -380,32 +388,117 @@ int main(void)
 		if (lapCounterP2 == handlerRaceLED.numberOfLaps) {
 			raceModeFlag = 0;
 			lapCounterP2 = 0;
-			delayms(10);
 
-
-			clearLEDS(180, &handlerPWMOutput);
+			clearAllStrip(&handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
-			delayms(500);
 
-			clearLEDS(180, &handlerPWMOutput);
-			ResetTime(&handlerPWMOutput);
-			delayms(500);
+			for (uint16_t i = 0; i < 540; i += 3) {
+				buffer[i] = 255;
+			}
 
+			//Se prende la cinta con los colores del arreglo
+			for (uint16_t i = 0; i < 540; i++) {
+				colorByte(buffer[i], &handlerPWMOutput);
+			}
+
+			sprintf(bufferTx, " GANADOR: VERDE     ");
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+			setColumn(&handlerI2COLED, 0x01);
+			printBytesArray(&handlerI2COLED, bufferTx);
+
+			delayms(1000);
+
+			clearAllStrip(&handlerPWMOutput);
 		}
 
 		if (lapCounterP1 == handlerRaceLED.numberOfLaps) {
 			raceModeFlag = 0;
 			lapCounterP1 = 0;
 
-			GPIO_WritePin( &handlerPWMOutput, 0);
-
-			clearLEDS(180, &handlerPWMOutput);
+			clearAllStrip(&handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
-			delayms(500);
 
-			clearLEDS(180, &handlerPWMOutput);
+			for (uint16_t i = 1; i < 540; i += 3) {
+				buffer[i] = 255;
+			}
+
+			//Se prende la cinta con los colores del arreglo
+			for (uint16_t i = 0; i < 540; i++) {
+				colorByte(buffer[i], &handlerPWMOutput);
+			}
+
+			sprintf(bufferTx, " GANADOR: ROJO     ");
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+			setColumn(&handlerI2COLED, 0x01);
+			printBytesArray(&handlerI2COLED, bufferTx);
+
+			delayms(1000);
+
+			clearAllStrip(&handlerPWMOutput);
+		}
+
+		if (lapCounterP3 == handlerRaceLED.numberOfLaps) {
+			raceModeFlag = 0;
+			lapCounterP3 = 0;
+
+			clearAllStrip(&handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
-			delayms(500);
+
+			for (uint16_t i = 1; i < 540; i += 3) {
+				buffer[i] = 255;
+			}
+
+			for (uint16_t i = 2; i < 540; i += 3) {
+				buffer[i] = (255*30)/100;
+			}
+
+			//Se prende la cinta con los colores del arreglo
+			for (uint16_t i = 0; i < 540; i++) {
+				colorByte(buffer[i], &handlerPWMOutput);
+			}
+
+			sprintf(bufferTx, " GANADOR: ROSA     ");
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+			setColumn(&handlerI2COLED, 0x01);
+			printBytesArray(&handlerI2COLED, bufferTx);
+
+			delayms(1000);
+
+			clearAllStrip(&handlerPWMOutput);
+		}
+
+		if (lapCounterP4 == handlerRaceLED.numberOfLaps) {
+			raceModeFlag = 0;
+			lapCounterP4 = 0;
+
+			clearAllStrip(&handlerPWMOutput);
+			ResetTime(&handlerPWMOutput);
+
+			for (uint16_t i = 1; i < 540; i += 3) {
+				buffer[i] = 255;
+			}
+
+			for (uint16_t i = 2; i < 540; i += 3) {
+				buffer[i] = 255;
+			}
+
+			//Se prende la cinta con los colores del arreglo
+			for (uint16_t i = 0; i < 540; i++) {
+				colorByte(buffer[i], &handlerPWMOutput);
+			}
+
+			sprintf(bufferTx, "GANADOR: MAGENTA     ");
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+			setColumn(&handlerI2COLED, 0x01);
+			printBytesArray(&handlerI2COLED, bufferTx);
+
+			delayms(1000);
+
+			clearAllStrip(&handlerPWMOutput);
 		}
 
 	}
@@ -456,6 +549,115 @@ char* intensityColorCarsFunction (uint16_t* carsIntensityADC){
 
 }
 
+void updatePartyOLEDFunction(void){
+
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_0);
+	printBytesArray(&handlerI2COLED, "          PARTY ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+	printBytesArray(&handlerI2COLED, "PARTY           ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+	printBytesArray(&handlerI2COLED, "     PARTY      ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_6);
+	printBytesArray(&handlerI2COLED,"          PARTY ");
+
+	delayms(300);
+
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_0);
+	printBytesArray(&handlerI2COLED, "PARTY           ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+	printBytesArray(&handlerI2COLED, "     PARTY      ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+	printBytesArray(&handlerI2COLED, "          PARTY ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_6);
+	printBytesArray(&handlerI2COLED, "PARTY           ");
+
+	delayms(300);
+
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_0);
+	printBytesArray(&handlerI2COLED, "     PARTY      ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+	printBytesArray(&handlerI2COLED, "          PARTY ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+	printBytesArray(&handlerI2COLED, "PARTY           ");
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_6);
+	printBytesArray(&handlerI2COLED, "     PARTY      ");
+
+	delayms(300);
+}
+
+void updateRaceModeOLED(void){
+
+	if(handlerRaceLED.numberOfPlayers == 2){
+
+		sprintf(bufferTx, "PLAYER 1 LAPS: %d", lapCounterP1);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+		setColumn(&handlerI2COLED, 0x01);
+		printBytesArray(&handlerI2COLED, bufferTx);
+
+		sprintf(bufferTx, "PLAYER 2 LAPS: %d", lapCounterP2);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		setColumn(&handlerI2COLED, 0x01);
+		printBytesArray(&handlerI2COLED, bufferTx);
+
+	}
+
+	else if(handlerRaceLED.numberOfPlayers == 4){
+
+		sprintf(bufferTx, "PLAYER 1 LAPS: %d", lapCounterP1);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+		setColumn(&handlerI2COLED, 0x01);
+		printBytesArray(&handlerI2COLED, bufferTx);
+
+		sprintf(bufferTx, "PLAYER 2 LAPS: %d", lapCounterP2);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		setColumn(&handlerI2COLED, 0x01);
+		printBytesArray(&handlerI2COLED, bufferTx);
+
+		sprintf(bufferTx, "PLAYER 3 LAPS: %d", lapCounterP3);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+		setColumn(&handlerI2COLED, 0x01);
+		printBytesArray(&handlerI2COLED, bufferTx);
+
+		sprintf(bufferTx, "PLAYER 4 LAPS: %d", lapCounterP4);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		setColumn(&handlerI2COLED, 0x01);
+		printBytesArray(&handlerI2COLED, bufferTx);
+	}
+}
+
+void updateJoyStickModeOLED(void){
+
+	if(joyStickModePosition < 10){
+
+		sprintf(bufferTx, " POSITION: 00%d", joyStickModePosition);
+	}
+
+	else if(joyStickModePosition < 100){
+
+		sprintf(bufferTx, " POSITION: 0%d", joyStickModePosition);
+
+	}
+
+	else {
+
+		sprintf(bufferTx, " POSITION: %d", joyStickModePosition);
+
+	}
+
+
+	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+	setColumn(&handlerI2COLED, 0x01);
+	printBytesArray(&handlerI2COLED, bufferTx);
+
+
+}
+
 void parseCommands(char *ptrBufferReception) {
 	//esta función lee lo obtenido por el puerto serial y toma decisiones en base a eso
 
@@ -464,9 +666,16 @@ void parseCommands(char *ptrBufferReception) {
 
 	if (strcmp(cmd, "help") == 0) {
 
-		joyStickModeFlag		= 0;
-		raceModeFlag  = 0;
-		partyModeFlag = 0;
+		disableEvent(&handlerPWMTimer);
+		disableOutput(&handlerPWMTimer);
+		stopPwmSignal(&handlerPWMTimer);
+
+		joyStickModeFlag        = 0;
+		partyModeFlag		    = 0;
+		autodestructionModeFlag = 0;
+		raceModeFlag			= 0;
+		counterRaceState        = 0;
+		intensityConfigFlag     = 0;
 
 		//Se escribe el menú de comandos en la terminal serial
 		writeMsg(&handlerUsart2, "\n\rInstrucciones de juego:\n\r");
@@ -517,9 +726,14 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "setRaceMode") == 0) {
 
-		joyStickModeFlag		= 0;
-		raceModeFlag  = 0;
-		partyModeFlag = 0;
+		clearAllScreen(&handlerI2COLED);
+		joyStickModeFlag        = 0;
+		partyModeFlag		    = 0;
+		autodestructionModeFlag = 0;
+		counterRaceState        = 0;
+		intensityConfigFlag		= 0;
+		raceModeFlag			= 0;
+		//delayms(100);
 
 
 		if ((firstParameter != 2) & (firstParameter != 4)) {
@@ -541,8 +755,20 @@ void parseCommands(char *ptrBufferReception) {
 			handlerRaceLED.numberOfPlayers = firstParameter;
 			handlerRaceLED.numberOfLaps    = secondParameter;
 
+			clearAllScreen(&handlerI2COLED);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+			setColumn(&handlerI2COLED, 0x01);
+			printBytesArray(&handlerI2COLED, "MODO CONFIGURADO");
+			sprintf(bufferTx, "JUGADORES: %d\n", firstParameter);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+			setColumn(&handlerI2COLED, 0x10);
+			printBytesArray(&handlerI2COLED, bufferTx);
+			sprintf(bufferTx, "  VUELTAS: %d\n\r", secondParameter);
+			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
+			setColumn(&handlerI2COLED, 0x10);
+			printBytesArray(&handlerI2COLED, bufferTx);
 
-			writeMsg(&handlerUsart2, "Configure la intesnsidad de los colores deseada, posteriormente escriba el comando\n"
+			writeMsg(&handlerUsart2, "Configure la intensidad de los colores deseada, posteriormente escriba el comando\n"
 					"initRace @ para iniciar la carrera.");
 
 			posP1 = 1;
@@ -552,30 +778,36 @@ void parseCommands(char *ptrBufferReception) {
 
 			showFourCarsToConfig(posP1, posP2, posP3, posP4, 255, 255, 255, 255, &handlerPWMOutput);
 
-			intensityConfigFlag = 1;
 			enableEvent(&handlerPWMTimer);
 			enableOutput(&handlerPWMTimer);
 			startPwmSignal(&handlerPWMTimer);
+
+			intensityConfigFlag = 1;
+
+			delayms(100);
 		}
 
 	}
 
 	else if (strcmp(cmd, "initRace") == 0){
 
-		joyStickModeFlag		= 0;
+		clearAllScreen(&handlerI2COLED);
+		joyStickModeFlag        = 0;
+		intensityConfigFlag     = 0;
+		partyModeFlag		    = 0;
+		autodestructionModeFlag = 0;
+		raceModeFlag       		= 0;
+		counterRaceState   		= 0;
 
 		disableEvent(&handlerPWMTimer);
 		disableOutput(&handlerPWMTimer);
 		stopPwmSignal(&handlerPWMTimer);
-
-		intensityConfigFlag = 0;
 
 		posP1 = 1;
 		posP2 = 15;
 		posP3 = 25;
 		posP4 = 35;
 
-		partyModeFlag = 0;
 
 		lapCounterP1 = 0;
 		lapCounterP2 = 0;
@@ -599,7 +831,7 @@ void parseCommands(char *ptrBufferReception) {
 		}
 
 		//Se prende la cinta con los colores del arreglo
-		for (uint16_t i = 0; i < 180; i++) {
+		for (uint16_t i = 0; i < 540; i++) {
 			colorByte(buffer[i], &handlerPWMOutput);
 		}
 
@@ -621,7 +853,7 @@ void parseCommands(char *ptrBufferReception) {
 			buffer[i] = 0;
 		}
 
-		for (uint16_t i = 0; i < 540; i += 3) {
+		for (uint16_t i = 1; i < 540; i += 3) {
 			buffer[i] = 255;
 		}
 
@@ -632,6 +864,9 @@ void parseCommands(char *ptrBufferReception) {
 
 		//Se envía un reset, para que se encienda adecacuadamente la cinta
 		ResetTime(&handlerPWMOutput);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
+		setColumn(&handlerI2COLED, 0x01);
 
 		//Se pone el sonido
 		Tone(&handlerPWMTimerBuzzer, 1);
@@ -690,11 +925,48 @@ void parseCommands(char *ptrBufferReception) {
 			colorByte(buffer[i], &handlerPWMOutput);
 		}
 
-		//Se envía un reset, para que se encienda adecacuadamente la cinta
+		//Se envía un resetRaceMode 2 10 set, para que se encienda adecacuadamente la cinta
 		ResetTime(&handlerPWMOutput);
 
 		Tone(&handlerPWMTimerBuzzer, 2);
-		delayms(1000);
+
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "          GOOOO ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "GOOOO           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "     GOOOO      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "           GOOOO ");
+
+		delayms(300);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "GOOOO           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "     GOOOO      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "          GOOOO ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "GOOOO           ");
+
+		delayms(300);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "     GOOOO      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "          GOOOO ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "GOOOO           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "     GOOOO      ");
+
+		delayms(300);
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "                ");
+
 		noTone(&handlerPWMTimerBuzzer);
 		clearAllStrip(&handlerPWMOutput);
 		delayms(100);
@@ -706,19 +978,23 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "setPartyMode") == 0){
 
-		joyStickModeFlag		= 0;
-		partyModeFlag 			= 1;
-		raceModeFlag  			= 0;
+		joyStickModeFlag        = 0;
+		partyModeFlag		    = 1;
 		autodestructionModeFlag = 0;
+		raceModeFlag			= 0;
+		counterRaceState        = 0;
+		intensityConfigFlag     = 0;
+
 	}
 
 	else if (strcmp(cmd, "initAutodestruction") == 0){
 
-		joyStickModeFlag		= 0;
-		partyModeFlag 			= 0;
-		raceModeFlag  			= 0;
+		joyStickModeFlag        = 0;
+		partyModeFlag		    = 0;
 		autodestructionModeFlag = 1;
-		intensityConfigFlag = 0;
+		raceModeFlag			= 0;
+		counterRaceState        = 0;
+		intensityConfigFlag     = 0;
 
 		//CONTEO REGRESIVO
 		//3
@@ -799,6 +1075,44 @@ void parseCommands(char *ptrBufferReception) {
 		delayms(100);
 		delayms(500);
 
+		Tone(&handlerPWMTimerBuzzer, 10);
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "          BYEEE ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "BYEEE           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "     BYEEE      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "           BYEEE ");
+
+		delayms(300);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "BYEEE           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "     BYEEE      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "          BYEEE ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "BYEEE           ");
+
+		delayms(300);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "     BYEEE      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "          BYEEE ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "BYEEE           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "     BYEEE      ");
+
+		delayms(300);
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "                ");
+		noTone(&handlerPWMTimerBuzzer);
 
 
 		//CONTEO REGRESIVO
@@ -824,20 +1138,92 @@ void parseCommands(char *ptrBufferReception) {
 
 		//Se envía un reset, para que se encienda adecacuadamente la cinta
 		ResetTime(&handlerPWMOutput);
+
 	}
 
 	else if (strcmp(cmd, "joyStickMode") == 0) {
 
-		partyModeFlag           = 0;
-		raceModeFlag            = 0;
-		joyStickModeFlag		= 1;
-		autodestructionModeFlag = 0;
-		intensityConfigFlag = 0;
+		clearAllScreen(&handlerI2COLED);
 
 		enableEvent(&handlerPWMTimer);
 		enableOutput(&handlerPWMTimer);
 		startPwmSignal(&handlerPWMTimer);
 
+		joyStickModeFlag        = 1;
+		partyModeFlag		    = 0;
+		autodestructionModeFlag = 0;
+		raceModeFlag			= 0;
+		counterRaceState        = 0;
+		intensityConfigFlag     = 0;
+
+	}
+
+	else {
+
+		joyStickModeFlag        = 0;
+		partyModeFlag		    = 0;
+		autodestructionModeFlag = 0;
+		raceModeFlag			= 0;
+		counterRaceState        = 0;
+		intensityConfigFlag     = 0;
+
+		//Se llena el arreglo
+		for (uint16_t i = 0; i < 540; i++) {
+			buffer[i] = 0;
+		}
+
+		for (uint16_t i = 2; i < 540; i += 3) {
+			buffer[i] = 0;
+		}
+
+		for (uint16_t i = 1; i < 540; i += 3) {
+			buffer[i] = 255;
+		}
+
+		//Se prende la cinta con los colores del arreglo
+		for (uint16_t i = 0; i < 540; i++) {
+			colorByte(buffer[i], &handlerPWMOutput);
+		}
+
+		//Se envía un reset, para que se encienda adecacuadamente la cinta
+		ResetTime(&handlerPWMOutput);
+
+		clearAllScreen(&handlerI2COLED);
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "          ERROR ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "ERROR           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "     ERROR      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "           ERROR ");
+
+		delayms(300);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "ERROR           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "     ERROR      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "          ERROR ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "ERROR           ");
+
+		delayms(300);
+
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_1);
+		printBytesArray(&handlerI2COLED, "     ERROR      ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
+		printBytesArray(&handlerI2COLED, "          ERROR ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_5);
+		printBytesArray(&handlerI2COLED, "ERROR           ");
+		setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_7);
+		printBytesArray(&handlerI2COLED, "     ERROR      ");
+
+		delayms(300);
+		clearAllScreen(&handlerI2COLED);
+
+		clearAllStrip(&handlerPWMOutput);
 	}
 }
 
@@ -942,7 +1328,7 @@ void initSystem(void) {
 	//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
 	handlerUserButton.pGPIOx        					 = GPIOA;
 	handlerUserButton.GPIO_PinConfig.GPIO_PinNumber      = PIN_15;
-	handlerUserButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerUserButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
 
 	//Se configura el EXTI del botón
 	UserButtonExtiConfig.pGPIOHandler = &handlerUserButton;
@@ -952,8 +1338,8 @@ void initSystem(void) {
 	extInt_Config(&UserButtonExtiConfig);
 
 
-/*	//Se configura el SDA del I2C de la OLED
-	handlerSDAPin.pGPIOx 							 = GPIOC;
+	//Se configura el SDA del I2C de la OLED
+	handlerSDAPin.pGPIOx 							 = GPIOB;
 	handlerSDAPin.GPIO_PinConfig.GPIO_PinNumber 	 = PIN_9;
 	handlerSDAPin.GPIO_PinConfig.GPIO_PinMode 		 = GPIO_MODE_ALTFN; //Función alternativa
 	handlerSDAPin.GPIO_PinConfig.GPIO_PinOPType 	 = GPIO_OTYPE_OPENDRAIN;
@@ -965,8 +1351,8 @@ void initSystem(void) {
 	GPIO_Config(&handlerSDAPin);
 
 	//Se configura el SCL del I2C del acelerómetro y la OLED
-	handlerSCLPin.pGPIOx 							 = GPIOA;
-	handlerSCLPin.GPIO_PinConfig.GPIO_PinNumber	     = PIN_8;
+	handlerSCLPin.pGPIOx 							 = GPIOB;
+	handlerSCLPin.GPIO_PinConfig.GPIO_PinNumber	     = PIN_6;
 	handlerSCLPin.GPIO_PinConfig.GPIO_PinMode 		 = GPIO_MODE_ALTFN; //Función alternativa
 	handlerSCLPin.GPIO_PinConfig.GPIO_PinOPType 	 = GPIO_OTYPE_OPENDRAIN;
 	handlerSCLPin.GPIO_PinConfig.GPIO_PinSpeed 		 = GPIO_OSPEED_FAST;
@@ -979,10 +1365,10 @@ void initSystem(void) {
 	 //Se configura el HandlerI2C de la OLED
 	handlerI2COLED.slaveAddress = OLED_ADD;
 	handlerI2COLED.modeI2C      = I2C_MODE_FM; //Es necesario que sea en fastmode
-	handlerI2COLED.ptrI2Cx 		= I2C3;
+	handlerI2COLED.ptrI2Cx 		= I2C1;
 
 	//Se carga la configuración
-	i2c_config(&handlerI2COLED);*/
+	i2c_config(&handlerI2COLED);
 
 	//Se configura la conversión ADC
 	adcConfig.channels          = channels;
@@ -1031,18 +1417,15 @@ void initSystem(void) {
 	//Se carga la configuración
 	GPIO_Config(&handlerPinPWMChannel);
 
-/*
 	initOLED(&handlerI2COLED);
 	clearOLED(&handlerI2COLED);
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
 	setColumn(&handlerI2COLED, 0x10);
 	printBytesArray(&handlerI2COLED, " BIENVENIDO ");
-*/
+
 	//Se limpia la cinta de LEDs
-	GPIO_WritePin( &handlerPWMOutput, 0);
-	clearLEDS(180, &handlerPWMOutput);
+	clearAllStrip(&handlerPWMOutput);
 	ResetTime(&handlerPWMOutput);
-	delayms(100);
 }
 
 
