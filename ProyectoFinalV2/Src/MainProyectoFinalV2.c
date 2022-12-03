@@ -58,7 +58,8 @@ uint8_t colorJoyStickMode = 3;
 uint8_t autodestructionModeFlag = 0;
 
 //Bandera auxiliar para el modo race
-uint8_t raceModeFlag       = 0;
+uint8_t raceModeFlagP2     = 0;
+uint8_t raceModeFlagP4     = 0;
 uint8_t counterRaceState   = 0;
 uint8_t updateRaceModeFlag = 0;
 
@@ -175,6 +176,7 @@ int main(void)
 			}
 
 			if (stringComplete) {                //Si el string está completo, se aplica la función parseCommands al buffer, para anlizar el comando recibido
+				delayms(10);
 				parseCommands(bufferReception);
 				stringComplete = false;			 //Se baja la bandera
 			}
@@ -215,23 +217,10 @@ int main(void)
 				adcIsComplete = false;
 				adcData[5] = getADC();
 
-				sprintf(bufferTx, "\n\rADC1: %u\n", adcData[0]);
-				writeMsg(&handlerUsart2, bufferTx);
-				sprintf(bufferTx, "ADC2: %u\n", adcData[1]);
-				writeMsg(&handlerUsart2, bufferTx);
-				sprintf(bufferTx, "ADC3: %u\n", adcData[2]);
-				writeMsg(&handlerUsart2, bufferTx);
-				sprintf(bufferTx, "ADC4: %u\n", adcData[3]);
-				writeMsg(&handlerUsart2, bufferTx);
-				sprintf(bufferTx, "ADCx: %u\n", adcData[4]);
-				writeMsg(&handlerUsart2, bufferTx);
-				sprintf(bufferTx, "ADCy: %u\n\r", adcData[5]);
-				writeMsg(&handlerUsart2, bufferTx);
-
 				counterADC = 0;
 
 				intensityColorCarsFunction(adcData);
-				showFourCarsToConfig(posP1, posP2, posP3, posP4, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
+				showFourCarsToConfig(1, 15, 25, 35, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
 						intensityColorCars[3], &handlerPWMOutput);
 
 			}
@@ -296,10 +285,6 @@ int main(void)
 			else if (counterADC == 6) {
 				adcIsComplete = false;
 				adcData[5] = getADC();
-				sprintf(bufferTx, "ADCx: %u\n", adcData[4]);
-				writeMsg(&handlerUsart2, bufferTx);
-				sprintf(bufferTx, "ADCy: %u\n\r", adcData[5]);
-				writeMsg(&handlerUsart2, bufferTx);
 
 				counterADC = 0;
 
@@ -367,10 +352,38 @@ int main(void)
 
 			updateRaceModeFlag = 0;
 
-			if(raceModeFlag){
+			if(raceModeFlagP4){
 
 				moveCarsFourPlayers (posP1, posP2, posP3, posP4, intensityColorCars[0], intensityColorCars[1], intensityColorCars[2],
 												intensityColorCars[3], &handlerPWMOutput);
+
+				updateRaceModeOLED();
+
+				if (posP1 == 179) {
+					posP1 = 0;
+					lapCounterP1++;
+				}
+
+				if (posP2 == 179) {
+					posP2 = 0;
+					lapCounterP2++;
+				}
+
+				if (posP3 == 179) {
+					posP3 = 0;
+					lapCounterP3++;
+				}
+
+				if (posP4 == 179) {
+					posP4 = 0;
+					lapCounterP4++;
+				}
+			}
+
+			else if(raceModeFlagP2){
+
+				moveCarsTwoPlayers (posP1, posP2, intensityColorCars[0], intensityColorCars[1], &handlerPWMOutput);
+
 				updateRaceModeOLED();
 
 				if (posP1 == 179) {
@@ -385,8 +398,10 @@ int main(void)
 			}
 		}
 
+
 		if (lapCounterP2 == handlerRaceLED.numberOfLaps) {
-			raceModeFlag = 0;
+			raceModeFlagP2 = 0;
+			raceModeFlagP4 = 0;
 			lapCounterP2 = 0;
 
 			clearAllStrip(&handlerPWMOutput);
@@ -413,7 +428,8 @@ int main(void)
 		}
 
 		if (lapCounterP1 == handlerRaceLED.numberOfLaps) {
-			raceModeFlag = 0;
+			raceModeFlagP2 = 0;
+			raceModeFlagP4 = 0;
 			lapCounterP1 = 0;
 
 			clearAllStrip(&handlerPWMOutput);
@@ -440,7 +456,8 @@ int main(void)
 		}
 
 		if (lapCounterP3 == handlerRaceLED.numberOfLaps) {
-			raceModeFlag = 0;
+			raceModeFlagP2 = 0;
+			raceModeFlagP4 = 0;
 			lapCounterP3 = 0;
 
 			clearAllStrip(&handlerPWMOutput);
@@ -451,7 +468,7 @@ int main(void)
 			}
 
 			for (uint16_t i = 2; i < 540; i += 3) {
-				buffer[i] = (255*30)/100;
+				buffer[i] = (255 * 30) / 100;
 			}
 
 			//Se prende la cinta con los colores del arreglo
@@ -471,7 +488,8 @@ int main(void)
 		}
 
 		if (lapCounterP4 == handlerRaceLED.numberOfLaps) {
-			raceModeFlag = 0;
+			raceModeFlagP2 = 0;
+			raceModeFlagP4 = 0;
 			lapCounterP4 = 0;
 
 			clearAllStrip(&handlerPWMOutput);
@@ -500,7 +518,6 @@ int main(void)
 
 			clearAllStrip(&handlerPWMOutput);
 		}
-
 	}
 
 	return 0;
@@ -666,14 +683,11 @@ void parseCommands(char *ptrBufferReception) {
 
 	if (strcmp(cmd, "help") == 0) {
 
-		disableEvent(&handlerPWMTimer);
-		disableOutput(&handlerPWMTimer);
-		stopPwmSignal(&handlerPWMTimer);
-
 		joyStickModeFlag        = 0;
 		partyModeFlag		    = 0;
 		autodestructionModeFlag = 0;
-		raceModeFlag			= 0;
+		raceModeFlagP2     = 0;
+		raceModeFlagP4     = 0;
 		counterRaceState        = 0;
 		intensityConfigFlag     = 0;
 
@@ -726,13 +740,18 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "setRaceMode") == 0) {
 
+		enableEvent(&handlerPWMTimer);
+		enableOutput(&handlerPWMTimer);
+		startPwmSignal(&handlerPWMTimer);
+
 		clearAllScreen(&handlerI2COLED);
 		joyStickModeFlag        = 0;
 		partyModeFlag		    = 0;
 		autodestructionModeFlag = 0;
 		counterRaceState        = 0;
 		intensityConfigFlag		= 0;
-		raceModeFlag			= 0;
+		raceModeFlagP2     = 0;
+		raceModeFlagP4     = 0;
 		//delayms(100);
 
 
@@ -745,12 +764,6 @@ void parseCommands(char *ptrBufferReception) {
 		}
 
 		else{
-
-			writeMsg(&handlerUsart2, "Modo de juego configurado:\n");
-			sprintf(bufferTx, "Numero de jugadores: %d\n", firstParameter);
-			writeMsg(&handlerUsart2, bufferTx);
-			sprintf(bufferTx, "Numero de vueltas: %d\n\r", secondParameter);
-			writeMsg(&handlerUsart2, bufferTx);
 
 			handlerRaceLED.numberOfPlayers = firstParameter;
 			handlerRaceLED.numberOfLaps    = secondParameter;
@@ -768,19 +781,14 @@ void parseCommands(char *ptrBufferReception) {
 			setColumn(&handlerI2COLED, 0x10);
 			printBytesArray(&handlerI2COLED, bufferTx);
 
-			writeMsg(&handlerUsart2, "Configure la intensidad de los colores deseada, posteriormente escriba el comando\n"
-					"initRace @ para iniciar la carrera.");
-
 			posP1 = 1;
 			posP2 = 15;
 			posP3 = 25;
 			posP4 = 35;
 
+
 			showFourCarsToConfig(posP1, posP2, posP3, posP4, 255, 255, 255, 255, &handlerPWMOutput);
 
-			enableEvent(&handlerPWMTimer);
-			enableOutput(&handlerPWMTimer);
-			startPwmSignal(&handlerPWMTimer);
 
 			intensityConfigFlag = 1;
 
@@ -791,17 +799,17 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "initRace") == 0){
 
+		disableEvent(&handlerPWMTimer);
+		disableOutput(&handlerPWMTimer);
+
 		clearAllScreen(&handlerI2COLED);
 		joyStickModeFlag        = 0;
 		intensityConfigFlag     = 0;
 		partyModeFlag		    = 0;
 		autodestructionModeFlag = 0;
-		raceModeFlag       		= 0;
+		raceModeFlagP2     = 0;
+		raceModeFlagP4     = 0;
 		counterRaceState   		= 0;
-
-		disableEvent(&handlerPWMTimer);
-		disableOutput(&handlerPWMTimer);
-		stopPwmSignal(&handlerPWMTimer);
 
 		posP1 = 1;
 		posP2 = 15;
@@ -972,7 +980,14 @@ void parseCommands(char *ptrBufferReception) {
 		delayms(100);
 		delayms(100);
 
-		raceModeFlag       = 1;
+		if(handlerRaceLED.numberOfPlayers == 2){
+			raceModeFlagP2       = 1;
+		}
+
+		else if(handlerRaceLED.numberOfPlayers == 4){
+			raceModeFlagP4       = 1;
+		}
+
 		counterRaceState   = 1;
 	}
 
@@ -981,7 +996,8 @@ void parseCommands(char *ptrBufferReception) {
 		joyStickModeFlag        = 0;
 		partyModeFlag		    = 1;
 		autodestructionModeFlag = 0;
-		raceModeFlag			= 0;
+		raceModeFlagP2     = 0;
+		raceModeFlagP4     = 0;
 		counterRaceState        = 0;
 		intensityConfigFlag     = 0;
 
@@ -992,7 +1008,8 @@ void parseCommands(char *ptrBufferReception) {
 		joyStickModeFlag        = 0;
 		partyModeFlag		    = 0;
 		autodestructionModeFlag = 1;
-		raceModeFlag			= 0;
+		raceModeFlagP2     = 0;
+		raceModeFlagP4     = 0;
 		counterRaceState        = 0;
 		intensityConfigFlag     = 0;
 
@@ -1143,16 +1160,17 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "joyStickMode") == 0) {
 
-		clearAllScreen(&handlerI2COLED);
-
 		enableEvent(&handlerPWMTimer);
 		enableOutput(&handlerPWMTimer);
 		startPwmSignal(&handlerPWMTimer);
 
+		clearAllScreen(&handlerI2COLED);
+
 		joyStickModeFlag        = 1;
 		partyModeFlag		    = 0;
 		autodestructionModeFlag = 0;
-		raceModeFlag			= 0;
+		raceModeFlagP2     = 0;
+		raceModeFlagP4     = 0;
 		counterRaceState        = 0;
 		intensityConfigFlag     = 0;
 
@@ -1163,7 +1181,8 @@ void parseCommands(char *ptrBufferReception) {
 		joyStickModeFlag        = 0;
 		partyModeFlag		    = 0;
 		autodestructionModeFlag = 0;
-		raceModeFlag			= 0;
+		raceModeFlagP2     = 0;
+		raceModeFlagP4     = 0;
 		counterRaceState        = 0;
 		intensityConfigFlag     = 0;
 

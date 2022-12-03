@@ -660,78 +660,6 @@ void setColorNumberLED(uint8_t RED, uint8_t GREEN, uint8_t BLUE, uint8_t numberL
 	}
 }
 
-void moveCarsTwoPlayers(uint8_t positionP1, uint8_t positionP2, GPIO_Handler_t *pGPIOHandler) {
-
-	uint8_t buffer[180] = { 0 };
-
-	clearLEDS(52, pGPIOHandler);
-	ResetTime(pGPIOHandler);
-
-	for (uint8_t i = 0; i < positionP1 * 3 - 1; i++) {
-		buffer[i] = 0;
-	}
-
-	for (uint8_t i = (positionP1 + 4) * 3; i < 180; i++) {
-		buffer[i] = 0;
-	}
-
-	for (uint8_t i = 0; i < positionP2 * 3 - 1; i++) {
-		buffer[i] = 0;
-	}
-
-	for (uint8_t i = (positionP2 + 4) * 3; i < 180; i++) {
-		buffer[i] = 0;
-	}
-
-	//Jugador 1
-	buffer[positionP1 * 3 - 1] = 0;
-	buffer[positionP1 * 3 - 2] = 255;
-	buffer[positionP1 * 3 - 3] = 0;
-
-	buffer[(positionP1 + 1) * 3 - 1] = 0;
-	buffer[(positionP1 + 1) * 3 - 2] = 255;
-	buffer[(positionP1 + 1) * 3 - 3] = 0;
-
-	buffer[(positionP1 + 2) * 3 - 1] = 0;
-	buffer[(positionP1 + 2) * 3 - 2] = 255;
-	buffer[(positionP1 + 2) * 3 - 3] = 0;
-
-	buffer[(positionP1 + 3) * 3 - 1] = 0;
-	buffer[(positionP1 + 3) * 3 - 2] = 255;
-	buffer[(positionP1 + 3) * 3 - 3] = 0;
-
-	buffer[(positionP1 + 4) * 3 - 1] = 0;
-	buffer[(positionP1 + 4) * 3 - 2] = 255;
-	buffer[(positionP1 + 4) * 3 - 3] = 0;
-
-	//Jugador 2
-	buffer[positionP2 * 3 - 1] = 0;
-	buffer[positionP2 * 3 - 2] = 0;
-	buffer[positionP2 * 3 - 3] = 255;
-
-	buffer[(positionP2 + 1) * 3 - 1] = 0;
-	buffer[(positionP2 + 1) * 3 - 2] = 0;
-	buffer[(positionP2 + 1) * 3 - 3] = 255;
-
-	buffer[(positionP2 + 2) * 3 - 1] = 0;
-	buffer[(positionP2 + 2) * 3 - 2] = 0;
-	buffer[(positionP2 + 2) * 3 - 3] = 255;
-
-	buffer[(positionP2 + 3) * 3 - 1] = 0;
-	buffer[(positionP2 + 3) * 3 - 2] = 0;
-	buffer[(positionP2 + 3) * 3 - 3] = 255;
-
-	buffer[(positionP2 + 4) * 3 - 1] = 0;
-	buffer[(positionP2 + 4) * 3 - 2] = 0;
-	buffer[(positionP2 + 4) * 3 - 3] = 255;
-
-	for (uint8_t i = 0; i < 180; i++) {
-		colorByte(buffer[i], pGPIOHandler);
-	}
-
-	ResetTime(pGPIOHandler);
-}
-
 void redLED(GPIO_Handler_t *pGPIOHandler, uint8_t intensityColorR){
 	setColorLED(intensityColorR, 0, 0,pGPIOHandler);
 }
@@ -835,6 +763,59 @@ void moveCarJoyStickMode (uint8_t positionPJ, uint8_t color, GPIO_Handler_t *pGP
 
 	ResetTime(pGPIOHandler);
 	__enable_irq();
+}
+
+void moveCarsTwoPlayers (uint8_t positionP1, uint8_t positionP2, uint8_t intensityColorP1,  uint8_t intensityColorP2,
+		GPIO_Handler_t *pGPIOHandler){
+
+	uint8_t buffer[180] = {0};
+
+	__disable_irq();
+
+
+	buffer[positionP1 + 0] = 1;
+	buffer[positionP1 + 1] = 1;
+	buffer[positionP1 + 2] = 1;
+	buffer[positionP1 + 3] = 1;
+
+	buffer[positionP2 + 0] = 2;
+	buffer[positionP2 + 1] = 2;
+	buffer[positionP2 + 2] = 2;
+	buffer[positionP2 + 3] = 2;
+
+	for (uint8_t i = 0; i < 180; i++) {
+
+		switch(buffer[i]){
+
+		case 0: {
+			ptr_nullFunct(pGPIOHandler);
+
+			break;
+		}
+
+		case 1: {
+			ptr_redFunct(pGPIOHandler, intensityColorP1);
+
+			break;
+		}
+
+		case 2: {
+			ptr_greenFunct(pGPIOHandler, intensityColorP2);
+
+			break;
+		}
+
+		default: {
+			__NOP();
+			break;
+		}
+		}
+	}
+
+	ResetTime(pGPIOHandler);
+
+	__enable_irq();
+
 }
 
 void moveCarsFourPlayers (uint8_t positionP1, uint8_t positionP2,uint8_t positionP3, uint8_t positionP4,

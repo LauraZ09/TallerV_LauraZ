@@ -170,7 +170,6 @@ void adc_Config(ADC_Config_t *adcConfig){
 	__NVIC_EnableIRQ(ADC_IRQn);
 	
 	/* 11b. Configuramos la prioridad para la interrupción ADC */
-	__NVIC_SetPriority(ADC_IRQn,1);
 
 	/* 12. Activamos el modulo ADC */
 	// 0: Disable ADC conversion and go to power down mode
