@@ -477,3 +477,7 @@ void USART1_IRQHandler(void){
 	}
 }
 
+/*
+ * Laura!! Como siempre, impecable tu solución. Excelente trabajo.
+ * Calificación = 5.0
+ * */
