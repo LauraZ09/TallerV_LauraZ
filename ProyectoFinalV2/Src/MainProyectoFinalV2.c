@@ -518,6 +518,7 @@ int main(void)
 
 			clearAllStrip(&handlerPWMOutput);
 		}
+
 	}
 
 	return 0;
@@ -529,8 +530,10 @@ void adcComplete_Callback(void){
 }
 
 void BasicTimer10_Callback(void) {
+
 	GPIOxTooglePin(&handlerBlinkyPin);
 	partyModeUpdateFlag = 1;
+
 	}
 
 void BasicTimer3_Callback(void){
@@ -576,30 +579,6 @@ void updatePartyOLEDFunction(void){
 	printBytesArray(&handlerI2COLED, "     PARTY      ");
 	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_6);
 	printBytesArray(&handlerI2COLED,"          PARTY ");
-
-	delayms(300);
-
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_0);
-	printBytesArray(&handlerI2COLED, "PARTY           ");
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
-	printBytesArray(&handlerI2COLED, "     PARTY      ");
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
-	printBytesArray(&handlerI2COLED, "          PARTY ");
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_6);
-	printBytesArray(&handlerI2COLED, "PARTY           ");
-
-	delayms(300);
-
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_0);
-	printBytesArray(&handlerI2COLED, "     PARTY      ");
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
-	printBytesArray(&handlerI2COLED, "          PARTY ");
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
-	printBytesArray(&handlerI2COLED, "PARTY           ");
-	setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_6);
-	printBytesArray(&handlerI2COLED, "     PARTY      ");
-
-	delayms(300);
 }
 
 void updateRaceModeOLED(void){
@@ -740,6 +719,9 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "setRaceMode") == 0) {
 
+		handlerRaceLED.numberOfPlayers = firstParameter;
+		handlerRaceLED.numberOfLaps    = secondParameter;
+
 		enableEvent(&handlerPWMTimer);
 		enableOutput(&handlerPWMTimer);
 		startPwmSignal(&handlerPWMTimer);
@@ -764,9 +746,6 @@ void parseCommands(char *ptrBufferReception) {
 		}
 
 		else{
-
-			handlerRaceLED.numberOfPlayers = firstParameter;
-			handlerRaceLED.numberOfLaps    = secondParameter;
 
 			clearAllScreen(&handlerI2COLED);
 			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
@@ -1160,9 +1139,11 @@ void parseCommands(char *ptrBufferReception) {
 
 	else if (strcmp(cmd, "joyStickMode") == 0) {
 
+		delayms(10);
 		enableEvent(&handlerPWMTimer);
 		enableOutput(&handlerPWMTimer);
 		startPwmSignal(&handlerPWMTimer);
+		delayms(10);
 
 		clearAllScreen(&handlerI2COLED);
 
@@ -1286,7 +1267,7 @@ void initSystem(void) {
 	handlerIntTimer.ptrTIMx 					= TIM3;
 	handlerIntTimer.TIMx_Config.TIMx_mode 	    = BTIMER_MODE_UP;
 	handlerIntTimer.TIMx_Config.TIMx_speed 	    = BTIMER_SPEED_100M_05ms;
-	handlerIntTimer.TIMx_Config.TIMx_period 	= 20; //Update period = 15ms
+	handlerIntTimer.TIMx_Config.TIMx_period 	= 100; //Update period = 15ms
 
 	//Se carga la configuración del BlinkyTimer
 	BasicTimer_Config(&handlerIntTimer);
