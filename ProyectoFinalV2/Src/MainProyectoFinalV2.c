@@ -114,6 +114,8 @@ GPIO_Handler_t handlerMCO_2  			= { 0 };  //Handler para el PIN de salida del Cl
 GPIO_Handler_t handlerPWMOutput 		= { 0 };  //Handler para la salida del PWM
 GPIO_Handler_t handlerUserButton 		= { 0 };
 GPIO_Handler_t handlerButton 		    = { 0 };
+GPIO_Handler_t handlerPlayer3			= { 0 };
+GPIO_Handler_t handlerPlayer4			= { 0 };
 GPIO_Handler_t handlerTxPin             = { 0 }; //Handler para el PIN por el cual se hará la transmisión
 GPIO_Handler_t handlerRxPin             = { 0 }; //Handler para el PIN por el cual se hará la transmisión
 GPIO_Handler_t handlerSCLPin			= { 0 };
@@ -126,6 +128,8 @@ USART_Handler_t handlerUsart2           = { 0 }; //Handler para el USART2
 //Handler de las interrupciones externas
 EXTI_Config_t ButtonExtiConfig          = { 0 };
 EXTI_Config_t UserButtonExtiConfig      = { 0 };
+EXTI_Config_t Player3ExtiConfig 		= { 0 };
+EXTI_Config_t Player4ExtiConfig 		= { 0 };
 
 //Handler para el I2C de la OLED
 I2C_Handler_t handlerI2COLED 			= { 0 };
@@ -407,6 +411,10 @@ int main(void)
 			clearAllStrip(&handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
 
+			for (uint16_t i = 0; i < 540; i++) {
+				buffer[i] = 0;
+			}
+
 			for (uint16_t i = 0; i < 540; i += 3) {
 				buffer[i] = 255;
 			}
@@ -431,6 +439,10 @@ int main(void)
 			raceModeFlagP2 = 0;
 			raceModeFlagP4 = 0;
 			lapCounterP1 = 0;
+
+			for (uint16_t i = 0; i < 540; i++) {
+				buffer[i] = 0;
+			}
 
 			clearAllStrip(&handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
@@ -463,6 +475,10 @@ int main(void)
 			clearAllStrip(&handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
 
+			for (uint16_t i = 0; i < 540; i++) {
+				buffer[i] = 0;
+			}
+
 			for (uint16_t i = 1; i < 540; i += 3) {
 				buffer[i] = 255;
 			}
@@ -494,6 +510,10 @@ int main(void)
 
 			clearAllStrip(&handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
+
+			for (uint16_t i = 0; i < 540; i++) {
+				buffer[i] = 0;
+			}
 
 			for (uint16_t i = 1; i < 540; i += 3) {
 				buffer[i] = 255;
@@ -539,6 +559,18 @@ void BasicTimer10_Callback(void) {
 void BasicTimer3_Callback(void){
 	updateRaceModeFlag = 1;
 	updateJoyStickModeFlag = 1;
+}
+
+void callback_extInt2(void) {
+//Se sube la bandera del PinClock a 1
+	posP4++;
+	flagP2 = 1;
+}
+
+void callback_extInt7(void) {
+//Se sube la bandera del PinClock a 1
+	posP3++;
+	flagP2 = 1;
 }
 
 void callback_extInt10(void) {
@@ -1328,7 +1360,7 @@ void initSystem(void) {
 	//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
 	handlerUserButton.pGPIOx        					 = GPIOA;
 	handlerUserButton.GPIO_PinConfig.GPIO_PinNumber      = PIN_15;
-	handlerUserButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
+	handlerUserButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 
 	//Se configura el EXTI del botón
 	UserButtonExtiConfig.pGPIOHandler = &handlerUserButton;
@@ -1337,6 +1369,30 @@ void initSystem(void) {
 	//Se carga la configuración: al cargar la configuración del exti, se carga también la del GPIO
 	extInt_Config(&UserButtonExtiConfig);
 
+	//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
+	handlerPlayer3.pGPIOx        					 = GPIOC;
+	handlerPlayer3.GPIO_PinConfig.GPIO_PinNumber      = PIN_7;
+	handlerPlayer3.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+
+	//Se configura el EXTI del botón
+	Player3ExtiConfig.pGPIOHandler = &handlerPlayer3;
+	Player3ExtiConfig.edgeType     = EXTERNAL_INTERRUPT_RISING_EDGE;
+
+	//Se carga la configuración: al cargar la configuración del exti, se carga también la del GPIO
+	extInt_Config(&Player3ExtiConfig);
+
+
+	//Se configura el Button: Se debe tener en cuenta que el modo entrada está configurado en el ExtiDriver
+	handlerPlayer4.pGPIOx = GPIOB;
+	handlerPlayer4.GPIO_PinConfig.GPIO_PinNumber = PIN_2;
+	handlerPlayer4.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+
+	//Se configura el EXTI del botón
+	Player4ExtiConfig.pGPIOHandler = &handlerPlayer4;
+	Player4ExtiConfig.edgeType = EXTERNAL_INTERRUPT_RISING_EDGE;
+
+	//Se carga la configuración: al cargar la configuración del exti, se carga también la del GPIO
+	extInt_Config(&Player4ExtiConfig);
 
 	//Se configura el SDA del I2C de la OLED
 	handlerSDAPin.pGPIOx 							 = GPIOB;
