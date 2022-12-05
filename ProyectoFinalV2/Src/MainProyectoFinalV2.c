@@ -7,7 +7,7 @@
  *
  ******************************************************************************
  */
-
+//TODO: SISTICK, MUSICA DE GANADOR, MENSAJE DE BIENVENIDA Y DE HELP, SOLDAR Y 0S DE LA OLED
 //Se incluyen algunas librerías de C
 #include <stdint.h>
 #include <stdlib.h>
