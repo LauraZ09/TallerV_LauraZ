@@ -387,22 +387,22 @@ int main(void)
 				updateRaceModeOLED();
 
 				//Si la posición del jugador, es la final, se suma 1 al número de vueltas
-				if (posP1 == 179) {
+				if (posP1 >= 179) {
 					posP1 = 0;
 					lapCounterP1++;
 				}
 
-				if (posP2 == 179) {
+				if (posP2 >= 179) {
 					posP2 = 0;
 					lapCounterP2++;
 				}
 
-				if (posP3 == 179) {
+				if (posP3 >= 179) {
 					posP3 = 0;
 					lapCounterP3++;
 				}
 
-				if (posP4 == 179) {
+				if (posP4 >= 179) {
 					posP4 = 0;
 					lapCounterP4++;
 				}
@@ -440,7 +440,7 @@ int main(void)
 				buffer[i] = 0;
 			}
 
-			for (uint16_t i = 0; i < 540; i += 3) {
+			for (uint16_t i = 2; i < 540; i += 3) {
 				buffer[i] = 255;
 			}
 
@@ -505,12 +505,12 @@ int main(void)
 				buffer[i] = 0;
 			}
 
-			for (uint16_t i = 1; i < 540; i += 3) {
+			for (uint16_t i = 2; i < 540; i += 3) {
 				buffer[i] = 255;
 			}
 
-			for (uint16_t i = 2; i < 540; i += 3) {
-				buffer[i] = (255 * 30) / 100;
+			for (uint16_t i = 0; i < 540; i += 3) {
+				buffer[i] = 0;
 			}
 
 			//Se prende la cinta con los colores del arreglo
@@ -735,8 +735,8 @@ void parseCommands(char *ptrBufferReception) {
 
 		joyStickModeFlag        = 0;
 		partyModeFlag		    = 0;
-		raceModeFlagP2     = 0;
-		raceModeFlagP4     = 0;
+		raceModeFlagP2     		= 0;
+		raceModeFlagP4    		= 0;
 		intensityConfigFlag     = 0;
 
 		//Se escribe el menú de comandos en la terminal serial
@@ -765,7 +765,7 @@ void parseCommands(char *ptrBufferReception) {
 				"y posteriormente se dara inicio a la carrera.\n\r");
 
 		writeMsg(&handlerUsart2, "Al finalizar la carrera se mostrará en la pantalla el color ganador, adicionalmente, la pista se pintara\n"
-				"toda de este color.\n\r");
+				"toda de color azul.\n\r");
 
 		writeMsg(&handlerUsart2, "Otros modos:\n"
 				"Adicional al juego de carreras, la pista de LEDs se puede poner en otros modos:\n"
@@ -828,13 +828,13 @@ void parseCommands(char *ptrBufferReception) {
 			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_2);
 			setColumn(&handlerI2COLED, 0x01);
 			printBytesArray(&handlerI2COLED, "MODO CONFIGURADO");
-			sprintf(bufferTx, "JUGADORES: %d\n", firstParameter);
+			sprintf(bufferTx, "   JUGADORES: %d\n", firstParameter);
 			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_3);
-			setColumn(&handlerI2COLED, 0x10);
+			setColumn(&handlerI2COLED, 0x01);
 			printBytesArray(&handlerI2COLED, bufferTx);
-			sprintf(bufferTx, "  VUELTAS: %d\n\r", secondParameter);
+			sprintf(bufferTx, "   VUELTAS: %d\n\r", secondParameter);
 			setPageOLED(&handlerI2COLED, OLED_PAGE_NUMBER_4);
-			setColumn(&handlerI2COLED, 0x10);
+			setColumn(&handlerI2COLED, 0x01);
 			printBytesArray(&handlerI2COLED, bufferTx);
 
 			//Se ponen unas posiciones predeterminadas para poder observar los jugadores y sus intensidades de color

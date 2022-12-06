@@ -805,6 +805,18 @@ void moveCarsTwoPlayers (uint8_t positionP1, uint8_t positionP2, uint8_t intensi
 			break;
 		}
 
+		case 3: {
+			ptr_roseFunct(pGPIOHandler, intensityColorP1);
+
+			break;
+		}
+
+		case 4: {
+			ptr_magentaFunct(pGPIOHandler, intensityColorP2);
+
+			break;
+		}
+
 		default: {
 			__NOP();
 			break;
