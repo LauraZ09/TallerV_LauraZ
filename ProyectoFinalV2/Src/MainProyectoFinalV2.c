@@ -7,7 +7,10 @@
  *
  ******************************************************************************
  */
-//TODO: SISTICK, MUSICA DE GANADOR, MENSAJE DE BIENVENIDA Y DE HELP, SOLDAR Y 0S DE LA OLED
+/* El proyecto consiste en un juego de carreras que cuenta con varios modos de funcionamiento.
+ * Para ver las instrucciones de juego se debe enviar por la terminal serial el comando:
+ * help @.
+ */
 //Se incluyen algunas librerías de C
 #include <stdint.h>
 #include <stdlib.h>
@@ -747,17 +750,18 @@ void parseCommands(char *ptrBufferReception) {
 				"2. Modo 4 Jugadores: en este modo seran 4 competidores. Para este modo es posible configurar con cuantas vueltas\n"
 				"de la pista contara la carrera.\n"
 				"En caso de no hacerse la configuracion del modo de juego antes de iniciar la carrera, por defecto el juego se\n"
-				"inicilizara en modo de 2 jugadores y 3 vueltas.\n\r");
+				"inicilizara en modo de 2 jugadores y 1 vuelta.\n\r");
 
 		writeMsg(&handlerUsart2, "Para configurar el modo de juego:\n"
 				"Con el comando setRaceMode #numeroDeJugadores #numeroDeVueltas @ se configura el modo de juego.\n"
-				"Por ejemplo, para 2 jugadores y 5 vueltas: "
-				"Con el comando setRaceMode #numeroDeJugadores #numeroDeVueltas @ se configura el modo de juego.\n"
-				"Por ejemplo,para 2 jugadores y 5 vueltas: setPlayersMode 2 5 @\n\r"
+				"Por ejemplo,para 2 jugadores y 5 vueltas: envíe el comando setPlayersMode 2 5 @, configure la intensidad\n"
+				"deseada con las perillas y posteriormente envíe el comando initRace @ para iniciar la carrera. \n"
+				"La intensidad de los colores de los carros, solo se podra configurar en el momento de configuracion, es decir \n"
+				"al enviar el comando setRaceMode # #.\n\r"
 				);
 
 		writeMsg(&handlerUsart2, "Para iniciar la carrera:\n"
-				"La carrera se inicia con el comando initRace @, este comando empezara a hacer una cuenta reegresiva de 5 segundos\n"
+				"La carrera se inicia con el comando initRace @, este comando empezara a hacer una cuenta reegresiva\n"
 				"y posteriormente se dara inicio a la carrera.\n\r");
 
 		writeMsg(&handlerUsart2, "Al finalizar la carrera se mostrará en la pantalla el color ganador, adicionalmente, la pista se pintara\n"
@@ -767,6 +771,11 @@ void parseCommands(char *ptrBufferReception) {
 				"Adicional al juego de carreras, la pista de LEDs se puede poner en otros modos:\n"
 				"1.Modo Fiesta: se inicializa con el comando setPartyMode @, al enviar este comando, la pista se encendera aleatoriamente de\n"
 				"diferentes colores.\n\r"
+				"2.Modo JoyStick: Se inicializa con el comando joyStickMode @, en este modo aparece en la pista un carrp \n"
+				"el cual se mueve según la posición del joyStick: para avanzar se debe mover el joyStick en la direccion positiva en x,\n"
+				"para retroceder se debe mover en la dirección negativa en x y para cambiar de color se debe mover en cualquier direccion en y.\n\r"
+				"3.Modo autodestruccion: al llamar el comando initAutodestruction @, la pista hace una cuenta regresiva y posteriormente se\n"
+				"queda encendida en color rosado.\n\r"
 				);
 
 		//Se limpia la oled y se envía el mensaje
@@ -1227,6 +1236,9 @@ void parseCommands(char *ptrBufferReception) {
 		//Se limpia la OLED
 		clearAllScreen(&handlerI2COLED);
 
+		//Se pone la posición del carro en 0
+		joyStickModePosition 	= 0;
+
 		//Se bajan las banderas de los otros modos
 		joyStickModeFlag        = 1;
 		partyModeFlag		    = 0;
@@ -1388,7 +1400,7 @@ void initSystem(void) {
 	//Se carga la configuración del USART
 	USART_Config(&handlerUsart2);
 
-	//Se configura la carrera de LEDs, por defecto se pone con 3 vueltas y 2 jugadore
+	//Se configura la carrera de LEDs, por defecto se pone con 1 vuelta y 2 jugadore
 	handlerRaceLED.numberOfLaps    = 1;
 	handlerRaceLED.numberOfPlayers = 2;
 
