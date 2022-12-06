@@ -473,7 +473,7 @@ int main(void)
 			clearAllStrip(&handlerPWMOutput);
 			ResetTime(&handlerPWMOutput);
 
-			for (uint16_t i = 1; i < 540; i += 3) {
+			for (uint16_t i = 2; i < 540; i += 3) {
 				buffer[i] = 255;
 			}
 
@@ -542,7 +542,7 @@ int main(void)
 			}
 
 			for (uint16_t i = 1; i < 540; i += 3) {
-				buffer[i] = 255;
+				buffer[i] = 0;
 			}
 
 			for (uint16_t i = 2; i < 540; i += 3) {
